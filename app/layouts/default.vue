@@ -20,7 +20,6 @@ const links = [
       label: "Market Quality",
       icon: "i-lucide-chart-pie",
       to: "/inbox",
-      badge: "4",
       onSelect: () => {
         open.value = false;
       },
@@ -84,12 +83,6 @@ const links = [
     {
       label: "Feedback",
       icon: "i-lucide-message-circle",
-      to: "https://github.com/nuxt-ui-templates/dashboard",
-      target: "_blank",
-    },
-    {
-      label: "Help & Support",
-      icon: "i-lucide-info",
       to: "https://github.com/nuxt-ui-templates/dashboard",
       target: "_blank",
     },
