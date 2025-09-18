@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-ui-template-dashboard",
+  "name": "nuxt-ui-qdc-dashboard",
   "private": true,
   "type": "module",
   "scripts": {
@@ -30,6 +30,5 @@
   },
   "resolutions": {
     "unimport": "4.1.1"
-  },
-  "packageManager": "pnpm@10.15.1"
+  }
 }
