@@ -160,10 +160,10 @@ onMounted(async () => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <img src="/favicon.png" alt="" />
-        <span class="text-primary font-bold ml-2">QRCC</span>
-        <span>Data center</span>
-        <!-- <TeamsMenu :collapsed="collapsed" /> -->
+        <!-- <img src="/favicon.png" alt="" />
+        <span class="text-primary font-bold">QRCC</span>
+        <span>Data center</span> -->
+        <TeamsMenu :collapsed="collapsed" />
       </template>
 
       <template #default="{ collapsed }">
