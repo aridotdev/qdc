@@ -1,75 +1,71 @@
 <script setup lang="ts">
-import type { Period, Range, Stat } from "~/types";
+import { formatters } from 'date-fns';
+import type { Period, Range, Stat } from '~/types'
 
 const props = defineProps<{
-  period: Period;
-  range: Range;
-}>();
+  period: Period
+  range: Range
+}>()
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
+  return value.toLocaleString('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0
+  })
 }
 
 const baseStats = [
   {
-    title: "PPM",
-    icon: "i-lucide-chart-pie",
-    minValue: 200,
-    maxValue: 600,
-    minVariation: -15,
-    maxVariation: 25,
+    title: 'PPM',
+    icon: 'i-lucide-chart-pie',
+    value: 495,
+    percentage: 10,
+    type: 0
   },
   {
-    title: "F-Cost",
-    icon: "i-lucide-circle-dollar-sign",
-    minValue: 1000,
-    maxValue: 2000,
-    minVariation: -10,
-    maxVariation: 20,
-  },
-  {
-    title: "Sales",
-    icon: "i-lucide-shopping-cart",
-    minValue: 200000,
-    maxValue: 500000,
-    minVariation: -20,
-    maxVariation: 30,
+    title: 'F-Cost',
+    icon: 'i-lucide-circle-dollar-sign',
+    value: 1170000,
+    percentage: -7,
     formatter: formatCurrency,
+    type: 0
   },
   {
-    title: "Models",
-    icon: "i-lucide-monitor",
-    minValue: 1,
-    maxValue: 30,
-    minVariation: 1,
-    maxVariation: 5,
+    title: 'Sales',
+    icon: 'i-lucide-shopping-cart',
+    value: 137000000,
+    percentage: -6,
+    formatter: formatCurrency,
+    type: 1
   },
-];
+  {
+    title: 'Models',
+    icon: 'i-lucide-monitor',
+    value: 7,
+    percentage: 12,
+    type: 1
+  }
+]
 
 const { data: stats } = await useAsyncData<Stat[]>(
-  "stats",
+  'stats',
   async () => {
     return baseStats.map((stat) => {
-      const value = randomInt(stat.minValue, stat.maxValue);
-      const variation = randomInt(stat.minVariation, stat.maxVariation);
-
       return {
         title: stat.title,
         icon: stat.icon,
-        value: stat.formatter ? stat.formatter(value) : value,
-        variation,
-      };
-    });
+        value: stat.formatter ? stat.formatter(stat.value) : stat.value,
+        variation: stat.percentage,
+        type: stat.type
+      }
+    })
   },
   {
     watch: [() => props.period, () => props.range],
-    default: () => [],
+    default: () => []
   }
-);
+)
 </script>
 
 <template>
@@ -86,7 +82,7 @@ const { data: stats } = await useAsyncData<Stat[]>(
         wrapper: 'items-start',
         leading:
           'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
-        title: 'font-normal text-muted text-xs uppercase',
+        title: 'font-normal text-muted text-xs uppercase'
       }"
       class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
     >
@@ -94,8 +90,16 @@ const { data: stats } = await useAsyncData<Stat[]>(
         <span class="text-2xl font-semibold text-highlighted">
           {{ stat.value }}
         </span>
-
         <UBadge
+          v-if="stat.type === 0"
+          :color="stat.variation > 0 ? 'error':'success'"
+          variant="subtle"
+          class="text-xs"
+        >
+          {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
+        </UBadge>
+        <UBadge
+          v-else
           :color="stat.variation > 0 ? 'success' : 'error'"
           variant="subtle"
           class="text-xs"

@@ -37,7 +37,7 @@ const y = (d: DataRecord) => d.amount
 
 const total = computed(() => data.value.reduce((acc: number, { amount }) => acc + amount, 0))
 
-const formatNumber = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format
+const formatNumber = new Intl.NumberFormat('id', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format
 
 const formatDate = (date: Date): string => {
   return ({
@@ -63,7 +63,7 @@ const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amo
     <template #header>
       <div>
         <p class="text-xs text-muted uppercase mb-1.5">
-          Revenue
+          Quality PPM
         </p>
         <p class="text-3xl text-highlighted font-semibold">
           {{ formatNumber(total) }}
@@ -77,11 +77,7 @@ const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amo
       class="h-96"
       :width="width"
     >
-      <VisLine
-        :x="x"
-        :y="y"
-        color="var(--ui-primary)"
-      />
+      <VisLine :x="x" :y="y" color="var(--ui-primary)" />
       <VisArea
         :x="x"
         :y="y"
@@ -89,16 +85,9 @@ const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amo
         :opacity="0.1"
       />
 
-      <VisAxis
-        type="x"
-        :x="x"
-        :tick-format="xTicks"
-      />
+      <VisAxis type="x" :x="x" :tick-format="xTicks" />
 
-      <VisCrosshair
-        color="var(--ui-primary)"
-        :template="template"
-      />
+      <VisCrosshair color="var(--ui-primary)" :template="template" />
 
       <VisTooltip />
     </VisXYContainer>
