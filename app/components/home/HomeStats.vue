@@ -21,7 +21,8 @@ const baseStats = [
     icon: 'i-lucide-chart-pie',
     value: 495,
     percentage: 10,
-    type: 0
+    type: 0,
+    compare: 'vs Last Month'
   },
   {
     title: 'F-Cost',
@@ -29,7 +30,8 @@ const baseStats = [
     value: 1170000,
     percentage: -7,
     formatter: formatCurrency,
-    type: 0
+    type: 0,
+    compare: 'vs Last Month'
   },
   {
     title: 'Sales',
@@ -37,14 +39,16 @@ const baseStats = [
     value: 137000000,
     percentage: -6,
     formatter: formatCurrency,
-    type: 1
+    type: 1,
+    compare: 'vs Last Month'
   },
   {
     title: 'Models',
     icon: 'i-lucide-monitor',
     value: 7,
     percentage: 12,
-    type: 1
+    type: 1,
+    compare: 'vs Last Month'
   }
 ]
 
@@ -57,7 +61,8 @@ const { data: stats } = await useAsyncData<Stat[]>(
         icon: stat.icon,
         value: stat.formatter ? stat.formatter(stat.value) : stat.value,
         variation: stat.percentage,
-        type: stat.type
+        type: stat.type,
+        compare: stat.compare
       }
     })
   },
@@ -70,43 +75,27 @@ const { data: stats } = await useAsyncData<Stat[]>(
 
 <template>
   <UPageGrid class="lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-px">
-    <UPageCard
-      v-for="(stat, index) in stats"
-      :key="index"
-      :icon="stat.icon"
-      :title="stat.title"
-      to="/customers"
-      variant="subtle"
-      :ui="{
+    <UPageCard v-for="(stat, index) in stats" :icon="stat.icon" :key="index" :title="stat.title" to="/customers"
+      variant="subtle" :ui="{
         container: 'gap-y-1.5',
         wrapper: 'items-start',
         leading:
           'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
-        title: 'font-normal text-muted text-xs uppercase'
-      }"
-      class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
-    >
+        title: 'font-bold text-muted text-xs uppercase'
+      }" class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1">
       <div class="flex items-center gap-2">
         <span class="text-2xl font-semibold text-highlighted">
           {{ stat.value }}
         </span>
-        <UBadge
-          v-if="stat.type === 0"
-          :color="stat.variation > 0 ? 'error':'success'"
-          variant="subtle"
-          class="text-xs"
-        >
+        <UBadge v-if="stat.type === 0" :color="stat.variation > 0 ? 'error' : 'success'" variant="subtle"
+          class="text-xs">
           {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
         </UBadge>
-        <UBadge
-          v-else
-          :color="stat.variation > 0 ? 'success' : 'error'"
-          variant="subtle"
-          class="text-xs"
-        >
+        <UBadge v-else :color="stat.variation > 0 ? 'success' : 'error'" variant="subtle" class="text-xs">
           {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
         </UBadge>
       </div>
+      <span class="text-xs text-muted">{{ stat.compare }}</span>
     </UPageCard>
   </UPageGrid>
 </template>
