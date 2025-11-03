@@ -40,7 +40,7 @@ const baseStats = [
     type: 1
   },
   {
-    title: 'Models',
+    title: 'New Models',
     icon: 'i-lucide-monitor',
     value: 7,
     percentage: 12,
