@@ -35,7 +35,6 @@ export interface Stat {
   variation: number;
   formatter?: (value: number) => string;
   type: number;
-  compare: string;
 }
 
 export interface Sale {

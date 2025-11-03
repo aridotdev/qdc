@@ -21,8 +21,7 @@ const baseStats = [
     icon: 'i-lucide-chart-pie',
     value: 495,
     percentage: 10,
-    type: 0,
-    compare: 'vs Last Month'
+    type: 0
   },
   {
     title: 'F-Cost',
@@ -30,8 +29,7 @@ const baseStats = [
     value: 1170000,
     percentage: -7,
     formatter: formatCurrency,
-    type: 0,
-    compare: 'vs Last Month'
+    type: 0
   },
   {
     title: 'Sales',
@@ -39,16 +37,14 @@ const baseStats = [
     value: 137000000,
     percentage: -6,
     formatter: formatCurrency,
-    type: 1,
-    compare: 'vs Last Month'
+    type: 1
   },
   {
     title: 'Models',
     icon: 'i-lucide-monitor',
     value: 7,
     percentage: 12,
-    type: 1,
-    compare: 'vs Last Month'
+    type: 1
   }
 ]
 
@@ -62,7 +58,6 @@ const { data: stats } = await useAsyncData<Stat[]>(
         value: stat.formatter ? stat.formatter(stat.value) : stat.value,
         variation: stat.percentage,
         type: stat.type,
-        compare: stat.compare
       }
     })
   },
@@ -87,15 +82,19 @@ const { data: stats } = await useAsyncData<Stat[]>(
         <span class="text-2xl font-semibold text-highlighted">
           {{ stat.value }}
         </span>
-        <UBadge v-if="stat.type === 0" :color="stat.variation > 0 ? 'error' : 'success'" variant="subtle"
-          class="text-xs">
-          {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
-        </UBadge>
-        <UBadge v-else :color="stat.variation > 0 ? 'success' : 'error'" variant="subtle" class="text-xs">
-          {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
-        </UBadge>
       </div>
-      <span class="text-xs text-muted">{{ stat.compare }}</span>
+      <div>
+        <div>
+          <UBadge v-if="stat.type === 0" :color="stat.variation > 0 ? 'error' : 'success'" variant="subtle"
+            class="text-xs">
+            {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
+          </UBadge>
+          <UBadge v-else :color="stat.variation > 0 ? 'success' : 'error'" variant="subtle" class="text-xs">
+            {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
+          </UBadge>
+          <span class="text-xs text-muted"> vs last month</span>
+        </div>
+      </div>
     </UPageCard>
   </UPageGrid>
 </template>
