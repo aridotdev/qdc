@@ -14,7 +14,7 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.66",
     "@iconify-json/simple-icons": "^1.2.50",
-    "@nuxt/ui": "^4.0.0-alpha.1",
+    "@nuxt/ui": "^4.2.1",
     "@unovis/ts": "^1.6.0",
     "@unovis/vue": "^1.6.0",
     "@vueuse/nuxt": "^13.9.0",
