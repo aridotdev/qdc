@@ -11,11 +11,6 @@ const links = [[{
   icon: 'i-lucide-users',
   to: '/settings/members'
 }, {
-  label: 'Notifications',
-  icon: 'i-lucide-bell',
-  to: '/settings/notifications'
-}, {
-}, {
   label: 'Category Product',
   icon: 'i-lucide-monitor-cog',
   to: '/settings/category'

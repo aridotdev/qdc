@@ -63,13 +63,6 @@ const links = [
           }
         },
         {
-          label: 'Notifications',
-          to: '/settings/notifications',
-          onSelect: () => {
-            open.value = false
-          }
-        },
-        {
           label: 'Category Product',
           to: '/settings/category',
           onSelect: () => {
