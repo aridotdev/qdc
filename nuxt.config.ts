@@ -3,8 +3,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    '@vueuse/nuxt',
-    '@nuxt/fonts'
+    '@nuxt/fonts',
+    '@vueuse/nuxt'
   ],
 
   devtools: {
