@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import * as z from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
+import type { TableColumn } from '@nuxt/ui'
+
 
 const schema = z.object({
   name: z.string('Category name is required').max(20, 'Maximum 25 characters')
@@ -22,9 +24,43 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   isOpenModal.value = !isOpenModal.value
 }
 
-const { data } = useFetch('/api/category', {
-  lazy: true
+const { data } = await useFetch('/api/category', {
+  lazy: true,
+  key: 'categories-fetch-key'
 })
+
+type Category = {
+  id: number,
+  name: string
+}
+
+const columns: TableColumn<Category>[] = [
+  {
+    accessorKey: 'id',
+    // header: 'ID',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'ID',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    }
+  },
+  {
+    accessorKey: 'name',
+    header: 'Category Name',
+  }
+]
+
 </script>
 
 <template>
@@ -54,7 +90,7 @@ const { data } = useFetch('/api/category', {
 
 
     <div class="border border-b border-default rounded-lg p-2">
-      <UTable :data="data" class="shrink-0" :ui="{
+      <UTable :data="data?.data" :columns="columns" class="shrink-0" :ui="{
         base: 'table-fixed border-separate border-spacing-0',
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',

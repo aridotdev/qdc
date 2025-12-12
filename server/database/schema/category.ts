@@ -1,19 +1,27 @@
+import z from "zod";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { createInsertSchema } from "drizzle-zod";
+import { sql } from "drizzle-orm";
 
 export const category = sqliteTable("category", {
   id: integer().primaryKey({ autoIncrement: true }),
   name: text().notNull().unique(),
-  createdAt: integer()
+  createdAt: integer({ mode: "timestamp" })
     .notNull()
-    .$default(() => Date.now()),
-  updatedAt: integer()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer({ mode: "timestamp" })
     .notNull()
-    .$default(() => Date.now())
-    .$onUpdate(() => Date.now()),
+    .default(sql`(unixepoch())`)
+    .$onUpdate(() => sql`(unixepoch())`),
 });
 
-export const InsertCategory = createInsertSchema() 
+export const InsertCategory = createInsertSchema(category, {
+  name: z.string().min(1).max(20),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
-function createInsertSchema() {
-  throw new Error("Function not implemented.");
-}
+export type InsertCategory = z.infer<typeof InsertCategory>;
+export type SelectCategory = typeof category.$inferSelect;
