@@ -9,7 +9,6 @@ dist
 
 # Node dependencies
 node_modules
-local.db
 # Logs
 logs
 *.log
@@ -26,3 +25,6 @@ logs
 
 # VSC
 .history
+
+# Local SQLite
+local.db
