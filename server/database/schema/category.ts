@@ -15,13 +15,17 @@ export const category = sqliteTable("category", {
     .$onUpdate(() => sql`(unixepoch())`),
 });
 
-export const InsertCategory = createInsertSchema(category, {
-  name: z.string().min(1).max(20),
+export const InsertCategorySchema = createInsertSchema(category, {
+  name: z
+    .string()
+    .min(1)
+    .max(20)
+    .transform((val) => val.toUpperCase()),
 }).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type InsertCategory = z.infer<typeof InsertCategory>;
+export type InsertCategory = z.infer<typeof InsertCategorySchema>;
 export type SelectCategory = typeof category.$inferSelect;
