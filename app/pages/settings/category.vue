@@ -89,6 +89,13 @@ const columns: TableColumn<Category>[] = [
     cell: ({ row }) => {
       return String(row.getValue('name') ?? '').toUpperCase()
     }
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created At',
+    cell: ({ row }) => {
+      return new Date(row.getValue('createdAt')).toLocaleString('en-US')
+    }
   }
 ]
 // ------- /DataTable section -------------
