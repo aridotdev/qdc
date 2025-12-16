@@ -20,7 +20,6 @@ export const InsertCategorySchema = createInsertSchema(category, {
     .string()
     .min(1)
     .max(20)
-    .transform(val => val.toUpperCase())
 }).omit({
   id: true,
   createdAt: true,

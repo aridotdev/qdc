@@ -1,4 +1,4 @@
-import { desc } from 'drizzle-orm'
+import { asc } from 'drizzle-orm'
 import db from '@@/server/database'
 import { category } from '@@/server/database/schema'
 
@@ -7,8 +7,7 @@ export default defineEventHandler(async () => {
     const getCategory = await db
       .select({ id: category.id, name: category.name })
       .from(category)
-      .orderBy(desc(category.id))
-    // const getCategory = await db.query.category.findMany();
+      .orderBy(asc(category.id))
     return {
       message: 'Successfully retrieved all categories.',
       data: getCategory
