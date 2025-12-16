@@ -70,6 +70,13 @@ const links = [
           }
         },
         {
+          label: 'Calendar',
+          to: '/settings/calendar',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
           label: 'Security',
           to: '/settings/security',
           onSelect: () => {
@@ -143,8 +150,14 @@ onMounted(async () => {
 
 <template>
   <UDashboardGroup unit="rem">
-    <UDashboardSidebar id="default" v-model:open="open" collapsible resizable class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }">
+    <UDashboardSidebar
+      id="default"
+      v-model:open="open"
+      collapsible
+      resizable
+      class="bg-elevated/25"
+      :ui="{ footer: 'lg:border-t lg:border-default' }"
+    >
       <template #header="{ collapsed }">
         <!-- <img src="/favicon.png" alt="" />
         <span class="text-primary font-bold">QRCC</span>

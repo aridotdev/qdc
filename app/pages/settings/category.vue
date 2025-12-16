@@ -21,7 +21,12 @@ const isOpenModal = ref(false)
 const isSubmitting = ref(false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+<<<<<<< HEAD
   isSubmitting.value = true
+=======
+  console.log(event.data.name.toUpperCase())
+  category.name = undefined
+>>>>>>> 879dc60 (try:calendar component)
   try {
     const response = await $fetch('/api/category', {
       method: 'POST',
@@ -93,15 +98,37 @@ const columns: TableColumn<Category>[] = [
 
 <template>
   <main>
+<<<<<<< HEAD
     <div class="text-right mb-4">
       <UButton icon="i-lucide-plus" label="Add category" color="primary" variant="subtle"
         @click.prevent="isOpenModal = true" />
     </div>
     <UModal v-model:open="isOpenModal" title="Add New Category" :dismissible="false"
       :close="{ color: 'primary', variant: 'outline', class: 'rounded-full' }">
+=======
+    <UModal
+      v-model:open="isOpenModal"
+      title="Add New Category"
+      :dismissible="false"
+      :close="{ color: 'primary', variant: 'outline', class: 'rounded-full' }"
+    >
+      <div class="text-right mb-4">
+        <UButton
+          icon="i-lucide-plus"
+          label="Add category"
+          color="primary"
+          variant="subtle"
+        />
+      </div>
+>>>>>>> 879dc60 (try:calendar component)
 
       <template #body>
-        <UForm :schema="schema" :state="category" class="flex items-end gap-1 mb-4" @submit="onSubmit">
+        <UForm
+          :schema="schema"
+          :state="category"
+          class="flex items-end gap-1 mb-4"
+          @submit="onSubmit"
+        >
           <UFormField label="Category Name" name="name" class="flex-1">
             <UInput v-model="category.name" class="w-full" autofocus />
           </UFormField>
@@ -114,13 +141,18 @@ const columns: TableColumn<Category>[] = [
     </UModal>
 
     <div class="border border-b border-default rounded-lg p-2">
-      <UTable :data="data?.data" :columns="columns" class="shrink-0" :ui="{
-        base: 'table-fixed border-separate border-spacing-0',
-        thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-        tbody: '[&>tr]:last:[&>td]:border-b-0',
-        th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default'
-      }" />
+      <UTable
+        :data="data?.data"
+        :columns="columns"
+        class="shrink-0"
+        :ui="{
+          base: 'table-fixed border-separate border-spacing-0',
+          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+          tbody: '[&>tr]:last:[&>td]:border-b-0',
+          th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+          td: 'border-b border-default'
+        }"
+      />
     </div>
   </main>
 </template>
