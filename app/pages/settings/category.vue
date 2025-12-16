@@ -4,7 +4,10 @@ import type { FormSubmitEvent, TableColumn } from '@nuxt/ui'
 
 // ------- form section -------------
 const schema = z.object({
-  name: z.string('Category name is required').max(20, 'Maximum 25 characters')
+  name: z.string()
+    .trim()
+    .min(1, 'Category name is required')
+    .max(20, 'Maximum 25 characters')
 })
 
 type Schema = z.output<typeof schema>
@@ -15,38 +18,41 @@ const category = reactive<Partial<Schema>>({
 
 const toast = useToast()
 const isOpenModal = ref(false)
+const isSubmitting = ref(false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-
-  console.log(event.data.name.toUpperCase())
-  category.name = undefined
+  isSubmitting.value = true
   try {
     const response = await $fetch('/api/category', {
       method: 'POST',
       body: event.data
-      // body: event.data.name.toUpperCase()
     })
 
     if (response.success) {
       toast.add({
         title: 'Success',
-        description: response.message,
+        description: response.message || 'Category created successfully',
         color: 'success'
       })
-      isOpenModal.value = !isOpenModal.value
+      isOpenModal.value = false
+      await refresh();
+      category.name = ""
     }
-  } catch (error) {
+  } catch (error: any) {
+    const errMessage = error.data?.message || 'Error creating new category'
     toast.add({
       title: 'Warning',
       description: 'Error creating new category',
       color: 'error'
     })
+  } finally {
+    isSubmitting.value = false
   }
 }
 // ------- /form section -------------
 
 // ------- DataTable section -------------
-const { data } = await useFetch('/api/category', {
+const { data, status, refresh } = await useFetch('/api/category', {
   lazy: true,
   key: 'categories-fetch-key'
 })
@@ -87,19 +93,20 @@ const columns: TableColumn<Category>[] = [
 
 <template>
   <main>
+    <div class="text-right mb-4">
+      <UButton icon="i-lucide-plus" label="Add category" color="primary" variant="subtle"
+        @click.prevent="isOpenModal = true" />
+    </div>
     <UModal v-model:open="isOpenModal" title="Add New Category" :dismissible="false"
       :close="{ color: 'primary', variant: 'outline', class: 'rounded-full' }">
-      <div class="text-right mb-4">
-        <UButton icon="i-lucide-plus" label="Add category" color="primary" variant="subtle" />
-      </div>
 
       <template #body>
         <UForm :schema="schema" :state="category" class="flex items-end gap-1 mb-4" @submit="onSubmit">
           <UFormField label="Category Name" name="name" class="flex-1">
-            <UInput v-model="category.name" class="w-full" />
+            <UInput v-model="category.name" class="w-full" autofocus />
           </UFormField>
 
-          <UButton type="submit">
+          <UButton type="submit" :loading="isSubmitting">
             Submit
           </UButton>
         </UForm>
