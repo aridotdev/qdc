@@ -5,7 +5,7 @@ import { category } from '@@/server/database/schema'
 export default defineEventHandler(async () => {
   try {
     const getCategory = await db
-      .select({ id: category.id, name: category.name })
+      .select({ id: category.id, name: category.name, createdAt: category.createdAt })
       .from(category)
       .orderBy(asc(category.id))
     return {

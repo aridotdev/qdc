@@ -6,13 +6,13 @@ import { sql } from 'drizzle-orm'
 export const category = sqliteTable('category', {
   id: integer().primaryKey({ autoIncrement: true }),
   name: text().notNull().unique(),
-  createdAt: integer({ mode: 'timestamp' })
+  createdAt: text()
     .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer({ mode: 'timestamp' })
+    .default(sql`(current_timestamp)`),
+  updatedAt: text()
     .notNull()
-    .default(sql`(unixepoch())`)
-    .$onUpdate(() => sql`(unixepoch())`)
+    .default(sql`(current_timestamp)`)
+    .$onUpdateFn(() => sql`(current_timestamp)`)
 })
 
 export const InsertCategorySchema = createInsertSchema(category, {
