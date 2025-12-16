@@ -21,12 +21,7 @@ const isOpenModal = ref(false)
 const isSubmitting = ref(false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-<<<<<<< HEAD
   isSubmitting.value = true
-=======
-  console.log(event.data.name.toUpperCase())
-  category.name = undefined
->>>>>>> 879dc60 (try:calendar component)
   try {
     const response = await $fetch('/api/category', {
       method: 'POST',
@@ -40,14 +35,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         color: 'success'
       })
       isOpenModal.value = false
-      await refresh();
-      category.name = ""
+      await refresh()
+      category.name = ''
     }
   } catch (error: any) {
     const errMessage = error.data?.message || 'Error creating new category'
     toast.add({
       title: 'Warning',
-      description: 'Error creating new category',
+      description: errMessage,
       color: 'error'
     })
   } finally {
@@ -57,7 +52,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 // ------- /form section -------------
 
 // ------- DataTable section -------------
-const { data, status, refresh } = await useFetch('/api/category', {
+const { data, refresh } = await useFetch('/api/category', {
   lazy: true,
   key: 'categories-fetch-key'
 })
@@ -98,30 +93,21 @@ const columns: TableColumn<Category>[] = [
 
 <template>
   <main>
-<<<<<<< HEAD
     <div class="text-right mb-4">
-      <UButton icon="i-lucide-plus" label="Add category" color="primary" variant="subtle"
-        @click.prevent="isOpenModal = true" />
+      <UButton
+        icon="i-lucide-plus"
+        label="Add category"
+        color="primary"
+        variant="subtle"
+        @click.prevent="isOpenModal = true"
+      />
     </div>
-    <UModal v-model:open="isOpenModal" title="Add New Category" :dismissible="false"
-      :close="{ color: 'primary', variant: 'outline', class: 'rounded-full' }">
-=======
     <UModal
       v-model:open="isOpenModal"
       title="Add New Category"
       :dismissible="false"
       :close="{ color: 'primary', variant: 'outline', class: 'rounded-full' }"
     >
-      <div class="text-right mb-4">
-        <UButton
-          icon="i-lucide-plus"
-          label="Add category"
-          color="primary"
-          variant="subtle"
-        />
-      </div>
->>>>>>> 879dc60 (try:calendar component)
-
       <template #body>
         <UForm
           :schema="schema"
