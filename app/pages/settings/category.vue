@@ -7,7 +7,7 @@ const schema = z.object({
   name: z.string()
     .trim()
     .min(1, 'Category name is required')
-    .max(20, 'Maximum 25 characters')
+    .max(20, 'Maximum 20 characters')
 })
 
 type Schema = z.output<typeof schema>
@@ -85,7 +85,10 @@ const columns: TableColumn<Category>[] = [
   },
   {
     accessorKey: 'name',
-    header: 'Category Name'
+    header: 'Category Name',
+    cell: ({ row }) => {
+      return String(row.getValue('name') ?? '').toUpperCase()
+    }
   }
 ]
 // ------- /DataTable section -------------
@@ -112,16 +115,18 @@ const columns: TableColumn<Category>[] = [
         <UForm
           :schema="schema"
           :state="category"
-          class="flex items-end gap-1 mb-4"
+          class="space-y-2"
           @submit="onSubmit"
         >
           <UFormField label="Category Name" name="name" class="flex-1">
             <UInput v-model="category.name" class="w-full" autofocus />
           </UFormField>
 
-          <UButton type="submit" :loading="isSubmitting">
-            Submit
-          </UButton>
+          <div class="mt-4 text-right">
+            <UButton type="submit" :loading="isSubmitting">
+              Submit
+            </UButton>
+          </div>
         </UForm>
       </template>
     </UModal>
