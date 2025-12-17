@@ -8,11 +8,11 @@ export const category = sqliteTable('category', {
   name: text().notNull().unique(),
   createdAt: text()
     .notNull()
-    .default(sql`(current_timestamp)`),
+    .default(sql`(datetime('now', 'localtime'))`),
   updatedAt: text()
     .notNull()
-    .default(sql`(current_timestamp)`)
-    .$onUpdateFn(() => sql`(current_timestamp)`)
+    .default(sql`(datetime('now', 'localtime'))`)
+    .$onUpdateFn(() => sql`(datetime('now', 'localtime'))`)
 })
 
 export const InsertCategorySchema = createInsertSchema(category, {
