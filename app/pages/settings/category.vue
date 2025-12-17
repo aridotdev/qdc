@@ -94,7 +94,11 @@ const columns: TableColumn<Category>[] = [
     accessorKey: 'createdAt',
     header: 'Created At',
     cell: ({ row }) => {
-      return new Date(row.getValue('createdAt')).toLocaleString('en-US')
+      return new Date(row.getValue('createdAt')).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit'
+      })
     }
   }
 ]
