@@ -119,8 +119,7 @@ const columns: TableColumn<Category>[] = [
     <UModal
       v-model:open="isOpenModal"
       title="Add New Category"
-      :dismissible="false"
-      :close="{ color: 'primary', variant: 'outline', class: 'rounded-full' }"
+      :dismissible="true"
     >
       <template #body>
         <UForm
@@ -130,10 +129,19 @@ const columns: TableColumn<Category>[] = [
           @submit="onSubmit"
         >
           <UFormField label="Category Name" name="name" class="flex-1">
-            <UInput v-model="category.name" class="w-full" autofocus />
+            <UInput v-model="category.name" class="w-full" />
           </UFormField>
 
-          <div class="mt-4 text-right">
+          <div class="mt-4 text-right space-x-2">
+            <UButton
+              label="Cancel"
+              color="neutral"
+              variant="subtle"
+              type="button"
+              @click.prevent="isOpenModal = false"
+            >
+              Cancel
+            </UButton>
             <UButton type="submit" :loading="isSubmitting">
               Submit
             </UButton>
