@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent, TableColumn } from '@nuxt/ui'
+import type { Row } from '@tanstack/table-core'
+
 
 // ------- form section -------------
 const schema = z.object({
@@ -16,6 +18,8 @@ const category = reactive<Partial<Schema>>({
   name: undefined
 })
 
+const UButton = resolveComponent('UButton')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 const toast = useToast()
 const isOpenModal = ref(false)
 const isSubmitting = ref(false)
@@ -62,6 +66,52 @@ type Category = {
   name: string
 }
 
+async function openEditModal(category: Category) {
+  // Implement edit modal logic here
+  console.log('Edit category:', category)
+  toast.add({
+    title: 'Warning',
+    description: category.id + ' Selected for edit (not implemented)',
+    color: 'error'
+  })
+}
+
+async function deleteCategory(categoryId: number) {
+  if (!confirm('Are you sure you want to delete this category?')) {
+    return
+  }
+
+  toast.add({
+    title: 'Warning',
+    description: categoryId + ' Selected for delete (not implemented)',
+    color: 'error'
+  })
+}
+
+function getRowItems(row: Row<Category>) {
+  return [
+    {
+      type: 'label',
+      label: 'Actions'
+    },
+    {
+      label: 'Edit Category',
+      icon: 'i-lucide-pen',
+      onSelect() {
+        openEditModal(row.original)
+      }
+    },
+    {
+      label: 'Delete customer',
+      icon: 'i-lucide-trash',
+      color: 'error',
+      onSelect() {
+        deleteCategory(row.original.id)
+      }
+    }
+  ]
+}
+
 const columns: TableColumn<Category>[] = [
   {
     accessorKey: 'id',
@@ -99,6 +149,31 @@ const columns: TableColumn<Category>[] = [
         month: 'short',
         day: '2-digit'
       })
+    }
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => {
+      return h(
+        'div',
+        { class: 'text-right' },
+        h(
+          UDropdownMenu,
+          {
+            content: {
+              align: 'end'
+            },
+            items: getRowItems(row)
+          },
+          () =>
+            h(UButton, {
+              icon: 'i-lucide-ellipsis-vertical',
+              color: 'neutral',
+              variant: 'ghost',
+              class: 'ml-auto'
+            })
+        )
+      )
     }
   }
 ]
