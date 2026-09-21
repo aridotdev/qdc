@@ -21,7 +21,7 @@ Bagian ini menjelaskan *step-by-step* bagaimana antarmuka pengguna (UI) berinter
 ### 2. Alur Modul "Sample Defect" (State Machine)
 
 * **Aksi 1: Meminta Sampel dari Cabang**
-* **UI:** User menerima email/notifikasi bahwa ada 3 part rusak untuk klaim nomor seri X. User membuka form *"Request New Sample"*. Mengisi data `notificationNumber`, `modelName`, `cabang`, lalu menambahkan 3 baris *Part Number* & *Part Name* yang berbeda di dalam satu layar.
+* **UI:** User membuka form *"Request New Sample"*. Mengisi data `notificationNumber`, `modelName`, `cabang`, lalu menambahkan 3 baris *Part Number* & *Part Name* yang berbeda di dalam satu layar.
 * **Database:** Melakukan 3x `INSERT` ke tabel **`sample_defects`** secara bersamaan. Kolom status akan otomatis terisi `'Diminta'`.
 
 
@@ -30,7 +30,7 @@ Bagian ini menjelaskan *step-by-step* bagaimana antarmuka pengguna (UI) berinter
 * **Database:** Melakukan `UPDATE` pada data **`sample_defects`** terpilih: mengubah `status = 'Diterima'` dan mencatat `tanggal_terima`.
 
 
-* **Aksi 3: Penyerahan ke Laboratorium PQA**
+* **Aksi 3: Penyerahan ke PQA**
 * **UI:** User memberikan kotak part ke analis PQA. Di sistem, user menekan tombol **"Serahkan ke PQA"** dan mengetik nama PIC (misal: "Budi").
 * **Database:** Melakukan `UPDATE` data: mengubah `status = 'Diserahkan ke PQA'` dan mencatat `nama_penerima_pqa` serta waktu penyerahan.
 
