@@ -142,17 +142,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Dev server smoke test.
 
-- [ ] TASK-002 - Konfigurasi Nuxt UI dan application shell
-  - Depends on: TASK-001
-  - Priority: P0
-  - Acceptance:
-    - Nuxt UI terpasang dengan theme dasar.
-    - Layout public dan authenticated tersedia.
-    - Navigation shell memiliki dashboard dan tiga modul utama.
-  - Test:
-    - Browser smoke test desktop dan tablet.
-
-- [ ] TASK-003 - Siapkan code quality dan verification commands
+- [ ] TASK-002 - Siapkan code quality dan verification commands
   - Depends on: TASK-001
   - Priority: P0
   - Acceptance:
@@ -162,6 +152,16 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Formatting menjaga LF, 2-space indentation, dan tanpa trailing whitespace.
   - Test:
     - Semua command berjalan dari clean checkout.
+    - 
+- [ ] TASK-003 - Konfigurasi Nuxt UI dan application shell
+  - Depends on: TASK-001
+  - Priority: P0
+  - Acceptance:
+    - Nuxt UI terpasang dengan theme dasar.
+    - Layout public dan authenticated tersedia.
+    - Navigation shell memiliki dashboard dan tiga modul utama.
+  - Test:
+    - Browser smoke test desktop dan tablet.
 
 - [ ] TASK-004 - Tetapkan struktur folder dan shared contracts
   - Depends on: TASK-001
@@ -241,7 +241,15 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Audit event test untuk setiap action utama.
 
-- [ ] TASK-011 - Buat migration, seed, dan reset database
+- [ ] TASK-011 - Implement schema better-auth
+  - Depends on: TASK-005
+  - Priority: P0
+  - Acceptance:
+    - Schema authentication tersedia sesuai official documentation.
+  - Test:
+    - dasar login/logout/session better-auth test.
+
+- [ ] TASK-012 - Buat migration, seed, dan reset database
   - Depends on: TASK-006, TASK-007, TASK-008, TASK-009, TASK-010
   - Priority: P0
   - Acceptance:
@@ -251,10 +259,9 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Migration failure tidak meninggalkan state yang dianggap sukses.
   - Test:
     - Clean migration, migrate up, reset, dan re-run migration.
-
 ## 4. Authentication dan Authorization
 
-- [ ] TASK-012 - Integrasikan Better-auth
+- [ ] TASK-013 - Integrasikan Better-auth
   - Depends on: TASK-001, TASK-003
   - Priority: P0
   - Acceptance:
@@ -264,8 +271,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Login valid, password invalid, logout, expiry, dan session retrieval.
 
-- [ ] TASK-013 - Tambahkan server-side auth middleware
-  - Depends on: TASK-012
+- [ ] TASK-014 - Tambahkan server-side auth middleware
+  - Depends on: TASK-013
   - Priority: P0
   - Acceptance:
     - Semua API domain menolak request tanpa session valid.
@@ -274,8 +281,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - 401 test pada setiap kelompok endpoint utama.
 
-- [ ] TASK-014 - Tambahkan authorization policy Admin
-  - Depends on: TASK-012, TASK-013
+- [ ] TASK-015 - Tambahkan authorization policy Admin
+  - Depends on: TASK-013, TASK-014
   - Priority: P0
   - Acceptance:
     - Read/create/update/forward transition memerlukan authenticated user.
@@ -286,7 +293,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 5. File Storage dan Attachment
 
-- [ ] TASK-015 - Implement file storage service
+- [ ] TASK-016 - Implement file storage service
   - Depends on: TASK-003
   - Priority: P0
   - Acceptance:
@@ -297,7 +304,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Unique filename, date partition, path traversal, dan overwrite test.
 
-- [ ] TASK-016 - Implement central file policy validation
+- [ ] TASK-017 - Implement central file policy validation
   - Depends on: TASK-003
   - Priority: P0
   - Acceptance:
@@ -308,8 +315,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid, invalid MIME, invalid extension, over-limit, dan boundary-size test.
 
-- [ ] TASK-017 - Implement attachment service dan compensation
-  - Depends on: TASK-009, TASK-015, TASK-016
+- [ ] TASK-018 - Implement attachment service dan compensation
+  - Depends on: TASK-009, TASK-016, TASK-017
   - Priority: P0
   - Acceptance:
     - Exactly-one-owner diperiksa sebelum insert.
@@ -321,8 +328,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - File-write failure, DB failure after write, multi-file failure, delete,
       dan orphan cleanup test.
 
-- [ ] TASK-018 - Implement attachment API domain endpoints
-  - Depends on: TASK-013, TASK-017
+- [ ] TASK-019 - Implement attachment API domain endpoints
+  - Depends on: TASK-013, TASK-018
   - Priority: P0
   - Acceptance:
     - Upload dilakukan melalui endpoint Quality Issue, Sample Defect, dan
@@ -334,7 +341,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 6. Shared Server Platform
 
-- [ ] TASK-019 - Implement Zod validation contracts
+- [ ] TASK-020 - Implement Zod validation contracts
   - Depends on: TASK-004, TASK-006, TASK-007, TASK-008
   - Priority: P0
   - Acceptance:
@@ -344,8 +351,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid payload, missing field, invalid enum, date, dan unsafe input test.
 
-- [ ] TASK-020 - Implement API error dan response convention
-  - Depends on: TASK-003, TASK-019
+- [ ] TASK-021 - Implement API error dan response convention
+  - Depends on: TASK-003, TASK-020
   - Priority: P0
   - Acceptance:
     - HTTP status konsisten untuk 400, 401, 403, 404, 409, dan 500.
@@ -355,8 +362,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Contract test validation, auth, forbidden, not found, conflict, dan
       unexpected failure.
 
-- [ ] TASK-021 - Implement reusable pagination, filtering, dan sorting
-  - Depends on: TASK-019, TASK-020
+- [ ] TASK-022 - Implement reusable pagination, filtering, dan sorting
+  - Depends on: TASK-020, TASK-021
   - Priority: P0
   - Acceptance:
     - Default page size 20 dan total count tersedia.
@@ -369,8 +376,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 7. Quality Issue Module
 
-- [ ] TASK-022 - Implement Quality Issue repository
-  - Depends on: TASK-006, TASK-021
+- [ ] TASK-023 - Implement Quality Issue repository
+  - Depends on: TASK-006, TASK-022
   - Priority: P0
   - Acceptance:
     - CRUD, detail, timeline, search, filter, sorting, dan pagination tersedia.
@@ -379,8 +386,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Repository integration test untuk CRUD, filter, pagination, dan ordering.
 
-- [ ] TASK-023 - Implement Quality Issue state machine service
-  - Depends on: TASK-006, TASK-010, TASK-014, TASK-022
+- [ ] TASK-024 - Implement Quality Issue state machine service
+  - Depends on: TASK-006, TASK-010, TASK-014, TASK-023
   - Priority: P0
   - Acceptance:
     - Forward transition hanya mengikuti urutan canonical.
@@ -391,8 +398,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Semua valid transition, semua invalid transition, non-admin rollback, dan
       rollback boundary test.
 
-- [ ] TASK-024 - Implement Quality Issue service dan initial evidence
-  - Depends on: TASK-017, TASK-022, TASK-023
+- [ ] TASK-025 - Implement Quality Issue service dan initial evidence
+  - Depends on: TASK-017, TASK-023, TASK-024
   - Priority: P0
   - Acceptance:
     - Create membuat issue status `OPEN`.
@@ -403,8 +410,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Create tanpa attachment, create dengan attachment, progress, dan failure
       compensation integration test.
 
-- [ ] TASK-025 - Implement Quality Issue API
-  - Depends on: TASK-013, TASK-020, TASK-023, TASK-024
+- [ ] TASK-026 - Implement Quality Issue API
+  - Depends on: TASK-013, TASK-021, TASK-024, TASK-025
   - Priority: P0
   - Acceptance:
     - Endpoint CRUD dan detail tersedia.
@@ -414,8 +421,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - API contract, authorization, validation, conflict, dan not-found test.
 
-- [ ] TASK-026 - Implement Quality Issue list UI
-  - Depends on: TASK-002, TASK-021, TASK-025
+- [ ] TASK-027 - Implement Quality Issue list UI
+  - Depends on: TASK-002, TASK-022, TASK-026
   - Priority: P0
   - Acceptance:
     - Table menampilkan field penting, status badge, search, filter, sorting,
@@ -425,8 +432,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Browser test search, filter, pagination, refresh, empty, dan API error.
 
-- [ ] TASK-027 - Implement Quality Issue create UI
-  - Depends on: TASK-016, TASK-025, TASK-026
+- [ ] TASK-028 - Implement Quality Issue create UI
+  - Depends on: TASK-016, TASK-026, TASK-027
   - Priority: P0
   - Acceptance:
     - Form field dan file uploader tersedia.
@@ -436,8 +443,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Browser test valid create, field error, file error, retry, dan redirect.
 
-- [ ] TASK-028 - Implement Quality Issue detail, timeline, dan actions UI
-  - Depends on: TASK-023, TASK-025, TASK-027
+- [ ] TASK-029 - Implement Quality Issue detail, timeline, dan actions UI
+  - Depends on: TASK-024, TASK-026, TASK-028
   - Priority: P0
   - Acceptance:
     - Detail menampilkan master data, status, timeline, attachment, loading,
@@ -449,8 +456,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 8. Sample Defect Module
 
-- [ ] TASK-029 - Implement Sample Defect repository
-  - Depends on: TASK-007, TASK-021
+- [ ] TASK-030 - Implement Sample Defect repository
+  - Depends on: TASK-007, TASK-022
   - Priority: P0
   - Acceptance:
     - CRUD, detail, batch lookup, search, filter, sorting, dan pagination.
@@ -458,8 +465,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Repository integration test.
 
-- [ ] TASK-030 - Implement Sample Defect state machine service
-  - Depends on: TASK-007, TASK-010, TASK-014, TASK-029
+- [ ] TASK-031 - Implement Sample Defect state machine service
+  - Depends on: TASK-007, TASK-010, TASK-014, TASK-030
   - Priority: P0
   - Acceptance:
     - Forward transition sesuai urutan canonical.
@@ -470,8 +477,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Valid/invalid transition, required field, role, audit, dan concurrency
       conflict test.
 
-- [ ] TASK-031 - Implement atomic multi-part batch service
-  - Depends on: TASK-007, TASK-029, TASK-030
+- [ ] TASK-032 - Implement atomic multi-part batch service
+  - Depends on: TASK-007, TASK-030, TASK-031
   - Priority: P0
   - Acceptance:
     - Satu request menghasilkan satu `batch_id`.
@@ -482,8 +489,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Three-part success, third-part failure rollback, duplicate submit, dan
       transaction failure test.
 
-- [ ] TASK-032 - Implement receive sample operation
-  - Depends on: TASK-030
+- [ ] TASK-033 - Implement receive sample operation
+  - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
     - Hanya `REQUESTED` dapat menjadi `RECEIVED`.
@@ -492,8 +499,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid receive, repeated receive, invalid state, dan audit test.
 
-- [ ] TASK-033 - Implement QRCC verification operation
-  - Depends on: TASK-030
+- [ ] TASK-034 - Implement QRCC verification operation
+  - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
     - Hanya `RECEIVED` dapat menjadi `QRCC_VERIFIED`.
@@ -502,8 +509,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid dan invalid state/field test.
 
-- [ ] TASK-034 - Implement PQA handover operation
-  - Depends on: TASK-030
+- [ ] TASK-035 - Implement PQA handover operation
+  - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
     - Hanya `QRCC_VERIFIED` dapat menjadi `HANDED_OVER_TO_PQA`.
@@ -512,8 +519,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Missing PIC, valid handover, repeated handover, dan audit test.
 
-- [ ] TASK-035 - Implement PQA analysis operation
-  - Depends on: TASK-017, TASK-030
+- [ ] TASK-036 - Implement PQA analysis operation
+  - Depends on: TASK-017, TASK-031
   - Priority: P0
   - Acceptance:
     - Hanya `HANDED_OVER_TO_PQA` dapat menjadi `PQA_ANALYZED`.
@@ -522,8 +529,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid analysis, invalid condition, attachment failure, dan state test.
 
-- [ ] TASK-036 - Implement supplier analysis operation
-  - Depends on: TASK-030
+- [ ] TASK-037 - Implement supplier analysis operation
+  - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
     - Hanya `PQA_ANALYZED` dapat menjadi `SUPPLIER_ANALYZED`.
@@ -532,9 +539,9 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Required conclusion, valid transition, repeated operation, dan audit test.
 
-- [ ] TASK-037 - Implement Sample Defect API
-  - Depends on: TASK-013, TASK-020, TASK-031, TASK-032, TASK-033, TASK-034,
-    TASK-035, TASK-036
+- [ ] TASK-038 - Implement Sample Defect API
+  - Depends on: TASK-013, TASK-021, TASK-032, TASK-033, TASK-034, TASK-035,
+    TASK-036, TASK-037
   - Priority: P0
   - Acceptance:
     - CRUD dan batch endpoint tersedia.
@@ -544,8 +551,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - API contract, auth, validation, transaction, dan transition integration.
 
-- [ ] TASK-038 - Implement Sample Defect list, batch form, dan detail UI
-  - Depends on: TASK-002, TASK-016, TASK-021, TASK-037
+- [ ] TASK-039 - Implement Sample Defect list, batch form, dan detail UI
+  - Depends on: TASK-002, TASK-017, TASK-022, TASK-038
   - Priority: P0
   - Acceptance:
     - Form mendukung banyak part dalam satu request.
@@ -558,8 +565,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 9. Technical Report Module
 
-- [ ] TASK-039 - Implement Technical Report repository
-  - Depends on: TASK-008, TASK-021
+- [ ] TASK-040 - Implement Technical Report repository
+  - Depends on: TASK-008, TASK-022
   - Priority: P1
   - Acceptance:
     - CRUD, detail, search, filter, sorting, pagination, dan unique lookup.
@@ -567,8 +574,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Repository integration test.
 
-- [ ] TASK-040 - Implement Technical Report service
-  - Depends on: TASK-017, TASK-039
+- [ ] TASK-041 - Implement Technical Report service
+  - Depends on: TASK-018, TASK-040
   - Priority: P1
   - Acceptance:
     - Document type dan duplicate number divalidasi.
@@ -578,8 +585,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Create, duplicate, invalid relation, attachment, dan cleanup test.
 
-- [ ] TASK-041 - Implement Technical Report API
-  - Depends on: TASK-013, TASK-020, TASK-040
+- [ ] TASK-042 - Implement Technical Report API
+  - Depends on: TASK-014, TASK-021, TASK-041
   - Priority: P1
   - Acceptance:
     - CRUD dan attachment endpoint tersedia.
@@ -588,8 +595,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - API contract, authorization, validation, dan conflict test.
 
-- [ ] TASK-042 - Implement Technical Report list, form, dan detail UI
-  - Depends on: TASK-002, TASK-016, TASK-021, TASK-041
+- [ ] TASK-043 - Implement Technical Report list, form, dan detail UI
+  - Depends on: TASK-002, TASK-017, TASK-022, TASK-042
   - Priority: P1
   - Acceptance:
     - Form mendukung metadata, PDF, XLSX, dan optional Quality Issue.
@@ -600,8 +607,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 10. Dashboard, Export, dan Productivity
 
-- [ ] TASK-043 - Implement dashboard aggregation repository/service
-  - Depends on: TASK-022, TASK-029, TASK-039
+- [ ] TASK-044 - Implement dashboard aggregation repository/service
+  - Depends on: TASK-023, TASK-030, TASK-040
   - Priority: P1
   - Acceptance:
     - KPI, status summary, sample trend, dan recent records memakai aggregation
@@ -611,8 +618,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Aggregation unit/integration test dataset kosong dan normal.
 
-- [ ] TASK-044 - Implement dashboard API dan UI
-  - Depends on: TASK-043, TASK-002
+- [ ] TASK-045 - Implement dashboard API dan UI
+  - Depends on: TASK-044, TASK-003
   - Priority: P1
   - Acceptance:
     - `/api/dashboard/summary`, quality issues, dan sample defects tersedia.
@@ -621,8 +628,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Browser test dashboard normal, empty, error, dan navigation.
 
-- [ ] TASK-045 - Implement Excel export
-  - Depends on: TASK-022, TASK-029, TASK-039, TASK-021
+- [ ] TASK-046 - Implement Excel export
+  - Depends on: TASK-023, TASK-030, TASK-040, TASK-022
   - Priority: P1
   - Acceptance:
     - Export full dan filtered tersedia per modul yang relevan.
@@ -631,8 +638,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Content, filter parity, filename, dan download response test.
 
-- [ ] TASK-046 - Implement PDF export
-  - Depends on: TASK-022, TASK-029, TASK-039, TASK-021
+- [ ] TASK-047 - Implement PDF export
+  - Depends on: TASK-023, TASK-030, TASK-040, TASK-022
   - Priority: P1
   - Acceptance:
     - PDF full dan filtered tersedia untuk data yang disepakati.
@@ -643,8 +650,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 11. Admin Operations, Backup, dan Reliability
 
-- [ ] TASK-047 - Implement admin delete Quality Issue
-  - Depends on: TASK-014, TASK-017, TASK-022, TASK-010
+- [ ] TASK-048 - Implement admin delete Quality Issue
+  - Depends on: TASK-015, TASK-018, TASK-023, TASK-010
   - Priority: P1
   - Acceptance:
     - Admin-only, confirmation, audit delete, cascade detail/attachment
@@ -654,8 +661,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Permission, cascade, relation set-null, file cleanup, dan failure test.
 
-- [ ] TASK-048 - Implement admin delete Sample Defect
-  - Depends on: TASK-014, TASK-017, TASK-029, TASK-010
+- [ ] TASK-049 - Implement admin delete Sample Defect
+  - Depends on: TASK-015, TASK-018, TASK-030, TASK-010
   - Priority: P1
   - Acceptance:
     - Admin-only, confirmation, audit, metadata cascade, dan file cleanup.
@@ -663,8 +670,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Permission, batch sibling, attachment cleanup, dan audit test.
 
-- [ ] TASK-049 - Implement admin delete Technical Report
-  - Depends on: TASK-014, TASK-017, TASK-039, TASK-010
+- [ ] TASK-050 - Implement admin delete Technical Report
+  - Depends on: TASK-015, TASK-018, TASK-040, TASK-010
   - Priority: P1
   - Acceptance:
     - Admin-only, confirmation, audit, attachment cleanup, dan relational
@@ -673,8 +680,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Permission, relation integrity, dan file cleanup test.
 
-- [ ] TASK-050 - Implement explicit rollback operations UI dan API
-  - Depends on: TASK-023, TASK-030, TASK-014
+- [ ] TASK-051 - Implement explicit rollback operations UI dan API
+  - Depends on: TASK-024, TASK-031, TASK-015
   - Priority: P1
   - Acceptance:
     - UI tidak menawarkan rollback target yang tidak valid.
@@ -683,8 +690,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - E2E admin rollback dan forbidden non-admin.
 
-- [ ] TASK-051 - Implement scheduled SQLite backup
-  - Depends on: TASK-005, TASK-015
+- [ ] TASK-052 - Implement scheduled SQLite backup
+  - Depends on: TASK-005, TASK-016
   - Priority: P1
   - Acceptance:
     - Default schedule mingguan dan dapat dikonfigurasi.
@@ -694,8 +701,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Backup saat ada write activity dan verification manifest.
 
-- [ ] TASK-052 - Implement backup retention dan integrity check
-  - Depends on: TASK-051
+- [ ] TASK-053 - Implement backup retention dan integrity check
+  - Depends on: TASK-052
   - Priority: P1
   - Acceptance:
     - Retention menyimpan N backup terbaru.
@@ -704,8 +711,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Retention count, corrupt DB, missing attachment, dan latest-valid backup.
 
-- [ ] TASK-053 - Implement restore procedure dan smoke verification
-  - Depends on: TASK-051, TASK-052, TASK-011
+- [ ] TASK-054 - Implement restore procedure dan smoke verification
+  - Depends on: TASK-052, TASK-053, TASK-012
   - Priority: P1
   - Acceptance:
     - Restore mengembalikan database, attachment, schema, dan manifest.
@@ -718,8 +725,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 12. Testing dan Delivery
 
-- [ ] TASK-054 - Unit test domain rules
-  - Depends on: TASK-023, TASK-030, TASK-016, TASK-019
+- [ ] TASK-055 - Unit test domain rules
+  - Depends on: TASK-024, TASK-031, TASK-017, TASK-020
   - Priority: P0
   - Acceptance:
     - Quality Issue semua valid/invalid transition diuji.
@@ -729,8 +736,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - `pnpm test:unit`.
 
-- [ ] TASK-055 - Integration test persistence dan failure handling
-  - Depends on: TASK-011, TASK-017, TASK-024, TASK-031, TASK-040
+- [ ] TASK-056 - Integration test persistence dan failure handling
+  - Depends on: TASK-012, TASK-018, TASK-025, TASK-032, TASK-041
   - Priority: P0
   - Acceptance:
     - Quality Issue create -> database -> attachment diuji.
@@ -740,8 +747,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - `pnpm test:integration`.
 
-- [ ] TASK-056 - E2E critical Quality Issue flow
-  - Depends on: TASK-028
+- [ ] TASK-057 - E2E critical Quality Issue flow
+  - Depends on: TASK-029
   - Priority: P0
   - Acceptance:
     - Login -> create issue -> upload attachment -> detail -> add progress ->
@@ -750,8 +757,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - `pnpm test:e2e -- quality-issue`.
 
-- [ ] TASK-057 - E2E critical Sample Defect flow
-  - Depends on: TASK-038
+- [ ] TASK-058 - E2E critical Sample Defect flow
+  - Depends on: TASK-039
   - Priority: P0
   - Acceptance:
     - Login -> create 3 part -> verify all -> receive -> QRCC verification ->
@@ -760,8 +767,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - `pnpm test:e2e -- sample-defect`.
 
-- [ ] TASK-058 - E2E critical Technical Report flow
-  - Depends on: TASK-042
+- [ ] TASK-059 - E2E critical Technical Report flow
+  - Depends on: TASK-043
   - Priority: P1
   - Acceptance:
     - Create report -> upload PDF -> upload XLSX -> link issue -> search ->
@@ -770,8 +777,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - `pnpm test:e2e -- technical-report`.
 
-- [ ] TASK-059 - Regression, accessibility, dan responsive verification
-  - Depends on: TASK-028, TASK-038, TASK-042, TASK-044
+- [ ] TASK-060 - Regression, accessibility, dan responsive verification
+  - Depends on: TASK-029, TASK-039, TASK-043, TASK-045
   - Priority: P1
   - Acceptance:
     - Semua route utama memiliki loading, error, dan empty state.
@@ -781,9 +788,9 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Browser regression dan accessibility smoke test.
 
-- [ ] TASK-060 - Final build, migration, backup, dan release checklist
-  - Depends on: TASK-053, TASK-054, TASK-055, TASK-056, TASK-057, TASK-058,
-    TASK-059
+- [ ] TASK-061 - Final build, migration, backup, dan release checklist
+  - Depends on: TASK-054, TASK-055, TASK-056, TASK-057, TASK-058, TASK-059,
+    TASK-060
   - Priority: P0
   - Acceptance:
     - Install, dev, build, preview, lint, format, typecheck, unit, integration,
