@@ -283,7 +283,7 @@ function runGhJson(args) {
 
   try {
     return JSON.parse(output)
-  } catch (error) {
+  } catch {
     fail(`Could not parse JSON from gh ${args.join(' ')}:\n${output}`)
   }
 }
@@ -305,7 +305,7 @@ function tryGhJson(args) {
       ok: true,
       value: result.stdout.trim() ? JSON.parse(result.stdout) : {},
     }
-  } catch (error) {
+  } catch {
     return {
       ok: false,
       error: `Could not parse JSON from gh ${args.join(' ')}:\n${result.stdout}`,
