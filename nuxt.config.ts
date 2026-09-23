@@ -5,9 +5,9 @@ export default defineNuxtConfig({
   typescript: {
     tsConfig: {
       compilerOptions: {
-        strict: true
-      }
-    }
+        strict: true,
+      },
+    },
   },
-  modules: ["@nuxt/eslint"]
+  modules: ['@nuxt/eslint'],
 })

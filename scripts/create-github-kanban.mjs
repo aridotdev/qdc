@@ -322,7 +322,18 @@ function ensureLabels(tasks, repo) {
   }
 
   for (const [name, color, description] of LABELS) {
-    runGh(['label', 'create', name, '--repo', repo, '--color', color, '--description', description, '--force'])
+    runGh([
+      'label',
+      'create',
+      name,
+      '--repo',
+      repo,
+      '--color',
+      color,
+      '--description',
+      description,
+      '--force',
+    ])
   }
 
   for (const [name, section] of areaLabels) {
@@ -394,7 +405,16 @@ function createIssue(task, repo, source, tempDir) {
 }
 
 function ensureProject(owner, title) {
-  const existingPayload = runGhJson(['project', 'list', '--owner', owner, '--format', 'json', '--limit', '100'])
+  const existingPayload = runGhJson([
+    'project',
+    'list',
+    '--owner',
+    owner,
+    '--format',
+    'json',
+    '--limit',
+    '100',
+  ])
   const projects = toArray(existingPayload, 'projects')
   const existing = projects.find((project) => project.title === title)
 
@@ -403,7 +423,16 @@ function ensureProject(owner, title) {
     return existing
   }
 
-  const created = runGhJson(['project', 'create', '--owner', owner, '--title', title, '--format', 'json'])
+  const created = runGhJson([
+    'project',
+    'create',
+    '--owner',
+    owner,
+    '--title',
+    title,
+    '--format',
+    'json',
+  ])
   console.log(`created project #${created.number}: ${title}`)
   return created
 }
@@ -595,7 +624,9 @@ if (tasks.length === 0) {
 if (args.dryRun) {
   console.log(`Found ${tasks.length} tasks in ${args.source}`)
   for (const task of tasks) {
-    console.log(`${task.issueTitle} [${task.priority}] ${task.areaLabel}; depends on ${task.dependsOn}`)
+    console.log(
+      `${task.issueTitle} [${task.priority}] ${task.areaLabel}; depends on ${task.dependsOn}`,
+    )
   }
   process.exit(0)
 }
