@@ -9,7 +9,7 @@ const DEFAULTS = {
   source: 'doc/implementation.md',
   repo: 'aridotdev/qdc',
   owner: 'aridotdev',
-  projectTitle: 'QRCC Data Center Implementation',
+  projectTitle: 'QRCC Data Center Implementation'
 }
 
 const LABELS = [
@@ -17,28 +17,28 @@ const LABELS = [
   ['type: task', '0E8A16', 'Implementation task'],
   ['priority: P0', 'B60205', 'Blocking or business-critical'],
   ['priority: P1', 'D93F0B', 'Required after the foundation is available'],
-  ['priority: P2', 'FBCA04', 'Refinement after main flows are stable'],
+  ['priority: P2', 'FBCA04', 'Refinement after main flows are stable']
 ]
 
 const FIELD_DEFINITIONS = [
   {
     name: 'Kanban Status',
     dataType: 'SINGLE_SELECT',
-    options: ['Backlog', 'Ready', 'In Progress', 'Review', 'Done'],
+    options: ['Backlog', 'Ready', 'In Progress', 'Review', 'Done']
   },
   {
     name: 'Priority',
     dataType: 'SINGLE_SELECT',
-    options: ['P0', 'P1', 'P2'],
+    options: ['P0', 'P1', 'P2']
   },
   {
     name: 'Task ID',
-    dataType: 'TEXT',
+    dataType: 'TEXT'
   },
   {
     name: 'Dependencies',
-    dataType: 'TEXT',
-  },
+    dataType: 'TEXT'
+  }
 ]
 
 function parseArgs(argv) {
@@ -119,7 +119,7 @@ function parseImplementation(source) {
         id: taskMatch[1],
         title: taskMatch[2].trim(),
         section,
-        lines: [],
+        lines: []
       }
       continue
     }
@@ -158,12 +158,12 @@ function finalizeTask(task) {
     acceptance,
     test,
     issueTitle: `${task.id} - ${task.title}`,
-    areaLabel: `area: ${slugify(task.section)}`,
+    areaLabel: `area: ${slugify(task.section)}`
   }
 }
 
 function extractScalar(lines, name) {
-  const start = lines.findIndex((line) => line.trimStart().startsWith(`- ${name}:`))
+  const start = lines.findIndex(line => line.trimStart().startsWith(`- ${name}:`))
   if (start === -1) {
     return ''
   }
@@ -185,7 +185,7 @@ function extractScalar(lines, name) {
 }
 
 function extractList(lines, name, nextName = null) {
-  const start = lines.findIndex((line) => line.trimStart().startsWith(`- ${name}:`))
+  const start = lines.findIndex(line => line.trimStart().startsWith(`- ${name}:`))
   if (start === -1) {
     return []
   }
@@ -232,8 +232,8 @@ function slugify(value) {
 }
 
 function issueBody(task, source) {
-  const acceptance = task.acceptance.map((item) => `- [ ] ${item}`).join('\n')
-  const test = task.test.map((item) => `- [ ] ${item}`).join('\n')
+  const acceptance = task.acceptance.map(item => `- [ ] ${item}`).join('\n')
+  const test = task.test.map(item => `- [ ] ${item}`).join('\n')
 
   return `Generated from \`${source}\`.
 
@@ -255,7 +255,7 @@ ${test || '- [ ] Not specified'}
 function runGhResult(args) {
   return spawnSync('gh', args, {
     encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['ignore', 'pipe', 'pipe']
   })
 }
 
@@ -296,21 +296,21 @@ function tryGhJson(args) {
       ok: false,
       error: ghError(args, result),
       stderr: result.stderr,
-      stdout: result.stdout,
+      stdout: result.stdout
     }
   }
 
   try {
     return {
       ok: true,
-      value: result.stdout.trim() ? JSON.parse(result.stdout) : {},
+      value: result.stdout.trim() ? JSON.parse(result.stdout) : {}
     }
   } catch {
     return {
       ok: false,
       error: `Could not parse JSON from gh ${args.join(' ')}:\n${result.stdout}`,
       stderr: result.stderr,
-      stdout: result.stdout,
+      stdout: result.stdout
     }
   }
 }
@@ -332,7 +332,7 @@ function ensureLabels(tasks, repo) {
       color,
       '--description',
       description,
-      '--force',
+      '--force'
     ])
   }
 
@@ -347,7 +347,7 @@ function ensureLabels(tasks, repo) {
       '1D76DB',
       '--description',
       `Area: ${section}`,
-      '--force',
+      '--force'
     ])
   }
 }
@@ -366,11 +366,11 @@ function findExistingIssue(task, repo) {
     '--json',
     'number,title,url',
     '--limit',
-    '20',
+    '20'
   ])
 
   const issues = Array.isArray(payload) ? payload : payload.issues || []
-  return issues.find((issue) => issue.title?.startsWith(`${task.id} - `)) || null
+  return issues.find(issue => issue.title?.startsWith(`${task.id} - `)) || null
 }
 
 function createIssue(task, repo, source, tempDir) {
@@ -394,13 +394,13 @@ function createIssue(task, repo, source, tempDir) {
     '--body-file',
     bodyFile,
     '--label',
-    labels.join(','),
+    labels.join(',')
   ])
 
   console.log(`created issue: ${task.issueTitle}`)
   return {
     title: task.issueTitle,
-    url: output.split(/\r?\n/).at(-1),
+    url: output.split(/\r?\n/).at(-1)
   }
 }
 
@@ -413,10 +413,10 @@ function ensureProject(owner, title) {
     '--format',
     'json',
     '--limit',
-    '100',
+    '100'
   ])
   const projects = toArray(existingPayload, 'projects')
-  const existing = projects.find((project) => project.title === title)
+  const existing = projects.find(project => project.title === title)
 
   if (existing) {
     console.log(`using project #${existing.number}: ${title}`)
@@ -431,7 +431,7 @@ function ensureProject(owner, title) {
     '--title',
     title,
     '--format',
-    'json',
+    'json'
   ])
   console.log(`created project #${created.number}: ${title}`)
   return created
@@ -440,7 +440,7 @@ function ensureProject(owner, title) {
 function ensureFields(project, owner) {
   for (const field of FIELD_DEFINITIONS) {
     const current = listFields(project.number, owner)
-    if (current.find((candidate) => candidate.name === field.name)) {
+    if (current.find(candidate => candidate.name === field.name)) {
       continue
     }
 
@@ -455,7 +455,7 @@ function ensureFields(project, owner) {
       '--data-type',
       field.dataType,
       '--format',
-      'json',
+      'json'
     ]
 
     if (field.options) {
@@ -479,7 +479,7 @@ function listFields(projectNumber, owner) {
     '--format',
     'json',
     '--limit',
-    '100',
+    '100'
   ])
 
   return toArray(payload, 'fields')
@@ -500,7 +500,7 @@ function addIssueToProject(issue, project, owner) {
     '--url',
     issue.url,
     '--format',
-    'json',
+    'json'
   ]
   const result = tryGhJson(args)
 
@@ -526,11 +526,11 @@ function findExistingProjectItem(issue, projectNumber, owner) {
     '--format',
     'json',
     '--limit',
-    '200',
+    '200'
   ])
 
   const items = toArray(payload, 'items')
-  return items.find((item) => projectItemUrl(item) === issue.url) || null
+  return items.find(item => projectItemUrl(item) === issue.url) || null
 }
 
 function projectItemUrl(item) {
@@ -553,8 +553,8 @@ function setFieldValues(item, project, fields, task) {
 }
 
 function setSingleSelect(projectId, itemId, fields, fieldName, optionName) {
-  const field = fields.find((candidate) => candidate.name === fieldName)
-  const option = field?.options?.find((candidate) => candidate.name === optionName)
+  const field = fields.find(candidate => candidate.name === fieldName)
+  const option = field?.options?.find(candidate => candidate.name === optionName)
 
   if (!field?.id || !option?.id) {
     console.warn(`skip ${fieldName}: option ${optionName} not found`)
@@ -571,12 +571,12 @@ function setSingleSelect(projectId, itemId, fields, fieldName, optionName) {
     '--field-id',
     field.id,
     '--single-select-option-id',
-    option.id,
+    option.id
   ])
 }
 
 function setText(projectId, itemId, fields, fieldName, value) {
-  const field = fields.find((candidate) => candidate.name === fieldName)
+  const field = fields.find(candidate => candidate.name === fieldName)
   if (!field?.id) {
     console.warn(`skip ${fieldName}: field not found`)
     return
@@ -592,7 +592,7 @@ function setText(projectId, itemId, fields, fieldName, value) {
     '--field-id',
     field.id,
     '--text',
-    value,
+    value
   ])
 }
 
@@ -625,7 +625,7 @@ if (args.dryRun) {
   console.log(`Found ${tasks.length} tasks in ${args.source}`)
   for (const task of tasks) {
     console.log(
-      `${task.issueTitle} [${task.priority}] ${task.areaLabel}; depends on ${task.dependsOn}`,
+      `${task.issueTitle} [${task.priority}] ${task.areaLabel}; depends on ${task.dependsOn}`
     )
   }
   process.exit(0)
