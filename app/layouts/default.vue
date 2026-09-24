@@ -14,6 +14,27 @@ const links = [[{
     open.value = false
   }
 }, {
+  label: 'Quality Issues',
+  icon: 'i-lucide-triangle-alert',
+  to: '/quality-issues',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Sample Defects',
+  icon: 'i-lucide-package-search',
+  to: '/sample-defects',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Technical Reports',
+  icon: 'i-lucide-file-text',
+  to: '/technical-reports',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
   label: 'Inbox',
   icon: 'i-lucide-inbox',
   to: '/inbox',
