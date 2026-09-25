@@ -6,6 +6,10 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    dbFileName: 'file:.data/qdc-local.db'
+  },
+
   routeRules: {
     '/api/**': {
       cors: true
