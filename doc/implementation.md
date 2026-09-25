@@ -177,7 +177,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 3. Database Foundation
 
-- [ ] TASK-005 - Konfigurasi SQLite dan Drizzle
+- [x] TASK-005 - Konfigurasi SQLite dan Drizzle
   - Depends on: TASK-001, TASK-003
   - Priority: P0
   - Acceptance:
