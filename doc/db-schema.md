@@ -29,7 +29,7 @@ Table: `quality_issues`
 | serial_number | text | NOT NULL | Nomor seri produk |
 | tanggal_kejadian | text | NOT NULL | Format `YYYY-MM-DD` |
 | notification_number | text | NULL | Nomor notifikasi cabang |
-| detail | text | NULL | Deskripsi masalah |
+| detail | text | NOT NULL | Deskripsi masalah |
 | keterangan | text | NULL | Catatan tambahan |
 | status | text | NOT NULL, DEFAULT `OPEN` | `OPEN`, `IN_PROGRESS`, `MONITORING`, `CLOSED` |
 | created_at | text | NOT NULL | Timestamp audit |
