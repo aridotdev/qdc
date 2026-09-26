@@ -231,7 +231,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - No-owner, multi-owner, valid-owner, dan cascade cases.
 
-- [ ] TASK-010 - Implement append-only audit log
+- [x] TASK-010 - Implement append-only audit log
   - Depends on: TASK-006, TASK-007, TASK-008
   - Priority: P0
   - Acceptance:
