@@ -34,7 +34,7 @@ export interface QualityIssue extends AuditFields {
   serial_number: string
   tanggal_kejadian: BusinessDate
   notification_number: string | null
-  detail: string | null
+  detail: string
   keterangan: string | null
   status: QualityIssueStatus
 }
@@ -45,7 +45,7 @@ export interface CreateQualityIssueInput {
   serial_number: string
   tanggal_kejadian: BusinessDate
   notification_number?: string | null
-  detail?: string | null
+  detail?: string
   keterangan?: string | null
 }
 

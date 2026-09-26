@@ -1,0 +1,366 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "8adfc5bd-3406-42b5-a90c-44f1544c0efe",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "name": "quality_issues",
+      "entityType": "tables"
+    },
+    {
+      "name": "quality_issue_details",
+      "entityType": "tables"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_name",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model_name",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "serial_number",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tanggal_kejadian",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "notification_number",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "detail",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "keterangan",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'OPEN'",
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tanggal",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "action",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "remark",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "columns": [
+        "issue_id"
+      ],
+      "tableTo": "quality_issues",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_quality_issue_details_issue_id_quality_issues_id_fk",
+      "entityType": "fks",
+      "table": "quality_issue_details"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "quality_issues_pk",
+      "table": "quality_issues",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "quality_issue_details_pk",
+      "table": "quality_issue_details",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_status_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "notification_number",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_notification_number_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "model_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_model_name_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "tanggal_kejadian",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_tanggal_kejadian_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "issue_id",
+          "isExpression": false
+        },
+        {
+          "value": "tanggal",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issue_details_issue_id_tanggal_idx",
+      "entityType": "indexes",
+      "table": "quality_issue_details"
+    },
+    {
+      "columns": [
+        {
+          "value": "tanggal",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issue_details_tanggal_idx",
+      "entityType": "indexes",
+      "table": "quality_issue_details"
+    },
+    {
+      "value": "\"status\" in ('OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED')",
+      "name": "quality_issues_status_check",
+      "entityType": "checks",
+      "table": "quality_issues"
+    }
+  ],
+  "renames": []
+}

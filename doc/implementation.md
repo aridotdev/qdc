@@ -187,7 +187,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Connection dan foreign key enforcement test.
 
-- [ ] TASK-006 - Implement schema Quality Issue dan timeline
+- [x] TASK-006 - Implement schema Quality Issue dan timeline
   - Depends on: TASK-005
   - Priority: P0
   - Acceptance:
