@@ -209,7 +209,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Insert valid/invalid field dan FK behavior test.
 
-- [ ] TASK-008 - Implement schema Technical Report
+- [x] TASK-008 - Implement schema Technical Report
   - Depends on: TASK-005
   - Priority: P1
   - Acceptance:
