@@ -9,7 +9,8 @@ import {
   qualityIssueDetails,
   qualityIssues,
   sampleDefects,
-  insertSampleDefectSchema
+  insertSampleDefectSchema,
+  technicalReports
 } from '../../server/database/schema'
 
 const migrationsFolder = join(process.cwd(), 'server/database/migrations')
@@ -65,14 +66,15 @@ describe('Quality Issue and Sample Defect schema', () => {
 
   it('runs the migration and applies the domain schemas', async () => {
     const tables = await database.client.execute({
-      sql: 'SELECT name FROM sqlite_master WHERE type = ? AND name IN (?, ?, ?) ORDER BY name',
-      args: ['table', 'quality_issues', 'quality_issue_details', 'sample_defects']
+      sql: 'SELECT name FROM sqlite_master WHERE type = ? AND name IN (?, ?, ?, ?) ORDER BY name',
+      args: ['table', 'quality_issues', 'quality_issue_details', 'sample_defects', 'technical_reports']
     })
 
     expect(tables.rows).toEqual([
       { name: 'quality_issue_details' },
       { name: 'quality_issues' },
-      { name: 'sample_defects' }
+      { name: 'sample_defects' },
+      { name: 'technical_reports' }
     ])
   })
 
@@ -283,5 +285,89 @@ describe('Quality Issue and Sample Defect schema', () => {
       .where(eq(sampleDefects.id, sample!.id))
 
     expect(remainingSample?.issueId).toBeNull()
+  })
+
+  it('enforces Technical Report document type and unique document number', async () => {
+    const now = new Date().toISOString()
+    const report = {
+      documentNumber: 'TR-001',
+      documentType: 'TECHNICAL_REPORT' as const,
+      releaseDate: '2026-09-26',
+      modelName: 'MODEL-03',
+      issueName: 'Loose connector',
+      rootCause: null,
+      action: null,
+      improvementStartDate: null,
+      improvementStartSerialNumber: null,
+      documentReference: null,
+      keterangan: null,
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: 'user-1',
+      updatedByUserId: 'user-1'
+    }
+
+    const [created] = await database.db.insert(technicalReports).values(report).returning()
+
+    expect(created?.documentType).toBe('TECHNICAL_REPORT')
+
+    await expect(database.db.insert(technicalReports).values(report)).rejects.toThrow()
+
+    await expect(database.db.insert(technicalReports).values({
+      ...report,
+      documentNumber: 'TR-002',
+      documentType: 'INVALID_TYPE'
+    })).rejects.toThrow()
+  })
+
+  it('rejects an invalid Technical Report issue FK and nulls the relation on issue deletion', async () => {
+    const now = new Date().toISOString()
+
+    await expect(database.db.insert(technicalReports).values({
+      documentNumber: 'TR-003',
+      documentType: 'SERVICE_TIPS',
+      releaseDate: '2026-09-26',
+      modelName: 'MODEL-04',
+      issueName: 'Invalid relation',
+      issueId: 999999,
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: 'user-1',
+      updatedByUserId: 'user-1'
+    })).rejects.toThrow()
+
+    const [issue] = await database.db.insert(qualityIssues).values({
+      issueName: 'Report relation issue',
+      modelName: 'MODEL-04',
+      serialNumber: 'SN-006',
+      tanggalKejadian: '2026-09-26',
+      detail: 'Issue untuk relasi report.',
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: 'user-1',
+      updatedByUserId: 'user-1'
+    }).returning({ id: qualityIssues.id })
+
+    const [report] = await database.db.insert(technicalReports).values({
+      documentNumber: 'TR-004',
+      documentType: 'SERVICE_TIPS',
+      releaseDate: '2026-09-26',
+      modelName: 'MODEL-04',
+      issueName: 'Linked report',
+      issueId: issue!.id,
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: 'user-1',
+      updatedByUserId: 'user-1'
+    }).returning({ id: technicalReports.id })
+
+    await database.db.delete(qualityIssues).where(eq(qualityIssues.id, issue!.id))
+
+    const [remainingReport] = await database.db
+      .select({ issueId: technicalReports.issueId })
+      .from(technicalReports)
+      .where(eq(technicalReports.id, report!.id))
+
+    expect(remainingReport?.issueId).toBeNull()
   })
 })
