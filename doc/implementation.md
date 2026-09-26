@@ -198,7 +198,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Migration dan relation test dari database kosong.
 
-- [ ] TASK-007 - Implement schema Sample Defect
+- [x] TASK-007 - Implement schema Sample Defect
   - Depends on: TASK-005
   - Priority: P0
   - Acceptance:
