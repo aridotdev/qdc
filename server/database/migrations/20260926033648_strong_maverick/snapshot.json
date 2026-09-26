@@ -1,0 +1,1250 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "7046a717-8e63-47f3-8c51-17101d6f1e2d",
+  "prevIds": [
+    "047d1597-cd0b-4cd7-8f49-495023217a83"
+  ],
+  "ddl": [
+    {
+      "name": "attachments",
+      "entityType": "tables"
+    },
+    {
+      "name": "quality_issues",
+      "entityType": "tables"
+    },
+    {
+      "name": "quality_issue_details",
+      "entityType": "tables"
+    },
+    {
+      "name": "sample_defects",
+      "entityType": "tables"
+    },
+    {
+      "name": "technical_reports",
+      "entityType": "tables"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "detail_id",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sample_id",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "report_id",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "file_name",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "storage_name",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "file_url",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "file_type",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "file_size",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "attachments"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_name",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model_name",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "serial_number",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tanggal_kejadian",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "notification_number",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "detail",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "keterangan",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'OPEN'",
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issues"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tanggal",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "action",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "remark",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "quality_issue_details"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "batch_id",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_id",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "notification_number",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model_name",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "serial_number",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "cabang",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "part_number",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "part_name",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kerusakan_cabang",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'REQUESTED'",
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tanggal_terima",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "keterangan_terima",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "nama_penerima_pqa",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tanggal_serah_pqa",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kerusakan_verifikasi",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kondisi_pqa",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "repair",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "hasil_analisa_supplier",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "sample_defects"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_id",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "document_number",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "document_type",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "release_date",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model_name",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issue_name",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "root_cause",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "action",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "improvement_start_date",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "improvement_start_serial_number",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "document_reference",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "keterangan",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by_user_id",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by_user_id",
+      "entityType": "columns",
+      "table": "technical_reports"
+    },
+    {
+      "columns": [
+        "detail_id"
+      ],
+      "tableTo": "quality_issue_details",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_attachments_detail_id_quality_issue_details_id_fk",
+      "entityType": "fks",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        "sample_id"
+      ],
+      "tableTo": "sample_defects",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_attachments_sample_id_sample_defects_id_fk",
+      "entityType": "fks",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        "report_id"
+      ],
+      "tableTo": "technical_reports",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_attachments_report_id_technical_reports_id_fk",
+      "entityType": "fks",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        "issue_id"
+      ],
+      "tableTo": "quality_issues",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_quality_issue_details_issue_id_quality_issues_id_fk",
+      "entityType": "fks",
+      "table": "quality_issue_details"
+    },
+    {
+      "columns": [
+        "issue_id"
+      ],
+      "tableTo": "quality_issues",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "nameExplicit": false,
+      "name": "fk_sample_defects_issue_id_quality_issues_id_fk",
+      "entityType": "fks",
+      "table": "sample_defects"
+    },
+    {
+      "columns": [
+        "issue_id"
+      ],
+      "tableTo": "quality_issues",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "nameExplicit": false,
+      "name": "fk_technical_reports_issue_id_quality_issues_id_fk",
+      "entityType": "fks",
+      "table": "technical_reports"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "attachments_pk",
+      "table": "attachments",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "quality_issues_pk",
+      "table": "quality_issues",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "quality_issue_details_pk",
+      "table": "quality_issue_details",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "sample_defects_pk",
+      "table": "sample_defects",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "technical_reports_pk",
+      "table": "technical_reports",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "detail_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "attachments_detail_id_idx",
+      "entityType": "indexes",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        {
+          "value": "sample_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "attachments_sample_id_idx",
+      "entityType": "indexes",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        {
+          "value": "report_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "attachments_report_id_idx",
+      "entityType": "indexes",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        {
+          "value": "file_type",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "attachments_file_type_idx",
+      "entityType": "indexes",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_status_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "notification_number",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_notification_number_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "model_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_model_name_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "tanggal_kejadian",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issues_tanggal_kejadian_idx",
+      "entityType": "indexes",
+      "table": "quality_issues"
+    },
+    {
+      "columns": [
+        {
+          "value": "issue_id",
+          "isExpression": false
+        },
+        {
+          "value": "tanggal",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issue_details_issue_id_tanggal_idx",
+      "entityType": "indexes",
+      "table": "quality_issue_details"
+    },
+    {
+      "columns": [
+        {
+          "value": "tanggal",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "quality_issue_details_tanggal_idx",
+      "entityType": "indexes",
+      "table": "quality_issue_details"
+    },
+    {
+      "columns": [
+        {
+          "value": "batch_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sample_defects_batch_id_idx",
+      "entityType": "indexes",
+      "table": "sample_defects"
+    },
+    {
+      "columns": [
+        {
+          "value": "issue_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sample_defects_issue_id_idx",
+      "entityType": "indexes",
+      "table": "sample_defects"
+    },
+    {
+      "columns": [
+        {
+          "value": "notification_number",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sample_defects_notification_number_idx",
+      "entityType": "indexes",
+      "table": "sample_defects"
+    },
+    {
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sample_defects_status_idx",
+      "entityType": "indexes",
+      "table": "sample_defects"
+    },
+    {
+      "columns": [
+        {
+          "value": "model_name",
+          "isExpression": false
+        },
+        {
+          "value": "part_number",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sample_defects_model_name_part_number_idx",
+      "entityType": "indexes",
+      "table": "sample_defects"
+    },
+    {
+      "columns": [
+        {
+          "value": "issue_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "technical_reports_issue_id_idx",
+      "entityType": "indexes",
+      "table": "technical_reports"
+    },
+    {
+      "columns": [
+        {
+          "value": "document_type",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "technical_reports_document_type_idx",
+      "entityType": "indexes",
+      "table": "technical_reports"
+    },
+    {
+      "columns": [
+        {
+          "value": "release_date",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "technical_reports_release_date_idx",
+      "entityType": "indexes",
+      "table": "technical_reports"
+    },
+    {
+      "columns": [
+        {
+          "value": "model_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "technical_reports_model_name_idx",
+      "entityType": "indexes",
+      "table": "technical_reports"
+    },
+    {
+      "columns": [
+        "storage_name"
+      ],
+      "nameExplicit": false,
+      "name": "attachments_storage_name_unique",
+      "entityType": "uniques",
+      "table": "attachments"
+    },
+    {
+      "columns": [
+        "document_number"
+      ],
+      "nameExplicit": false,
+      "name": "technical_reports_document_number_unique",
+      "entityType": "uniques",
+      "table": "technical_reports"
+    },
+    {
+      "value": "\"file_type\" in ('image/jpeg', 'image/jpeg', 'image/png', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'video/mp4')",
+      "name": "attachments_file_type_check",
+      "entityType": "checks",
+      "table": "attachments"
+    },
+    {
+      "value": "\"file_size\" >= 0",
+      "name": "attachments_file_size_check",
+      "entityType": "checks",
+      "table": "attachments"
+    },
+    {
+      "value": "(\n        (case when \"detail_id\" is not null then 1 else 0 end) +\n        (case when \"sample_id\" is not null then 1 else 0 end) +\n        (case when \"report_id\" is not null then 1 else 0 end)\n      ) = 1",
+      "name": "attachments_single_owner_check",
+      "entityType": "checks",
+      "table": "attachments"
+    },
+    {
+      "value": "\"status\" in ('OPEN', 'IN_PROGRESS', 'MONITORING', 'CLOSED')",
+      "name": "quality_issues_status_check",
+      "entityType": "checks",
+      "table": "quality_issues"
+    },
+    {
+      "value": "\"status\" in ('REQUESTED', 'RECEIVED', 'QRCC_VERIFIED', 'HANDED_OVER_TO_PQA', 'PQA_ANALYZED', 'SUPPLIER_ANALYZED')",
+      "name": "sample_defects_status_check",
+      "entityType": "checks",
+      "table": "sample_defects"
+    },
+    {
+      "value": "\"kondisi_pqa\" in ('NG', 'NDF')",
+      "name": "sample_defects_kondisi_pqa_check",
+      "entityType": "checks",
+      "table": "sample_defects"
+    },
+    {
+      "value": "\"document_type\" in ('TECHNICAL_REPORT', 'SERVICE_TIPS')",
+      "name": "technical_reports_document_type_check",
+      "entityType": "checks",
+      "table": "technical_reports"
+    }
+  ],
+  "renames": []
+}
