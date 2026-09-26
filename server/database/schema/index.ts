@@ -1,11 +1,13 @@
 import { defineRelations } from 'drizzle-orm'
 import { attachments } from './attachments'
+import { auditLogs } from './audit-logs'
 import { qualityIssues } from './quality-issues'
 import { qualityIssueDetails } from './quality-issue-details'
 import { sampleDefects } from './sample-defects'
 import { technicalReports } from './technical-reports'
 
 export * from './attachments'
+export * from './audit-logs'
 export * from './quality-issues'
 export * from './quality-issue-details'
 export * from './sample-defects'
@@ -13,6 +15,7 @@ export * from './technical-reports'
 
 export const schema = {
   attachments,
+  auditLogs,
   qualityIssues,
   qualityIssueDetails,
   sampleDefects,
@@ -78,5 +81,6 @@ export const relations = defineRelations(schema, r => ({
       from: r.attachments.reportId,
       to: r.technicalReports.id
     })
-  }
+  },
+  auditLogs: {}
 }))
