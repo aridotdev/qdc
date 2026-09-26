@@ -220,7 +220,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Duplicate document number dan FK behavior test.
 
-- [ ] TASK-009 - Implement schema Attachment dan owner invariant
+- [x] TASK-009 - Implement schema Attachment dan owner invariant
   - Depends on: TASK-006, TASK-007, TASK-008
   - Priority: P0
   - Acceptance:
