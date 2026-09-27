@@ -5,6 +5,7 @@ import { qualityIssues } from './quality-issues'
 import { qualityIssueDetails } from './quality-issue-details'
 import { sampleDefects } from './sample-defects'
 import { technicalReports } from './technical-reports'
+import { user, session, account, verification } from './auth-schema'
 
 export * from './attachments'
 export * from './audit-logs'
@@ -12,6 +13,7 @@ export * from './quality-issues'
 export * from './quality-issue-details'
 export * from './sample-defects'
 export * from './technical-reports'
+export * from './auth-schema'
 
 export const schema = {
   attachments,
@@ -19,7 +21,11 @@ export const schema = {
   qualityIssues,
   qualityIssueDetails,
   sampleDefects,
-  technicalReports
+  technicalReports,
+  user,
+  session,
+  account,
+  verification
 }
 
 export const relations = defineRelations(schema, r => ({
@@ -82,5 +88,28 @@ export const relations = defineRelations(schema, r => ({
       to: r.technicalReports.id
     })
   },
+  user: {
+    sessions: r.many.session({
+      from: r.user.id,
+      to: r.session.userId
+    }),
+    accounts: r.many.account({
+      from: r.user.id,
+      to: r.account.userId
+    })
+  },
+  session: {
+    user: r.one.user({
+      from: r.session.userId,
+      to: r.user.id
+    })
+  },
+  account: {
+    user: r.one.user({
+      from: r.account.userId,
+      to: r.user.id
+    })
+  },
+  verification: {},
   auditLogs: {}
 }))
