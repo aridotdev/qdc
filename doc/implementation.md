@@ -241,7 +241,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Audit event test untuk setiap action utama.
 
-- [ ] TASK-011 - Implement schema better-auth
+- [x] TASK-011 - Implement schema better-auth
   - Depends on: TASK-005
   - Priority: P0
   - Acceptance:

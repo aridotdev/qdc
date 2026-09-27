@@ -22,6 +22,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.6",
     "@iconify-json/lucide": "^1.2.134",
     "@iconify-json/simple-icons": "^1.2.96",
     "@internationalized/date": "^3.12.4",
@@ -32,6 +33,7 @@
     "@unovis/vue": "^1.7.0",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",
+    "better-auth": "^1.7.6",
     "date-fns": "^4.4.0",
     "dotenv": "^18.0.3",
     "drizzle-orm": "1.0.0-rc.4",
