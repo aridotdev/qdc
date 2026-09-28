@@ -10,11 +10,11 @@ import { createAuth } from '../lib/auth-config'
 import { qualityIssueDetails, qualityIssues, sampleDefects, technicalReports, user } from './schema'
 import { recordAuditLog } from '../services/audit-logs'
 
-const DEVELOPMENT_AUTH_SECRET = 'qdc-development-auth-secret-change-me-32'
+const DEVELOPMENT_AUTH_SECRET = 'JH6GCnacSZVgpIbeFnyjJVtoGDZEP13r'
 const DEVELOPMENT_USER = {
-  email: 'developer@qdc.local',
-  name: 'QDC Development User',
-  password: 'qdc-development-password'
+  email: 'qrcc@qdc.com',
+  name: 'QRCC User',
+  password: 'qwertyuiop'
 }
 const SEED_SERIAL_NUMBER = 'DEV-SEED-SERIAL-001'
 const SEED_DOCUMENT_NUMBER = 'DEV-SEED-TR-001'
