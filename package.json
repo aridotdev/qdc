@@ -18,6 +18,8 @@
     "test:e2e": "vitest run tests/e2e",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/database.ts seed",
+    "db:reset": "tsx scripts/database.ts reset",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },

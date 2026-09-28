@@ -249,7 +249,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - dasar login/logout/session better-auth test.
 
-- [ ] TASK-012 - Buat migration, seed, dan reset database
+- [x] TASK-012 - Buat migration, seed, dan reset database
   - Depends on: TASK-006, TASK-007, TASK-008, TASK-009, TASK-010
   - Priority: P0
   - Acceptance:
