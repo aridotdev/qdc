@@ -261,7 +261,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Clean migration, migrate up, reset, dan re-run migration.
 ## 4. Authentication dan Authorization
 
-- [ ] TASK-013 - Integrasikan Better-auth
+- [x] TASK-013 - Integrasikan Better-auth
   - Depends on: TASK-001, TASK-003
   - Priority: P0
   - Acceptance:
