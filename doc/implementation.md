@@ -271,7 +271,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Login valid, password invalid, logout, expiry, dan session retrieval.
 
-- [ ] TASK-014 - Tambahkan server-side auth middleware
+- [x] TASK-014 - Tambahkan server-side auth middleware
   - Depends on: TASK-013
   - Priority: P0
   - Acceptance:
