@@ -293,7 +293,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 5. File Storage dan Attachment
 
-- [ ] TASK-016 - Implement file storage service
+- [x] TASK-016 - Implement file storage service
   - Depends on: TASK-003
   - Priority: P0
   - Acceptance:
