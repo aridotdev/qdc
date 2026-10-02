@@ -2,6 +2,42 @@ import { USER_ROLE } from '../../shared/constants/domain'
 
 type AuthEvent = Parameters<Parameters<typeof eventHandler>[0]>[0]
 
+export interface PublicAuthUser {
+  id: string
+  name: string
+  email: string
+  role: typeof USER_ROLE.ADMIN | typeof USER_ROLE.USER
+}
+
+export interface AuthActor {
+  userId: string
+  role: typeof USER_ROLE.ADMIN | typeof USER_ROLE.USER
+  name: string
+  email: string
+}
+
+export interface AuthRequestContext {
+  user: PublicAuthUser
+  session: {
+    id: string
+    expiresAt: Date
+  }
+  actor: AuthActor
+}
+
+interface AuthSessionSource {
+  user: {
+    id: string
+    name: string
+    email: string
+    role?: string | null
+  }
+  session: {
+    id: string
+    expiresAt: Date
+  }
+}
+
 function splitSetCookieHeader(header: string | null): string[] {
   if (!header) {
     return []
@@ -54,11 +90,57 @@ export function publicAuthUser(user: {
   name: string
   email: string
   role?: string | null
-}) {
+}): PublicAuthUser {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role === USER_ROLE.ADMIN ? USER_ROLE.ADMIN : USER_ROLE.USER
   }
+}
+
+export function authRequestContext(session: AuthSessionSource): AuthRequestContext {
+  const user = publicAuthUser(session.user)
+
+  return {
+    user,
+    session: {
+      id: session.session.id,
+      expiresAt: session.session.expiresAt
+    },
+    actor: {
+      userId: user.id,
+      role: user.role,
+      name: user.name,
+      email: user.email
+    }
+  }
+}
+
+export function setAuthContext(
+  event: AuthEvent,
+  session: AuthSessionSource
+): AuthRequestContext {
+  const context = authRequestContext(session)
+
+  event.context.auth = context
+
+  return context
+}
+
+export function getAuthContext(event: AuthEvent): AuthRequestContext {
+  const context = event.context.auth as AuthRequestContext | undefined
+
+  if (!context) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Session valid diperlukan.'
+    })
+  }
+
+  return context
+}
+
+export function getAuthActor(event: AuthEvent): AuthActor {
+  return getAuthContext(event).actor
 }
