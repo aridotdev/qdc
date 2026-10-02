@@ -304,7 +304,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Unique filename, date partition, path traversal, dan overwrite test.
 
-- [ ] TASK-017 - Implement central file policy validation
+- [x] TASK-017 - Implement central file policy validation
   - Depends on: TASK-003
   - Priority: P0
   - Acceptance:
