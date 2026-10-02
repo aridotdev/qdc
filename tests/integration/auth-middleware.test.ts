@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { authRequestContext } from '../../server/lib/auth-http'
 import { shouldRequireAuth } from '../../server/lib/auth-middleware'
+import { authorizeDomainRequest, requiresAdmin } from '../../server/lib/auth-policy'
 import { USER_ROLE } from '../../shared/constants/domain'
 
 describe('server-side auth middleware contract', () => {
@@ -45,5 +46,63 @@ describe('server-side auth middleware contract', () => {
       email: 'admin@example.com'
     })
     expect(context.session.expiresAt).toBe(expiresAt)
+  })
+
+  it.each([
+    ['GET', '/api/quality-issues'],
+    ['POST', '/api/quality-issues'],
+    ['PATCH', '/api/quality-issues/1'],
+    ['POST', '/api/quality-issues/1/status'],
+    ['POST', '/api/sample-defects/1/receive']
+  ])('allows authenticated user policy for %s %s', (method, pathname) => {
+    expect(requiresAdmin(pathname, method)).toBe(false)
+  })
+
+  it.each([
+    ['DELETE', '/api/quality-issues/1'],
+    ['DELETE', '/api/sample-defects/1'],
+    ['DELETE', '/api/technical-reports/1'],
+    ['DELETE', '/api/attachments/1'],
+    ['POST', '/api/sample-defects/1/rollback']
+  ])('requires admin policy for %s %s', (method, pathname) => {
+    expect(requiresAdmin(pathname, method)).toBe(true)
+  })
+
+  it('rejects authenticated non-admin for delete and rollback', () => {
+    const createError = globalThis.createError
+    globalThis.createError = ((input: {
+      statusCode: number
+      statusMessage: string
+    }) => Object.assign(new Error(input.statusMessage), input)) as typeof globalThis.createError
+
+    try {
+      const actor = {
+        userId: 'user-1',
+        role: USER_ROLE.USER,
+        name: 'Regular User',
+        email: 'user@example.com'
+      }
+
+      expect(() => authorizeDomainRequest('/api/quality-issues/1', 'DELETE', actor))
+        .toThrowError(expect.objectContaining({ statusCode: 403 }))
+      expect(() => authorizeDomainRequest('/api/sample-defects/1/rollback', 'POST', actor))
+        .toThrowError(expect.objectContaining({ statusCode: 403 }))
+    } finally {
+      globalThis.createError = createError
+    }
+  })
+
+  it('allows admin for delete and rollback', () => {
+    const actor = {
+      userId: 'admin-1',
+      role: USER_ROLE.ADMIN,
+      name: 'Admin User',
+      email: 'admin@example.com'
+    }
+
+    expect(() => authorizeDomainRequest('/api/quality-issues/1', 'DELETE', actor))
+      .not.toThrow()
+    expect(() => authorizeDomainRequest('/api/sample-defects/1/rollback', 'POST', actor))
+      .not.toThrow()
   })
 })

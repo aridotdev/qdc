@@ -281,7 +281,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - 401 test pada setiap kelompok endpoint utama.
 
-- [ ] TASK-015 - Tambahkan authorization policy Admin
+- [x] TASK-015 - Tambahkan authorization policy Admin
   - Depends on: TASK-013, TASK-014
   - Priority: P0
   - Acceptance:
