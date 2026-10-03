@@ -328,7 +328,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - File-write failure, DB failure after write, multi-file failure, delete,
       dan orphan cleanup test.
 
-- [ ] TASK-019 - Implement attachment API domain endpoints
+- [x] TASK-019 - Implement attachment API domain endpoints
   - Depends on: TASK-013, TASK-018
   - Priority: P0
   - Acceptance:

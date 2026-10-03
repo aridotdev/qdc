@@ -19,6 +19,14 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2026-06-30',
 
+  nitro: {
+    esbuild: {
+      options: {
+        target: 'esnext'
+      }
+    }
+  },
+
   typescript: {
     tsConfig: {
       compilerOptions: {
