@@ -315,7 +315,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid, invalid MIME, invalid extension, over-limit, dan boundary-size test.
 
-- [ ] TASK-018 - Implement attachment service dan compensation
+- [x] TASK-018 - Implement attachment service dan compensation
   - Depends on: TASK-009, TASK-016, TASK-017
   - Priority: P0
   - Acceptance:
