@@ -1,6 +1,6 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 
 const DEFAULT_PUBLIC_PATH = '/uploads'
 const DEFAULT_MAX_ATTEMPTS = 3
@@ -26,6 +26,7 @@ export interface FileStorage {
   resolvePath: (storageName: string) => string
   write: (data: Uint8Array) => Promise<StoredFile>
   remove: (storageName: string) => Promise<void>
+  list: () => Promise<string[]>
 }
 
 export class InvalidStorageNameError extends Error {
@@ -140,11 +141,67 @@ export function createFileStorage(config: FileStorageConfig): FileStorage {
     await rm(resolvePath(storageName), { force: true })
   }
 
+  async function listFromDirectory(directory: string): Promise<string[]> {
+    let entries
+    try {
+      entries = await readdir(directory, {
+        withFileTypes: true,
+        encoding: 'utf8'
+      })
+    } catch (error) {
+      if (isFileSystemError(error) && error.code === 'ENOENT') {
+        return []
+      }
+
+      throw error
+    }
+
+    const storageNames: string[] = []
+
+    for (const entry of entries) {
+      const absolutePath = join(directory, entry.name)
+
+      if (entry.isDirectory()) {
+        storageNames.push(...await listFromDirectory(absolutePath))
+        continue
+      }
+
+      if (entry.isFile()) {
+        const storageName = relative(rootDir, absolutePath).split('\\').join('/')
+        assertSafeStorageName(storageName)
+        storageNames.push(storageName)
+      }
+    }
+
+    return storageNames
+  }
+
+  async function list(): Promise<string[]> {
+    const rootStat = await stat(rootDir).catch((error: unknown) => {
+      if (isFileSystemError(error) && error.code === 'ENOENT') {
+        return null
+      }
+
+      throw error
+    })
+
+    if (!rootStat) {
+      return []
+    }
+
+    if (!rootStat.isDirectory()) {
+      throw new InvalidStorageNameError()
+    }
+
+    return listFromDirectory(rootDir)
+  }
+
   return {
     rootDir,
     publicPath,
     resolvePath,
     write,
-    remove
+    remove,
+    list
   }
 }
