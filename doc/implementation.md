@@ -362,7 +362,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Contract test validation, auth, forbidden, not found, conflict, dan
       unexpected failure.
 
-- [ ] TASK-022 - Implement reusable pagination, filtering, dan sorting
+- [x] TASK-022 - Implement reusable pagination, filtering, dan sorting
   - Depends on: TASK-020, TASK-021
   - Priority: P0
   - Acceptance:

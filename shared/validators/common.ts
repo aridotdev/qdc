@@ -2,6 +2,7 @@ import {
   DOCUMENT_TYPES,
   PAGINATION_DEFAULT_PAGE,
   PAGINATION_DEFAULT_PAGE_SIZE,
+  PAGINATION_MAX_PAGE_SIZE,
   QUALITY_ISSUE_STATUSES,
   SAMPLE_CONDITIONS,
   SAMPLE_DEFECT_STATUSES,
@@ -17,7 +18,12 @@ export const sampleConditionSchema = z.enum(SAMPLE_CONDITIONS)
 
 export const paginationSchema = z.strictObject({
   page: z.coerce.number().int().min(1).default(PAGINATION_DEFAULT_PAGE),
-  limit: z.coerce.number().int().min(1).default(PAGINATION_DEFAULT_PAGE_SIZE),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(PAGINATION_MAX_PAGE_SIZE)
+    .default(PAGINATION_DEFAULT_PAGE_SIZE),
   search: z.string().trim().min(1).optional(),
   sortBy: z.string().trim().min(1).optional(),
   sortDirection: z.enum(Object.values(SORT_DIRECTION)).optional()
