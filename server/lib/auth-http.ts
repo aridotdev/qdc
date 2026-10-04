@@ -1,4 +1,5 @@
-import { USER_ROLE } from '../../shared/constants/domain'
+import { ERROR_CODES, USER_ROLE } from '../../shared/constants'
+import { createApiError } from '../utils/api-error'
 
 type AuthEvent = Parameters<Parameters<typeof eventHandler>[0]>[0]
 
@@ -132,10 +133,7 @@ export function getAuthContext(event: AuthEvent): AuthRequestContext {
   const context = event.context.auth as AuthRequestContext | undefined
 
   if (!context) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Session valid diperlukan.'
-    })
+    throw createApiError({ code: ERROR_CODES.UNAUTHORIZED })
   }
 
   return context

@@ -351,7 +351,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid payload, missing field, invalid enum, date, dan unsafe input test.
 
-- [ ] TASK-021 - Implement API error dan response convention
+- [x] TASK-021 - Implement API error dan response convention
   - Depends on: TASK-003, TASK-020
   - Priority: P0
   - Acceptance:

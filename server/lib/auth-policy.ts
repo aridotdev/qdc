@@ -1,5 +1,6 @@
-import { USER_ROLE } from '../../shared/constants/domain'
+import { ERROR_CODES, USER_ROLE } from '../../shared/constants'
 import type { AuthActor } from './auth-http'
+import { createApiError } from '../utils/api-error'
 
 export function requiresAdmin(pathname: string, method: string): boolean {
   const normalizedPathname = pathname.replace(/\/+$/, '')
@@ -14,9 +15,9 @@ export function requireAdmin(actor: AuthActor): void {
     return
   }
 
-  throw createError({
-    statusCode: 403,
-    statusMessage: 'Akses admin diperlukan.'
+  throw createApiError({
+    code: ERROR_CODES.FORBIDDEN,
+    message: 'Akses admin diperlukan.'
   })
 }
 

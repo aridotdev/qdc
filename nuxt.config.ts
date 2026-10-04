@@ -20,6 +20,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-06-30',
 
   nitro: {
+    errorHandler: 'server/error-handler.ts',
     esbuild: {
       options: {
         target: 'esnext'
