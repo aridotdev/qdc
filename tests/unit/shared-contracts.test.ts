@@ -5,6 +5,7 @@ import {
   ERROR_HTTP_STATUS,
   PAGINATION_DEFAULT_PAGE,
   PAGINATION_DEFAULT_PAGE_SIZE,
+  PAGINATION_MAX_PAGE_SIZE,
   QUALITY_ISSUE_STATUS,
   SAMPLE_DEFECT_STATUS
 } from '#shared'
@@ -41,6 +42,7 @@ describe('shared contracts', () => {
   it('defines the documented pagination defaults', () => {
     expect(PAGINATION_DEFAULT_PAGE).toBe(1)
     expect(PAGINATION_DEFAULT_PAGE_SIZE).toBe(20)
+    expect(PAGINATION_MAX_PAGE_SIZE).toBe(100)
   })
 
   it('supports typed paginated domain responses', () => {

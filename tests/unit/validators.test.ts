@@ -84,16 +84,18 @@ describe('Zod validation contracts', () => {
     }
   })
 
-  it('normalizes pagination defaults and query values', () => {
+  it('normalizes pagination defaults, query values, search, and filters', () => {
     expect(
       qualityIssuePaginationSchema.parse({
         page: '2',
         limit: '10',
+        search: ' housing ',
         status: 'OPEN'
       })
     ).toMatchObject({
       page: 2,
       limit: 10,
+      search: 'housing',
       status: 'OPEN'
     })
 
