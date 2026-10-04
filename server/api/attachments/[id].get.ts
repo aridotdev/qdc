@@ -4,6 +4,8 @@ import { createRuntimeAttachmentService } from '../../utils/attachment-api'
 import { parseAttachmentId } from '../../utils/attachment-validation'
 import { AttachmentNotFoundError } from '../../services/attachments'
 import { getAuthActor } from '../../lib/auth-http'
+import { ERROR_CODES } from '../../../shared/constants'
+import { createApiError, toApiError } from '../../utils/api-error'
 
 export default eventHandler(async (event) => {
   getAuthActor(event)
@@ -16,13 +18,10 @@ export default eventHandler(async (event) => {
     attachment = await service.getAttachment(id)
   } catch (error) {
     if (error instanceof AttachmentNotFoundError) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Attachment tidak ditemukan.'
-      })
+      throw createApiError({ code: ERROR_CODES.NOT_FOUND })
     }
 
-    throw error
+    throw toApiError(error)
   }
 
   const storage = service.storage
@@ -31,13 +30,13 @@ export default eventHandler(async (event) => {
     await stat(storage.resolvePath(attachment.storageName))
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'File attachment tidak ditemukan.'
+      throw createApiError({
+        code: ERROR_CODES.NOT_FOUND,
+        message: 'File attachment tidak ditemukan.'
       })
     }
 
-    throw error
+    throw toApiError(error)
   }
 
   setResponseHeader(event, 'content-type', attachment.fileType)

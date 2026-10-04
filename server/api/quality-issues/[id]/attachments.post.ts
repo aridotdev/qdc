@@ -1,9 +1,13 @@
 import { and, eq } from 'drizzle-orm'
-import { QUALITY_ISSUE_DETAIL_ACTION } from '../../../../shared/constants'
+import {
+  ERROR_CODES,
+  QUALITY_ISSUE_DETAIL_ACTION
+} from '../../../../shared/constants'
 import { qualityIssueDetails } from '../../../database/schema'
 import db from '../../../database'
 import { uploadAttachment } from '../../../utils/attachment-api'
 import { parseAttachmentId } from '../../../utils/attachment-validation'
+import { createApiError } from '../../../utils/api-error'
 
 export default eventHandler(async (event) => {
   const issueId = parseAttachmentId(getRouterParam(event, 'id'))
@@ -17,9 +21,9 @@ export default eventHandler(async (event) => {
     .limit(1)
 
   if (!initialEvidence) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Quality Issue tidak ditemukan atau belum memiliki detail awal.'
+    throw createApiError({
+      code: ERROR_CODES.NOT_FOUND,
+      message: 'Quality Issue tidak ditemukan atau belum memiliki detail awal.'
     })
   }
 

@@ -5,6 +5,9 @@ import {
   publicAuthUser
 } from '../../lib/auth-http'
 
+import { ERROR_CODES } from '../../../shared/constants'
+import { createApiError, toApiError } from '../../utils/api-error'
+
 interface LoginBody {
   email?: unknown
   password?: unknown
@@ -14,9 +17,9 @@ export default eventHandler(async (event) => {
   const body = await readBody<LoginBody>(event)
 
   if (typeof body?.email !== 'string' || typeof body.password !== 'string') {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Email dan password wajib diisi.'
+    throw createApiError({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      message: 'Email dan password wajib diisi.'
     })
   }
 
@@ -35,10 +38,7 @@ export default eventHandler(async (event) => {
     return {
       user: publicAuthUser(result.response.user)
     }
-  } catch {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Email atau password tidak valid.'
-    })
+  } catch (error) {
+    throw toApiError(error)
   }
 })

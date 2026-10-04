@@ -1,6 +1,9 @@
 import type { AuthRequestContext } from './auth-http'
 import { getAuthHeaders, setAuthContext } from './auth-http'
 
+import { ERROR_CODES } from '../../shared/constants'
+import { createApiError } from '../utils/api-error'
+
 type AuthEvent = Parameters<Parameters<typeof eventHandler>[0]>[0]
 
 export function shouldRequireAuth(pathname: string): boolean {
@@ -14,10 +17,7 @@ export async function requireAuthSession(event: AuthEvent): Promise<AuthRequestC
   })
 
   if (!session) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Session valid diperlukan.'
-    })
+    throw createApiError({ code: ERROR_CODES.UNAUTHORIZED })
   }
 
   return setAuthContext(event, session)

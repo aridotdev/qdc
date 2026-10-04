@@ -1,16 +1,12 @@
 import { useRuntimeConfig } from '#imports'
 import { createFileStorage } from '../services/file-storage'
 import {
-  createAttachmentService,
-  InvalidAttachmentOwnerError
+  createAttachmentService
 } from '../services/attachments'
-import {
-  FileTooLargeError,
-  InvalidFileSizeError,
-  UnsupportedFileTypeError
-} from '../services/file-policy'
 import { getAuthActor } from '../lib/auth-http'
 import db from '../database'
+import { createApiError, toApiError } from './api-error'
+import { ERROR_CODES } from '../../shared/constants'
 
 export type AttachmentOwnerField = 'detailId' | 'sampleId' | 'reportId'
 
@@ -26,19 +22,7 @@ export function createRuntimeAttachmentService() {
 }
 
 export function mapAttachmentInputError(error: unknown): never {
-  if (
-    error instanceof UnsupportedFileTypeError
-    || error instanceof FileTooLargeError
-    || error instanceof InvalidFileSizeError
-    || error instanceof InvalidAttachmentOwnerError
-  ) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: error.message
-    })
-  }
-
-  throw error
+  throw toApiError(error)
 }
 
 export async function uploadAttachment(
@@ -50,9 +34,9 @@ export async function uploadAttachment(
   }
 ) {
   if (!await owner.exists()) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Owner attachment tidak ditemukan.'
+    throw createApiError({
+      code: ERROR_CODES.NOT_FOUND,
+      message: 'Owner attachment tidak ditemukan.'
     })
   }
 
@@ -60,9 +44,9 @@ export async function uploadAttachment(
   const files = parts?.filter(part => part.name === 'file' && part.filename) ?? []
 
   if (files.length !== 1) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Satu file dengan field "file" wajib dikirim.'
+    throw createApiError({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      message: 'Satu file dengan field "file" wajib dikirim.'
     })
   }
 
