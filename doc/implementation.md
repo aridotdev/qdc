@@ -341,7 +341,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 6. Shared Server Platform
 
-- [ ] TASK-020 - Implement Zod validation contracts
+- [x] TASK-020 - Implement Zod validation contracts
   - Depends on: TASK-004, TASK-006, TASK-007, TASK-008
   - Priority: P0
   - Acceptance:
