@@ -376,7 +376,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 7. Quality Issue Module
 
-- [ ] TASK-023 - Implement Quality Issue repository
+- [x] TASK-023 - Implement Quality Issue repository
   - Depends on: TASK-006, TASK-022
   - Priority: P0
   - Acceptance:
