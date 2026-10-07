@@ -398,7 +398,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Semua valid transition, semua invalid transition, non-admin rollback, dan
       rollback boundary test.
 
-- [ ] TASK-025 - Implement Quality Issue service dan initial evidence
+- [x] TASK-025 - Implement Quality Issue service dan initial evidence
   - Depends on: TASK-017, TASK-023, TASK-024
   - Priority: P0
   - Acceptance:
