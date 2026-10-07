@@ -295,4 +295,69 @@ describe('Quality Issue service', () => {
       code: 'ENOENT'
     })
   })
+
+  it('updates an issue without changing its status and records an audit event', async () => {
+    const service = createService()
+    const created = await service.create({
+      issueName: 'Update issue',
+      modelName: 'MODEL-QI',
+      serialNumber: 'SN-QI-UPDATE',
+      tanggalKejadian: '2026-10-08',
+      detail: 'Before update'
+    }, { actorUserId })
+
+    const updated = await service.update(created.issueId, {
+      detail: 'After update',
+      keterangan: 'Additional context'
+    }, { actorUserId })
+
+    expect(updated).toMatchObject({
+      detail: 'After update',
+      keterangan: 'Additional context',
+      status: QUALITY_ISSUE_STATUS.OPEN,
+      updatedByUserId: actorUserId
+    })
+
+    const logs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, created.issueId))
+
+    expect(logs.some(log => log.action === AUDIT_ACTION.UPDATE)).toBe(true)
+  })
+
+  it('deletes an issue, its timeline attachments, and physical files', async () => {
+    const service = createService()
+    const created = await service.create({
+      issueName: 'Delete issue',
+      modelName: 'MODEL-QI',
+      serialNumber: 'SN-QI-DELETE',
+      tanggalKejadian: '2026-10-08',
+      detail: 'Issue to delete',
+      attachments: [
+        {
+          fileName: 'delete-issue.png',
+          mimeType: 'image/png',
+          data: new TextEncoder().encode('delete issue evidence')
+        }
+      ]
+    }, { actorUserId })
+    const [attachment] = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, created.attachmentIds[0]!))
+
+    await service.remove(created.issueId, { actorUserId })
+
+    expect(await database.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, created.issueId))).toEqual([])
+    expect(await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, created.attachmentIds[0]!))).toEqual([])
+    await expect(stat(join(storageRoot, attachment!.storageName)))
+      .rejects.toMatchObject({ code: 'ENOENT' })
+  })
 })

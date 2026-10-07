@@ -410,7 +410,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Create tanpa attachment, create dengan attachment, progress, dan failure
       compensation integration test.
 
-- [ ] TASK-026 - Implement Quality Issue API
+- [x] TASK-026 - Implement Quality Issue API
   - Depends on: TASK-013, TASK-021, TASK-024, TASK-025
   - Priority: P0
   - Acceptance:

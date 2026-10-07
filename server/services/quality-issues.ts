@@ -6,10 +6,11 @@ import {
   QUALITY_ISSUE_STATUS
 } from '../../shared/constants'
 import type { createDatabase } from '../database/client'
-import type { Attachment } from '../database/schema'
+import type { Attachment, QualityIssue } from '../database/schema'
 import {
   createQualityIssueRepository,
-  type CreateQualityIssueInput
+  type CreateQualityIssueInput,
+  type UpdateQualityIssueInput
 } from '../repositories/quality-issues'
 import type { createAttachmentService, AttachmentUploadInput } from './attachments'
 import { recordAuditLog } from './audit-logs'
@@ -40,6 +41,17 @@ export interface AddQualityIssueProgressInput {
   remark?: string | null
   attachments?: QualityIssueFileInput[]
 }
+
+export type UpdateQualityIssueServiceInput = Pick<
+  UpdateQualityIssueInput,
+  | 'issueName'
+  | 'modelName'
+  | 'serialNumber'
+  | 'tanggalKejadian'
+  | 'notificationNumber'
+  | 'detail'
+  | 'keterangan'
+>
 
 export interface QualityIssueMutationContext {
   actorUserId: string
@@ -232,8 +244,89 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
     }
   }
 
+  async function update(
+    issueId: number,
+    input: UpdateQualityIssueServiceInput,
+    context: QualityIssueMutationContext
+  ): Promise<QualityIssue> {
+    return config.db.transaction(async (transaction) => {
+      const repository = createQualityIssueRepository({ db: transaction })
+      const issue = await repository.findById(issueId)
+
+      if (!issue) {
+        throw new QualityIssueServiceNotFoundError(issueId)
+      }
+
+      const changes = Object.fromEntries(
+        Object.entries(input).filter(([, value]) => value !== undefined)
+      ) as UpdateQualityIssueServiceInput
+      const updated = await repository.update(issueId, {
+        ...changes,
+        updatedAt: clock().toISOString(),
+        updatedByUserId: context.actorUserId
+      })
+
+      if (!updated) {
+        throw new QualityIssueServiceNotFoundError(issueId)
+      }
+
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE,
+        entityId: issueId,
+        action: AUDIT_ACTION.UPDATE,
+        metadata: { fields: Object.keys(changes) },
+        actorUserId: context.actorUserId,
+        createdAt: updated.updatedAt
+      })
+
+      return updated
+    })
+  }
+
+  async function remove(
+    issueId: number,
+    context: QualityIssueMutationContext
+  ): Promise<QualityIssue> {
+    const repository = createQualityIssueRepository({ db: config.db })
+    const issue = await repository.findDetailById(issueId)
+
+    if (!issue) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    const attachmentIds = issue.details.flatMap(detail =>
+      detail.attachments.map(attachment => attachment.id)
+    )
+
+    for (const attachmentId of attachmentIds) {
+      await config.attachments.deleteAttachment(attachmentId, context)
+    }
+
+    return config.db.transaction(async (transaction) => {
+      const transactionRepository = createQualityIssueRepository({ db: transaction })
+      const now = clock().toISOString()
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE,
+        entityId: issueId,
+        action: AUDIT_ACTION.DELETE,
+        actorUserId: context.actorUserId,
+        createdAt: now
+      })
+
+      const deleted = await transactionRepository.delete(issueId)
+
+      if (!deleted) {
+        throw new QualityIssueServiceNotFoundError(issueId)
+      }
+
+      return deleted
+    })
+  }
+
   return {
     create: createInitialIssue,
-    addProgress
+    addProgress,
+    update,
+    remove
   }
 }
