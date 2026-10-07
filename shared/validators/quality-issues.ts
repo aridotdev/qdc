@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   businessDateSchema,
+  isoDateTimeSchema,
   nonEmptyUpdateSchema,
   optionalNullableText,
   optionalText,
@@ -52,7 +53,22 @@ export const qualityIssuePaginationSchema = z.strictObject({
 
 export const qualityIssueListQuerySchema = qualityIssuePaginationSchema
 
+export const qualityIssueProgressSchema = z.strictObject({
+  tanggal: isoDateTimeSchema.optional(),
+  action: requiredText('Action'),
+  remark: optionalNullableText('Remark')
+})
+
+export const qualityIssueStatusOperationSchema = z.strictObject({
+  operation: z.enum(['FORWARD', 'ROLLBACK']),
+  reason: optionalNullableText('Alasan')
+})
+
 export type CreateQualityIssuePayload = z.infer<typeof createQualityIssueSchema>
 export type UpdateQualityIssuePayload = z.infer<typeof updateQualityIssueSchema>
 export type QualityIssueFilter = z.infer<typeof qualityIssueFilterSchema>
 export type QualityIssuePagination = z.infer<typeof qualityIssuePaginationSchema>
+export type QualityIssueProgressPayload = z.infer<typeof qualityIssueProgressSchema>
+export type QualityIssueStatusOperationPayload = z.infer<
+  typeof qualityIssueStatusOperationSchema
+>

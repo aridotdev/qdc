@@ -5,6 +5,8 @@ import {
   createTechnicalReportSchema,
   formatValidationError,
   qualityIssuePaginationSchema,
+  qualityIssueProgressSchema,
+  qualityIssueStatusOperationSchema,
   updateQualityIssueSchema
 } from '#shared'
 
@@ -103,5 +105,18 @@ describe('Zod validation contracts', () => {
       page: 1,
       limit: 20
     })
+  })
+
+  it('validates progress and status operation payloads', () => {
+    expect(qualityIssueProgressSchema.parse({
+      tanggal: '2026-10-03T00:00:00.000Z',
+      action: 'INVESTIGATION',
+      remark: 'Checked unit'
+    })).toMatchObject({ action: 'INVESTIGATION' })
+    expect(qualityIssueStatusOperationSchema.parse({ operation: 'FORWARD' })).toEqual({
+      operation: 'FORWARD'
+    })
+    expect(qualityIssueStatusOperationSchema.safeParse({ operation: 'CLOSED' }).success)
+      .toBe(false)
   })
 })

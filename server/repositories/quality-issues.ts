@@ -1,10 +1,12 @@
-import { and, asc, count, desc, eq, gte, like, lte, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, inArray, like, lte, or } from 'drizzle-orm'
 import type { PaginatedResponse } from '../../shared/types'
 import type { QualityIssuePagination } from '../../shared/validators/quality-issues'
 import type { createDatabase } from '../database/client'
 import {
+  attachments,
   qualityIssueDetails,
   qualityIssues,
+  type Attachment,
   type QualityIssue,
   type QualityIssueDetail
 } from '../database/schema'
@@ -27,7 +29,11 @@ export interface QualityIssueRepositoryConfig {
 }
 
 export interface QualityIssueWithDetails extends QualityIssue {
-  details: QualityIssueDetail[]
+  details: QualityIssueDetailWithAttachments[]
+}
+
+export interface QualityIssueDetailWithAttachments extends QualityIssueDetail {
+  attachments: Attachment[]
 }
 
 const qualityIssueSortFields = {
@@ -102,9 +108,32 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
       .where(eq(qualityIssueDetails.issueId, id))
       .orderBy(asc(qualityIssueDetails.tanggal), asc(qualityIssueDetails.id))
 
+    const detailIds = details.map(detail => detail.id)
+    const attachmentRows = detailIds.length === 0
+      ? []
+      : await config.db
+          .select()
+          .from(attachments)
+          .where(inArray(attachments.detailId, detailIds))
+          .orderBy(asc(attachments.id))
+    const attachmentsByDetail = new Map<number, Attachment[]>()
+
+    for (const attachment of attachmentRows) {
+      if (attachment.detailId === null) {
+        continue
+      }
+
+      const current = attachmentsByDetail.get(attachment.detailId) ?? []
+      current.push(attachment)
+      attachmentsByDetail.set(attachment.detailId, current)
+    }
+
     return {
       ...issue,
-      details
+      details: details.map(detail => ({
+        ...detail,
+        attachments: attachmentsByDetail.get(detail.id) ?? []
+      }))
     }
   }
 
