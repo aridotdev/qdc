@@ -17,6 +17,7 @@ type QualityIssueDatabase = Pick<
 type QualityIssueSortField = keyof typeof qualityIssueSortFields
 
 export type CreateQualityIssueInput = typeof qualityIssues.$inferInsert
+export type CreateQualityIssueDetailInput = typeof qualityIssueDetails.$inferInsert
 export type UpdateQualityIssueInput = Partial<
   Omit<QualityIssue, 'id' | 'createdAt' | 'createdByUserId'>
 >
@@ -107,6 +108,25 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     }
   }
 
+  async function createDetail(input: CreateQualityIssueDetailInput): Promise<QualityIssueDetail> {
+    const [created] = await config.db.insert(qualityIssueDetails).values(input).returning()
+
+    if (!created) {
+      throw new Error('Quality Issue detail gagal dibuat.')
+    }
+
+    return created
+  }
+
+  async function deleteDetailById(id: number): Promise<QualityIssueDetail | undefined> {
+    const [deleted] = await config.db
+      .delete(qualityIssueDetails)
+      .where(eq(qualityIssueDetails.id, id))
+      .returning()
+
+    return deleted
+  }
+
   async function list(query: QualityIssuePagination): Promise<PaginatedResponse<QualityIssue>> {
     const where = buildListConditions(query)
     const sort = resolveSort<
@@ -156,8 +176,10 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     create,
     findById,
     findDetailById,
+    createDetail,
     list,
     update,
+    deleteDetail: deleteDetailById,
     delete: deleteById
   }
 }
