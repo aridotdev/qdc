@@ -10,7 +10,10 @@ import {
 } from '../database/schema'
 import { createPaginatedResponse, getPaginationOffset, resolveSort } from '../utils/pagination'
 
-type QualityIssueDatabase = Awaited<ReturnType<typeof createDatabase>>['db']
+type QualityIssueDatabase = Pick<
+  Awaited<ReturnType<typeof createDatabase>>['db'],
+  'select' | 'insert' | 'update' | 'delete'
+>
 type QualityIssueSortField = keyof typeof qualityIssueSortFields
 
 export type CreateQualityIssueInput = typeof qualityIssues.$inferInsert

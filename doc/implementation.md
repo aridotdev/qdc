@@ -386,7 +386,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Repository integration test untuk CRUD, filter, pagination, dan ordering.
 
-- [ ] TASK-024 - Implement Quality Issue state machine service
+- [x] TASK-024 - Implement Quality Issue state machine service
   - Depends on: TASK-006, TASK-010, TASK-014, TASK-023
   - Priority: P0
   - Acceptance:
