@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
+import { authClient } from '~/utils/auth-client'
 
 defineProps<{
   collapsed?: boolean
@@ -7,17 +8,35 @@ defineProps<{
 
 const colorMode = useColorMode()
 const appConfig = useAppConfig()
+const toast = useToast()
+const { session, clearSession } = useCurrentSession()
 
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone', 'taupe', 'mauve', 'mist', 'olive']
 
-const user = ref({
-  name: 'Benjamin Canac',
+const user = computed(() => ({
+  name: session.value?.user.name ?? 'User',
   avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: 'Benjamin Canac'
+    alt: session.value?.user.name ?? 'User'
   }
-})
+}))
+
+async function logout() {
+  const { error } = await authClient.signOut()
+
+  if (error) {
+    toast.add({
+      title: 'Logout gagal',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-circle-alert'
+    })
+    return
+  }
+
+  clearSession()
+  await navigateTo('/login')
+}
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
@@ -158,7 +177,8 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   target: '_blank'
 }], [{
   label: 'Log out',
-  icon: 'i-lucide-log-out'
+  icon: 'i-lucide-log-out',
+  onSelect: logout
 }]]))
 </script>
 
