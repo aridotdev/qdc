@@ -421,7 +421,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - API contract, authorization, validation, conflict, dan not-found test.
 
-- [ ] TASK-027 - Implement Quality Issue list UI
+- [x] TASK-027 - Implement Quality Issue list UI
   - Depends on: TASK-002, TASK-022, TASK-026
   - Priority: P0
   - Acceptance:
