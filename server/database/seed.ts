@@ -3,7 +3,8 @@ import {
   DOCUMENT_TYPE,
   AUDIT_ACTION,
   AUDIT_ENTITY_TYPE,
-  QUALITY_ISSUE_DETAIL_ACTION
+  QUALITY_ISSUE_DETAIL_ACTION,
+  USER_ROLE
 } from '../../shared/constants/domain'
 import type { createDatabase } from './client'
 import { createAuth } from '../lib/auth-config'
@@ -11,11 +12,11 @@ import { qualityIssueDetails, qualityIssues, sampleDefects, technicalReports, us
 import { recordAuditLog } from '../services/audit-logs'
 
 const DEVELOPMENT_AUTH_SECRET = 'JH6GCnacSZVgpIbeFnyjJVtoGDZEP13r'
-const DEVELOPMENT_USER = {
-  email: 'qrcc@qdc.com',
-  name: 'QRCC User',
+const DEFAULT_ADMIN = {
+  email: 'admin@qdc.local',
+  name: 'Administrator',
   password: 'qwertyuiop'
-}
+} as const
 const SEED_SERIAL_NUMBER = 'DEV-SEED-SERIAL-001'
 const SEED_DOCUMENT_NUMBER = 'DEV-SEED-TR-001'
 
@@ -26,14 +27,43 @@ export interface SeedResult {
   seeded: boolean
 }
 
-async function getOrCreateDevelopmentUser(database: Database['db']): Promise<string> {
+export interface SeedAdmin {
+  email: string
+  name: string
+  password: string
+}
+
+function getSeedAdmin(): SeedAdmin {
+  const admin = {
+    email: process.env.SEED_ADMIN_EMAIL ?? DEFAULT_ADMIN.email,
+    name: process.env.SEED_ADMIN_NAME ?? DEFAULT_ADMIN.name,
+    password: process.env.SEED_ADMIN_PASSWORD ?? DEFAULT_ADMIN.password
+  }
+
+  if (admin.password.length < 8) {
+    throw new Error('SEED_ADMIN_PASSWORD minimal 8 karakter.')
+  }
+
+  return admin
+}
+
+export async function seedAdminAccount(database: Database['db']): Promise<string> {
+  const admin = getSeedAdmin()
   const existingUser = await database
     .select({ id: user.id })
     .from(user)
-    .where(eq(user.email, DEVELOPMENT_USER.email))
+    .where(eq(user.email, admin.email))
     .limit(1)
 
   if (existingUser[0]?.id) {
+    await database
+      .update(user)
+      .set({
+        role: USER_ROLE.ADMIN,
+        updatedAt: new Date()
+      })
+      .where(eq(user.id, existingUser[0].id))
+
     return existingUser[0].id
   }
 
@@ -42,17 +72,25 @@ async function getOrCreateDevelopmentUser(database: Database['db']): Promise<str
     secret: process.env.BETTER_AUTH_SECRET ?? DEVELOPMENT_AUTH_SECRET
   })
   const result = await auth.api.signUpEmail({
-    body: DEVELOPMENT_USER,
+    body: admin,
     headers: new Headers({
       origin: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'
     })
   })
 
+  await database
+    .update(user)
+    .set({
+      role: USER_ROLE.ADMIN,
+      updatedAt: new Date()
+    })
+    .where(eq(user.id, result.user.id))
+
   return result.user.id
 }
 
 export async function seedDatabase(database: Database['db']): Promise<SeedResult> {
-  const userId = await getOrCreateDevelopmentUser(database)
+  const userId = await seedAdminAccount(database)
   const existingSeed = await database
     .select({ id: qualityIssues.id })
     .from(qualityIssues)
@@ -177,7 +215,8 @@ export async function seedDatabase(database: Database['db']): Promise<SeedResult
 }
 
 export const developmentSeed = {
-  userEmail: DEVELOPMENT_USER.email,
+  userEmail: getSeedAdmin().email,
+  userPassword: getSeedAdmin().password,
   serialNumber: SEED_SERIAL_NUMBER,
   documentNumber: SEED_DOCUMENT_NUMBER
 }
