@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { format } from 'date-fns'
 import type { Mail } from '~/types'
+import { formatIndonesianDateTime } from '~/utils/date'
 
 defineProps<{
   mail: Mail
@@ -100,7 +100,7 @@ function onSubmit() {
       </div>
 
       <p class="max-sm:pl-16 text-muted text-sm sm:mt-2">
-        {{ format(new Date(mail.date), 'dd MMM HH:mm') }}
+        {{ formatIndonesianDateTime(mail.date) }}
       </p>
     </div>
 
