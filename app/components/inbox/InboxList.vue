@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { format, isToday } from 'date-fns'
+import { isToday } from 'date-fns'
 import type { Mail } from '~/types'
+import { formatIndonesianDate, formatIndonesianTime } from '~/utils/date'
 
 const props = defineProps<{
   mails: Mail[]
@@ -66,7 +67,7 @@ defineShortcuts({
             <UChip v-if="mail.unread" />
           </div>
 
-          <span>{{ isToday(new Date(mail.date)) ? format(new Date(mail.date), 'HH:mm') : format(new Date(mail.date), 'dd MMM') }}</span>
+          <span>{{ isToday(new Date(mail.date)) ? formatIndonesianTime(mail.date) : formatIndonesianDate(mail.date) }}</span>
         </div>
         <p class="truncate" :class="[mail.unread && 'font-semibold']">
           {{ mail.subject }}

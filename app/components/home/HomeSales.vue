@@ -2,6 +2,7 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { Period, Range, Sale } from '~/types'
+import { formatIndonesianDateTime } from '~/utils/date'
 
 const props = defineProps<{
   period: Period
@@ -49,15 +50,9 @@ const columns: TableColumn<Sale>[] = [
   },
   {
     accessorKey: 'date',
-    header: 'Date',
+    header: 'Tanggal',
     cell: ({ row }) => {
-      return new Date(row.getValue('date')).toLocaleString('en-US', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      })
+      return formatIndonesianDateTime(row.getValue('date'))
     }
   },
   {

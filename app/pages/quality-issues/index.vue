@@ -7,6 +7,7 @@ import {
   type QualityIssueSortField,
   useQualityIssues
 } from '~/composables/useQualityIssues'
+import { formatIndonesianDate } from '~/utils/date'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
@@ -106,8 +107,7 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'tanggalKejadian',
     header: sortableHeader('tanggalKejadian'),
-    cell: ({ row }) =>
-      new Date(`${row.original.tanggalKejadian}T00:00:00`).toLocaleDateString('id-ID')
+    cell: ({ row }) => formatIndonesianDate(row.original.tanggalKejadian)
   },
   {
     accessorKey: 'notificationNumber',
@@ -151,6 +151,9 @@ function openDetail(_: Event, row: { original: QualityIssueListItem }) {
       <UDashboardNavbar title="Quality Issues">
         <template #leading>
           <UDashboardSidebarCollapse />
+        </template>
+        <template #right>
+          <UButton to="/quality-issues/new" icon="i-lucide-plus" label="New Quality Issue" />
         </template>
       </UDashboardNavbar>
     </template>

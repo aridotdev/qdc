@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { createDatabase } from '../server/database/client'
 import { migrateDatabase } from '../server/database/migrate'
-import { seedDatabase } from '../server/database/seed'
+import { seedAdminAccount, seedDatabase } from '../server/database/seed'
 
 const defaultDatabaseUrl = 'file:.data/qdc-local.db'
 
@@ -63,7 +63,29 @@ async function runSeed(databaseUrl: string): Promise<void> {
   try {
     await migrateDatabase(database)
     const result = await seedDatabase(database.db)
-    console.log(result.seeded ? 'Development seed completed.' : 'Development seed already applied.')
+    console.log(
+      result.seeded
+        ? `Development seed completed. Admin email: ${process.env.SEED_ADMIN_EMAIL ?? 'admin@qdc.local'}`
+        : 'Development seed already applied.'
+    )
+  } finally {
+    database.client.close()
+  }
+}
+
+async function runSeedAdmin(databaseUrl: string): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Development admin seed tidak boleh dijalankan pada production.')
+  }
+
+  const database = await openDatabase(databaseUrl)
+
+  try {
+    await migrateDatabase(database)
+    const userId = await seedAdminAccount(database.db)
+    console.log(
+      `Admin seed completed. User ID: ${userId}. Email: ${process.env.SEED_ADMIN_EMAIL ?? 'admin@qdc.local'}`
+    )
   } finally {
     database.client.close()
   }
@@ -91,7 +113,7 @@ async function runReset(databaseUrl: string): Promise<void> {
 }
 
 function printUsage(): void {
-  console.error('Usage: tsx scripts/database.ts <migrate|seed|reset>')
+  console.error('Usage: tsx scripts/database.ts <migrate|seed|seed-admin|reset>')
 }
 
 async function main(): Promise<void> {
@@ -105,6 +127,11 @@ async function main(): Promise<void> {
 
   if (command === 'seed') {
     await runSeed(databaseUrl)
+    return
+  }
+
+  if (command === 'seed-admin') {
+    await runSeedAdmin(databaseUrl)
     return
   }
 

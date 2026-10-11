@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
+import { id } from '@nuxt/ui/locale'
 
 defineProps<{
   error: NuxtError
@@ -12,13 +13,13 @@ useSeoMeta({
 
 useHead({
   htmlAttrs: {
-    lang: 'en'
+    lang: 'id'
   }
 })
 </script>
 
 <template>
-  <UApp>
+  <UApp :locale="id">
     <UError :error="error" />
   </UApp>
 </template>

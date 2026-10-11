@@ -30,16 +30,36 @@ Jalankan:
 pnpm db:seed
 ```
 
+Jika hanya membutuhkan akun admin tanpa data demo, jalankan:
+
+```bash
+pnpm db:seed:admin
+```
+
+Command tersebut hanya menjalankan migration dan membuat akun admin seed.
+
 Alurnya:
 
 1. Membuka database dan menjalankan migration.
-2. Membuat user development melalui Better Auth agar password di-hash oleh
-   provider auth.
+2. Membuat akun admin development melalui Better Auth agar password di-hash
+   oleh provider auth.
 3. Membuat contoh Quality Issue, timeline, Sample Defect, Technical Report,
    dan audit log.
 4. Menjalankan insert data terkait dalam satu transaction.
 5. Mengecek identifier seed agar command dapat dijalankan ulang tanpa membuat
    duplikat.
+
+Akun admin default:
+
+```text
+Email:    admin@qdc.local
+Password: QdcAdmin123!
+Role:     ADMIN
+```
+
+Credential dapat diganti melalui `SEED_ADMIN_EMAIL`, `SEED_ADMIN_NAME`, dan
+`SEED_ADMIN_PASSWORD`. Password akun yang sudah ada tidak diubah ketika seed
+dijalankan ulang; seed hanya memastikan role akun target adalah `ADMIN`.
 
 ## Database Reset
 

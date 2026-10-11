@@ -5,7 +5,9 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { eq } from 'drizzle-orm'
 import { createDatabase } from '../../server/database/client'
 import { migrateDatabase } from '../../server/database/migrate'
+import { createAuth } from '../../server/lib/auth-config'
 import { developmentSeed, seedDatabase } from '../../server/database/seed'
+import { USER_ROLE } from '../../shared/constants/domain'
 import {
   auditLogs,
   qualityIssues,
@@ -86,7 +88,7 @@ describe('database lifecycle', () => {
       const firstSeed = await seedDatabase(database.db)
       const secondSeed = await seedDatabase(database.db)
       const seededUsers = await database.db
-        .select({ id: user.id })
+        .select({ id: user.id, role: user.role })
         .from(user)
         .where(eq(user.email, developmentSeed.userEmail))
       const seededIssues = await database.db
@@ -109,10 +111,26 @@ describe('database lifecycle', () => {
       expect(firstSeed.seeded).toBe(true)
       expect(secondSeed).toEqual({ userId: firstSeed.userId, seeded: false })
       expect(seededUsers).toHaveLength(1)
+      expect(seededUsers[0]?.role).toBe(USER_ROLE.ADMIN)
       expect(seededIssues).toHaveLength(1)
       expect(seededSamples).toHaveLength(1)
       expect(seededReports).toHaveLength(1)
       expect(seededAuditLogs).toHaveLength(4)
+
+      const auth = createAuth(database.db, {
+        baseURL: 'http://localhost:3000',
+        secret: 'test-secret-that-is-at-least-32-characters-long'
+      })
+      const signIn = await auth.api.signInEmail({
+        body: {
+          email: developmentSeed.userEmail,
+          password: developmentSeed.userPassword
+        },
+        headers: new Headers({ origin: 'http://localhost:3000' })
+      })
+
+      expect(signIn.user.id).toBe(firstSeed.userId)
+      expect(signIn.user.role).toBe(USER_ROLE.ADMIN)
     } finally {
       database.client.close()
     }

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { id } from '@nuxt/ui/locale'
+
 const colorMode = useColorMode()
 
 const color = computed(() => colorMode.value === 'dark' ? '#1b1718' : 'white')
@@ -13,7 +15,7 @@ useHead({
     { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
-    lang: 'en'
+    lang: 'id'
   }
 })
 
@@ -31,7 +33,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <UApp>
+  <UApp :locale="id">
     <NuxtLoadingIndicator />
 
     <NuxtLayout>

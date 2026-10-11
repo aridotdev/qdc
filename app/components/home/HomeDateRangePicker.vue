@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import { DateFormatter, getLocalTimeZone, CalendarDate, today } from '@internationalized/date'
+import { getLocalTimeZone, CalendarDate, today } from '@internationalized/date'
 import type { Range } from '~/types'
-
-const df = new DateFormatter('en-US', {
-  dateStyle: 'medium'
-})
+import { formatIndonesianDate } from '~/utils/date'
 
 const selected = defineModel<Range>({ required: true })
 
 const ranges = [
-  { label: 'Last 7 days', days: 7 },
-  { label: 'Last 14 days', days: 14 },
-  { label: 'Last 30 days', days: 30 },
-  { label: 'Last 3 months', months: 3 },
-  { label: 'Last 6 months', months: 6 },
-  { label: 'Last year', years: 1 }
+  { label: '7 hari terakhir', days: 7 },
+  { label: '14 hari terakhir', days: 14 },
+  { label: '30 hari terakhir', days: 30 },
+  { label: '3 bulan terakhir', months: 3 },
+  { label: '6 bulan terakhir', months: 6 },
+  { label: '1 tahun terakhir', years: 1 }
 ]
 
 const toCalendarDate = (date: Date) => {
@@ -88,14 +85,14 @@ const selectRange = (range: { days?: number, months?: number, years?: number }) 
       <span class="truncate">
         <template v-if="selected.start">
           <template v-if="selected.end">
-            {{ df.format(selected.start) }} - {{ df.format(selected.end) }}
+            {{ formatIndonesianDate(selected.start) }} - {{ formatIndonesianDate(selected.end) }}
           </template>
           <template v-else>
-            {{ df.format(selected.start) }}
+            {{ formatIndonesianDate(selected.start) }}
           </template>
         </template>
         <template v-else>
-          Pick a date
+          Pilih tanggal
         </template>
       </span>
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format } from 'date-fns'
+import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns'
 import { VisXYContainer, VisLine, VisAxis, VisArea, VisCrosshair, VisTooltip } from '@unovis/vue'
 import type { Period, Range } from '~/types'
+import { formatIndonesianDate } from '~/utils/date'
 
 const cardRef = useTemplateRef<HTMLElement | null>('cardRef')
 
@@ -40,11 +41,7 @@ const total = computed(() => data.value.reduce((acc: number, { amount }) => acc 
 const formatNumber = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format
 
 const formatDate = (date: Date): string => {
-  return ({
-    daily: format(date, 'd MMM'),
-    weekly: format(date, 'd MMM'),
-    monthly: format(date, 'MMM yyy')
-  })[props.period]
+  return formatIndonesianDate(date)
 }
 
 const xTicks = (i: number) => {
