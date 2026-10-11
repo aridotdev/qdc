@@ -49,7 +49,7 @@ const datePickerValue = computed<CalendarDate | undefined>({
   }
 })
 
-const attachment = ref<File | null>(null)
+const attachments = ref<File[]>([])
 const attachmentError = ref('')
 const submitError = ref('')
 const isSubmitting = ref(false)
@@ -86,18 +86,20 @@ const attachmentPolicies: Record<string, { mimeType: string, maxSize: number }> 
   }
 }
 
-function validateAttachment(file: File | null): string {
-  if (!file) return ''
+function validateAttachments(files: File[]): string {
+  if (files.length === 0) return ''
 
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
-  const policy = attachmentPolicies[extension]
+  for (const file of files) {
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+    const policy = attachmentPolicies[extension]
 
-  if (!policy || file.type !== policy.mimeType) {
-    return 'Extension dan MIME file tidak didukung atau tidak cocok.'
-  }
+    if (!policy || file.type !== policy.mimeType) {
+      return `${file.name}: extension dan MIME file tidak didukung atau tidak cocok.`
+    }
 
-  if (file.size > policy.maxSize) {
-    return `Ukuran file melebihi batas ${formatFileSize(policy.maxSize)}.`
+    if (file.size > policy.maxSize) {
+      return `${file.name}: ukuran file melebihi batas ${formatFileSize(policy.maxSize)}.`
+    }
   }
 
   return ''
@@ -107,8 +109,8 @@ function formatFileSize(size: number): string {
   return size >= 1024 * 1024 ? `${size / (1024 * 1024)} MB` : `${size / 1024} KB`
 }
 
-watch(attachment, (file) => {
-  attachmentError.value = validateAttachment(file)
+watch(attachments, (files) => {
+  attachmentError.value = validateAttachments(files)
 })
 
 function getApiError(error: unknown): {
@@ -143,7 +145,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
   submitError.value = ''
   form.value?.setErrors([])
-  attachmentError.value = validateAttachment(attachment.value)
+  attachmentError.value = validateAttachments(attachments.value)
 
   if (attachmentError.value) return
 
@@ -158,8 +160,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     }
 
-    if (attachment.value) {
-      formData.append('attachment', attachment.value)
+    for (const attachment of attachments.value) {
+      formData.append('attachment', attachment)
     }
 
     const result = await $fetch<{ issueId: number }>('/api/quality-issues', {
@@ -388,31 +390,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               </div>
 
               <UFormField label="Attachment" :error="attachmentError || undefined">
-                <div
-                  class="flex flex-col gap-4 rounded-xl border border-default bg-elevated/30 p-3 sm:flex-row sm:items-center"
-                >
-                  <div
-                    class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                  >
-                    <UIcon name="i-lucide-paperclip" class="size-5" />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-xs font-semibold text-highlighted">
-                      Upload attachment
-                    </p>
-                    <p class="truncate text-[11px] text-muted">
-                      JPG, PNG, PDF, DOCX, XLSX maksimal 1 MB | MP4 maksimal 10 MB
-                    </p>
-                  </div>
-                  <UFileUpload
-                    v-model="attachment"
-                    :accept="attachmentAccept"
-                    variant="button"
-                    label="Pilih file"
-                    icon="i-lucide-upload"
-                    :disabled="isSubmitting"
-                  />
-                </div>
+                <UFileUpload
+                  v-model="attachments"
+                  position="inside"
+                  layout="list"
+                  multiple
+                  label="Pilih atau seret file ke sini"
+                  description="JPG, PNG, PDF, DOCX, XLSX maksimal 1 MB | MP4 maksimal 10 MB"
+                  :accept="attachmentAccept"
+                  :disabled="isSubmitting"
+                  class="w-full"
+                  :ui="{
+                    base: 'min-h-40'
+                  }"
+                />
               </UFormField>
             </section>
 

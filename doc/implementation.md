@@ -432,7 +432,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Browser test search, filter, pagination, refresh, empty, dan API error.
 
-- [ ] TASK-028 - Implement Quality Issue create UI
+- [x] TASK-028 - Implement Quality Issue create UI
   - Depends on: TASK-016, TASK-026, TASK-027
   - Priority: P0
   - Acceptance:
