@@ -35,21 +35,26 @@ dipakai sebagai FK, dan tidak mengubah relasi database.
 
 ### Tahap 1 — Persiapan dan kontrak
 
-- [ ] Pastikan working tree dan migration saat ini dipahami; jangan membatalkan
+- [x] Pastikan working tree dan migration saat ini dipahami; jangan membatalkan
       perubahan UI yang tidak terkait.
-- [ ] Pilih dependency UUIDv7 yang maintained dan memiliki API `v7()` atau
+- [x] Pilih dependency UUIDv7 yang maintained dan memiliki API `v7()` atau
       API setara.
-- [ ] Tambahkan dependency hanya jika belum tersedia, lalu commit lockfile.
-- [ ] Tetapkan helper terpusat, misalnya
+- [x] Tambahkan dependency hanya jika belum tersedia, lalu commit lockfile.
+- [x] Tetapkan helper terpusat, misalnya
       `server/utils/public-id.ts`, yang:
       - menerima jenis entity (`QI`, `SD`, atau `TR`);
       - menghasilkan `${prefix}-${uuidv7()}`;
       - tidak menerima nilai timestamp dari client;
       - tidak mengandung retry loop yang tidak perlu.
-- [ ] Tetapkan validator format public ID untuk kebutuhan response, lookup, dan
+- [x] Tetapkan validator format public ID untuk kebutuhan response, lookup, dan
       test. Validator harus membedakan prefix yang benar untuk setiap entity.
-- [ ] Tetapkan bahwa `public_id` bukan bagian dari input create/update dari
+- [x] Tetapkan bahwa `public_id` bukan bagian dari input create/update dari
       client.
+
+Status tahap 1: selesai. Kontrak dan helper tersedia di
+`shared/constants/public-id.ts`, `shared/validators/public-id.ts`, dan
+`server/utils/public-id.ts`. Schema database, backfill, jalur create, response,
+dan pemakaian UI tetap menunggu tahap berikutnya.
 
 ### Tahap 2 — Perubahan schema database
 
