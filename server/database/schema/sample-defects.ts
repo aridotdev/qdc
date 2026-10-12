@@ -1,10 +1,11 @@
-import { check, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { SAMPLE_CONDITIONS, SAMPLE_DEFECT_STATUS, SAMPLE_DEFECT_STATUSES } from '../../../shared/constants/domain'
 import { auditFields } from './_audit-fields'
 import { checkEnum } from './_check-enum'
 import { qualityIssues } from './quality-issues'
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
+import { createPublicId } from '../../utils/public-id'
 
 /**
  * db-schema.md §4 — Sample Defect.
@@ -18,6 +19,9 @@ export const sampleDefects = sqliteTable(
   'sample_defects',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    publicId: text('public_id')
+      .notNull()
+      .$defaultFn(() => createPublicId('SD')),
     batchId: text('batch_id').notNull(),
     issueId: integer('issue_id').references(() => qualityIssues.id, { onDelete: 'set null' }),
     notificationNumber: text('notification_number').notNull(),
@@ -42,6 +46,7 @@ export const sampleDefects = sqliteTable(
     ...auditFields
   },
   table => [
+    uniqueIndex('sample_defects_public_id_unique').on(table.publicId),
     index('sample_defects_batch_id_idx').on(table.batchId),
     index('sample_defects_issue_id_idx').on(table.issueId),
     index('sample_defects_notification_number_idx').on(table.notificationNumber),
@@ -79,7 +84,8 @@ export const insertSampleDefectSchema = createInsertSchema(sampleDefects, {
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
-  updatedByUserId: true
+  updatedByUserId: true,
+  publicId: true
 })
 
 export const selectSampleDefectSchema = createSelectSchema(sampleDefects)
@@ -108,7 +114,8 @@ export const updateSampleDefectSchema = createUpdateSchema(sampleDefects, {
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
-  updatedByUserId: true
+  updatedByUserId: true,
+  publicId: true
 })
 
 export type SampleDefect = typeof sampleDefects.$inferSelect

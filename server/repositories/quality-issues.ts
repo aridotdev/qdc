@@ -21,7 +21,7 @@ type QualityIssueSortField = keyof typeof qualityIssueSortFields
 export type CreateQualityIssueInput = typeof qualityIssues.$inferInsert
 export type CreateQualityIssueDetailInput = typeof qualityIssueDetails.$inferInsert
 export type UpdateQualityIssueInput = Partial<
-  Omit<QualityIssue, 'id' | 'createdAt' | 'createdByUserId'>
+  Omit<QualityIssue, 'id' | 'publicId' | 'createdAt' | 'createdByUserId'>
 >
 
 export interface QualityIssueRepositoryConfig {

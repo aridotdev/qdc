@@ -24,6 +24,7 @@ Table: `quality_issues`
 | Kolom | Tipe | Constraint | Keterangan |
 | --- | --- | --- | --- |
 | id | integer | PK | ID quality issue |
+| public_id | text | NOT NULL, UNIQUE | Identifier publik `QI-<uuid-v7>` |
 | issue_name | text | NOT NULL | Nama masalah |
 | model_name | text | NOT NULL | Model produk |
 | serial_number | text | NOT NULL | Nomor seri produk |
@@ -39,6 +40,7 @@ Table: `quality_issues`
 
 Indexes:
 
+- unique `quality_issues_public_id_unique`
 - `status`
 - `notification_number`
 - `model_name`
@@ -81,6 +83,7 @@ Table: `sample_defects`
 | Kolom | Tipe | Constraint | Keterangan |
 | --- | --- | --- | --- |
 | id | integer | PK | ID record per part |
+| public_id | text | NOT NULL, UNIQUE | Identifier publik `SD-<uuid-v7>` |
 | batch_id | text | NOT NULL | Identitas satu request multi-part |
 | issue_id | integer | NULL, FK, ON DELETE SET NULL | Relasi optional ke Quality Issue |
 | notification_number | text | NOT NULL | Nomor notifikasi cabang |
@@ -117,6 +120,7 @@ SUPPLIER_ANALYZED
 
 Indexes:
 
+- unique `sample_defects_public_id_unique`
 - `batch_id`
 - `issue_id`
 - `notification_number`
@@ -134,6 +138,7 @@ Table: `technical_reports`
 | Kolom | Tipe | Constraint | Keterangan |
 | --- | --- | --- | --- |
 | id | integer | PK | ID report |
+| public_id | text | NOT NULL, UNIQUE | Identifier publik `TR-<uuid-v7>` |
 | issue_id | integer | NULL, FK, ON DELETE SET NULL | Relasi optional |
 | document_number | text | NOT NULL, UNIQUE | Nomor dokumen |
 | document_type | text | NOT NULL | `TECHNICAL_REPORT` atau `SERVICE_TIPS` |
@@ -153,6 +158,7 @@ Table: `technical_reports`
 
 Indexes:
 
+- unique `technical_reports_public_id_unique`
 - unique `document_number`
 - `issue_id`
 - `document_type`
@@ -234,3 +240,14 @@ sebelum operasi delete berhasil.
 - File write dan database insert bukan atomic; service wajib melakukan cleanup
   kompensasi.
 - Status transition dan audit log ditulis dalam transaction yang sama.
+
+## 9. Public ID
+
+`public_id` dibuat server-side menggunakan UUIDv7 dan tidak memiliki default
+SQL. Drizzle memakai runtime default function yang memanggil helper public ID
+untuk memastikan direct insert server tetap menghasilkan nilai sebelum SQL
+dijalankan. Schema insert dan update client tidak mengekspos `publicId`.
+
+Migration schema tahap 2 menambahkan kolom `NOT NULL` dan unique index pada
+database kosong. Database existing membutuhkan migration bertahap, backfill,
+verifikasi, dan rebuild SQLite pada tahap 3.

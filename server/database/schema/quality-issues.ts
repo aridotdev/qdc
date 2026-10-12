@@ -1,9 +1,10 @@
-import { check, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { QUALITY_ISSUE_STATUS, QUALITY_ISSUE_STATUSES } from '../../../shared/constants/domain'
 import { auditFields } from './_audit-fields'
 import { checkEnum } from './_check-enum'
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
+import { createPublicId } from '../../utils/public-id'
 
 /**
  * db-schema.md §2 — Quality Issue
@@ -14,6 +15,9 @@ export const qualityIssues = sqliteTable(
   'quality_issues',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    publicId: text('public_id')
+      .notNull()
+      .$defaultFn(() => createPublicId('QI')),
     issueName: text('issue_name').notNull(),
     modelName: text('model_name').notNull(),
     serialNumber: text('serial_number').notNull(),
@@ -28,6 +32,7 @@ export const qualityIssues = sqliteTable(
     ...auditFields
   },
   table => [
+    uniqueIndex('quality_issues_public_id_unique').on(table.publicId),
     index('quality_issues_status_idx').on(table.status),
     index('quality_issues_notification_number_idx').on(table.notificationNumber),
     index('quality_issues_model_name_idx').on(table.modelName),
@@ -50,7 +55,8 @@ export const insertQualityIssueSchema = createInsertSchema(qualityIssues, {
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
-  updatedByUserId: true
+  updatedByUserId: true,
+  publicId: true
 })
 
 export const selectQualityIssueSchema = createSelectSchema(qualityIssues)
@@ -68,7 +74,8 @@ export const updateQualityIssueSchema = createUpdateSchema(qualityIssues, {
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
-  updatedByUserId: true
+  updatedByUserId: true,
+  publicId: true
 })
 
 export type QualityIssue = typeof qualityIssues.$inferSelect

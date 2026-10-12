@@ -1,10 +1,11 @@
-import { check, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { DOCUMENT_TYPES } from '../../../shared/constants/domain'
 import { auditFields } from './_audit-fields'
 import { checkEnum } from './_check-enum'
 import { qualityIssues } from './quality-issues'
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
+import { createPublicId } from '../../utils/public-id'
 
 /**
  * db-schema.md §5 — Technical Report.
@@ -14,6 +15,9 @@ export const technicalReports = sqliteTable(
   'technical_reports',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    publicId: text('public_id')
+      .notNull()
+      .$defaultFn(() => createPublicId('TR')),
     issueId: integer('issue_id').references(() => qualityIssues.id, { onDelete: 'set null' }),
     documentNumber: text('document_number').notNull().unique(),
     documentType: text('document_type').notNull(),
@@ -30,6 +34,7 @@ export const technicalReports = sqliteTable(
     ...auditFields
   },
   table => [
+    uniqueIndex('technical_reports_public_id_unique').on(table.publicId),
     index('technical_reports_issue_id_idx').on(table.issueId),
     index('technical_reports_document_type_idx').on(table.documentType),
     index('technical_reports_release_date_idx').on(table.releaseDate),
@@ -59,7 +64,8 @@ export const insertTechnicalReportSchema = createInsertSchema(technicalReports, 
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
-  updatedByUserId: true
+  updatedByUserId: true,
+  publicId: true
 })
 
 export const selectTechnicalReportSchema = createSelectSchema(technicalReports)
@@ -82,7 +88,8 @@ export const updateTechnicalReportSchema = createUpdateSchema(technicalReports, 
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
-  updatedByUserId: true
+  updatedByUserId: true,
+  publicId: true
 })
 
 export type TechnicalReport = typeof technicalReports.$inferSelect

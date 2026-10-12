@@ -14,22 +14,22 @@ dipakai sebagai FK, dan tidak mengubah relasi database.
 
 ### Keputusan desain
 
-- [ ] Simpan `public_id` sebagai `text`.
-- [ ] Gunakan UUIDv7 dari library yang teruji; jangan membuat algoritma UUIDv7
+- [x] Simpan `public_id` sebagai `text`.
+- [x] Gunakan UUIDv7 dari library yang teruji; jangan membuat algoritma UUIDv7
       sendiri.
-- [ ] Format canonical:
+- [x] Format canonical:
       `QI-<uuid-v7>`, `SD-<uuid-v7>`, `TR-<uuid-v7>`.
-- [ ] Prefix menggunakan huruf besar; UUID menggunakan format lowercase
+- [x] Prefix menggunakan huruf besar; UUID menggunakan format lowercase
       canonical.
-- [ ] `public_id` dibuat server-side saat record dibuat dan tidak dapat diubah
+- [x] `public_id` dibuat server-side saat record dibuat dan tidak dapat diubah
       pada update.
-- [ ] Tambahkan unique index pada masing-masing tabel.
-- [ ] Jangan memakai Unix millisecond saja karena dapat collision pada request
+- [x] Tambahkan unique index pada masing-masing tabel.
+- [x] Jangan memakai Unix millisecond saja karena dapat collision pada request
       yang terjadi dalam millisecond yang sama.
-- [ ] Jangan mengganti primary key integer atau foreign key pada task ini.
-- [ ] Jangan mengubah `audit_logs.entity_id`; audit log tetap merujuk ke ID
+- [x] Jangan mengganti primary key integer atau foreign key pada task ini.
+- [x] Jangan mengubah `audit_logs.entity_id`; audit log tetap merujuk ke ID
       internal.
-- [ ] Tahap pertama tetap kompatibel dengan API dan URL numeric yang sudah ada.
+- [x] Tahap pertama tetap kompatibel dengan API dan URL numeric yang sudah ada.
       Migrasi URL ke `public_id` hanya dilakukan setelah persistence dan
       backfill tervalidasi.
 
@@ -53,26 +53,32 @@ dipakai sebagai FK, dan tidak mengubah relasi database.
 
 Status tahap 1: selesai. Kontrak dan helper tersedia di
 `shared/constants/public-id.ts`, `shared/validators/public-id.ts`, dan
-`server/utils/public-id.ts`. Schema database, backfill, jalur create, response,
-dan pemakaian UI tetap menunggu tahap berikutnya.
+`server/utils/public-id.ts`. Schema database tahap 2 sudah tersedia; backfill,
+response, dan pemakaian UI tetap menunggu tahap berikutnya.
 
 ### Tahap 2 — Perubahan schema database
 
-- [ ] Tambahkan kolom `public_id` ke:
+- [x] Tambahkan kolom `public_id` ke:
       - `server/database/schema/quality-issues.ts`
       - `server/database/schema/sample-defects.ts`
       - `server/database/schema/technical-reports.ts`
-- [ ] Definisikan kolom sebagai `text`, `NOT NULL` pada schema final, dan
+- [x] Definisikan kolom sebagai `text`, `NOT NULL` pada schema final, dan
       tidak memiliki default SQL yang dibuat sendiri.
-- [ ] Tambahkan unique index yang jelas dan konsisten:
+- [x] Tambahkan unique index yang jelas dan konsisten:
       - `quality_issues_public_id_unique`
       - `sample_defects_public_id_unique`
       - `technical_reports_public_id_unique`
-- [ ] Pastikan insert schema menghapus `publicId` dari input client atau
+- [x] Pastikan insert schema menghapus `publicId` dari input client atau
       menjadikannya field internal yang hanya diisi service.
-- [ ] Pastikan update schema tidak mengizinkan `publicId` berubah.
-- [ ] Generate migration dari schema, lalu review SQL yang dihasilkan sebelum
+- [x] Pastikan update schema tidak mengizinkan `publicId` berubah.
+- [x] Generate migration dari schema, lalu review SQL yang dihasilkan sebelum
       menjalankannya.
+
+Status tahap 2: selesai. Migration
+`20261012225212_dusty_chameleon` sudah direview dan tervalidasi pada database
+kosong. Karena kolom final `NOT NULL` belum dapat ditambahkan ke database yang
+sudah berisi data, penerapan pada database existing menunggu prosedur backfill
+dan rebuild SQLite di tahap 3.
 
 ### Tahap 3 — Migrasi data existing
 
