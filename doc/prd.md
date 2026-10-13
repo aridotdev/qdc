@@ -223,7 +223,8 @@ seluruh tabel ke browser.
 - Testing: Vitest untuk unit/integration; E2E untuk critical flow.
 - Export: `xlsx` untuk Excel dan `pdfmake` untuk PDF.
 - Storage: local filesystem, logical URL `/uploads`.
-- Formatting: 2-space indentation, LF, tanpa trailing whitespace.
+- Formatting: ESLint sebagai formatter default, 2-space indentation, LF, tanpa
+  trailing whitespace.
 - Vue component memakai `<script setup lang="ts">`.
 - Naming: PascalCase component; camelCase composable/util; test memakai
   `.test.ts` atau `.spec.ts`.

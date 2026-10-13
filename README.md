@@ -72,4 +72,19 @@ yarn preview
 bun run preview
 ```
 
+## Code Quality
+
+ESLint menjadi formatter dan pemeriksa kode tunggal untuk JavaScript,
+TypeScript, dan Vue.
+
+```bash
+pnpm format
+pnpm format:check
+pnpm lint
+pnpm typecheck
+```
+
+`pnpm format` menjalankan `eslint --fix .`. VS Code juga dikonfigurasi untuk
+menjalankan ESLint fix saat file disimpan.
+
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

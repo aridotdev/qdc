@@ -149,9 +149,11 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Script format, lint, typecheck, unit, integration, E2E, build, dan
       preview tersedia.
     - TypeScript memakai strict mode.
-    - Formatting menjaga LF, 2-space indentation, dan tanpa trailing whitespace.
+    - ESLint menjadi formatter default dan menjaga LF, 2-space indentation,
+      serta tanpa trailing whitespace.
   - Test:
-    - Semua command berjalan dari clean checkout.
+    - `pnpm format`, `pnpm format:check`, dan `pnpm lint` berjalan dari clean
+      checkout.
     - 
 - [ ] TASK-003 - Konfigurasi Nuxt UI dan application shell
   - Depends on: TASK-001
