@@ -1,8 +1,8 @@
 # Public ID Contract
 
 Dokumen ini mencatat kontrak tahap 1, schema tahap 2, backfill tahap 3,
-generate ID pada jalur create tahap 4, dan response/type tahap 5 untuk public
-ID domain utama.
+generate ID pada jalur create tahap 4, response/type tahap 5, dan pemakaian UI
+tahap 6 untuk public ID domain utama.
 
 ## Format
 
@@ -51,6 +51,17 @@ List, detail, update, delete, dan state transition tetap menggunakan route serta
 lookup `id` numeric. Tahap ini tidak menambahkan `findByPublicId` sebelum URL
 public memang diperlukan.
 
+## Pemakaian UI Tahap 6
+
+List Quality Issue menampilkan `publicId` sebagai identifier yang dibaca user.
+Create Quality Issue juga menampilkan `publicId` pada toast sukses. Route row
+dan redirect create tetap memakai `id`/`issueId` numeric agar URL dan bookmark
+existing tetap kompatibel.
+
+Export dan halaman detail belum tersedia pada codebase saat ini. Sample Defect
+dan Technical Report juga belum memiliki list/detail UI yang menerima data
+domain, sehingga tidak ada identifier internal yang perlu ditampilkan di sana.
+
 ## Backfill Tahap 3
 
 Migration menambahkan `public_id` sebagai kolom nullable terlebih dahulu karena
@@ -69,9 +80,9 @@ Command tersebut menjalankan migration, mengisi row `NULL` dalam urutan
 prefix/UUID/duplicate, dan rebuild tabel untuk menegakkan `NOT NULL`. Command
 aman dijalankan ulang; row yang sudah memiliki public ID tidak diubah.
 
-## Batas Tahap 5
+## Batas Tahap 6
 
-Tahap ini belum mengubah URL numeric atau tampilan UI. API create Sample Defect
-dan Technical Report belum tersedia pada codebase saat ini; ketika service dan
-response masing-masing ditambahkan, keduanya harus mempertahankan `id` numeric
-dan menyertakan `publicId`.
+Tahap ini belum mengubah URL numeric, menambahkan lookup `findByPublicId`, atau
+membuat export/detail baru. API create Sample Defect dan Technical Report belum
+tersedia pada codebase saat ini; ketika UI masing-masing ditambahkan, identifier
+yang ditampilkan harus memakai `publicId`, sementara `id` tetap internal.

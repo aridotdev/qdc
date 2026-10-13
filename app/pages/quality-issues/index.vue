@@ -96,7 +96,11 @@ function statusColor(status: QualityIssueStatus) {
 }
 
 const columns: TableColumn<QualityIssueListItem>[] = [
-  { accessorKey: 'id', header: 'ID', cell: ({ row }) => `#${row.original.id}` },
+  {
+    accessorKey: 'publicId',
+    header: 'Public ID',
+    cell: ({ row }) => h('span', { class: 'break-all font-mono text-xs' }, row.original.publicId)
+  },
   {
     accessorKey: 'issueName',
     header: sortableHeader('issueName'),

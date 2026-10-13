@@ -427,8 +427,10 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Depends on: TASK-002, TASK-022, TASK-026
   - Priority: P0
   - Acceptance:
-    - Table menampilkan field penting, status badge, search, filter, sorting,
-      pagination, loading, empty, dan error state.
+    - Table menampilkan field penting termasuk public ID, status badge, search,
+      filter, sorting, pagination, loading, empty, dan error state.
+    - ID integer internal tidak ditampilkan sebagai identifier publik.
+    - Route row tetap kompatibel dengan ID numeric existing.
     - Query state tersimpan di URL.
     - Klik row membuka detail.
   - Test:

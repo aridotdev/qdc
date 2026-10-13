@@ -163,15 +163,24 @@ lookup public ID tetap menjadi tahap berikutnya.
 
 ### Tahap 6 — Pemakaian di UI
 
-- [ ] Tampilkan `public_id` pada tabel/detail yang membutuhkan identifier yang
-      dapat dibaca user.
-- [ ] Gunakan `public_id` pada export atau komunikasi user bila field ID perlu
-      ditampilkan.
-- [ ] Jangan menampilkan `id` integer internal sebagai identifier publik baru.
-- [ ] Pertahankan route numeric existing selama tahap pertama agar bookmark dan
-      integrasi lama tidak rusak.
-- [ ] Jangan menambahkan formatter atau komponen khusus jika tampilan text
-      sederhana sudah cukup.
+- [x] Tampilkan `public_id` pada tabel/detail yang membutuhkan identifier yang
+      dapat dibaca user. Tabel Quality Issue menampilkan `publicId`; halaman
+      detail belum tersedia dan halaman Sample Defect/Technical Report belum
+      memiliki data domain.
+- [x] Gunakan `public_id` pada export atau komunikasi user bila field ID perlu
+      ditampilkan. Export belum tersedia; toast create Quality Issue
+      menampilkan `publicId`.
+- [x] Jangan menampilkan `id` integer internal sebagai identifier publik baru.
+- [x] Pertahankan route numeric existing selama tahap pertama agar bookmark dan
+      integrasi lama tidak rusak. Klik row dan redirect create tetap memakai
+      `id`/`issueId` numeric.
+- [x] Jangan menambahkan formatter atau komponen khusus jika tampilan text
+      sederhana sudah cukup. Public ID ditampilkan sebagai text monospace
+      sederhana agar mudah dibaca.
+
+Status tahap 6: selesai. Public ID Quality Issue sekarang terlihat pada list
+dan feedback create. Tidak ada perubahan route, lookup, export, atau halaman
+detail; semuanya tetap mengikuti scope tahap berikutnya dan modul yang tersedia.
 
 ### Tahap 7 — Optional: migrasi URL ke public ID
 

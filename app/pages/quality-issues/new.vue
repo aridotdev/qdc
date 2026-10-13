@@ -172,6 +172,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     toast.add({
       title: 'Quality Issue berhasil dibuat',
+      description: `Public ID: ${result.publicId}`,
       color: 'success',
       icon: 'i-lucide-circle-check'
     })

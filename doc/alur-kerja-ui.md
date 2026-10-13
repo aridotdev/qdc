@@ -16,6 +16,8 @@ auth, input, transition, transaction, dan ownership attachment.
 - Error API ditampilkan dalam pesan yang dapat ditindaklanjuti.
 - Upload menampilkan filename, ukuran, tipe, progress, success, dan failure.
 - Destructive action memakai confirmation dialog.
+- Identifier domain yang ditampilkan ke user memakai `publicId`; `id` numeric
+  hanya dipakai untuk route dan relasi internal selama masa kompatibilitas.
 
 ## 2. Route Utama
 
@@ -68,7 +70,14 @@ auth, input, transition, transaction, dan ownership attachment.
 7. Jika sebagian upload gagal, file yang sudah ditulis tetapi belum tercatat
    dibersihkan dan response menjelaskan item yang gagal.
 8. Setelah berhasil, UI mengarahkan ke `/quality-issues/[id]` dan menampilkan
-   toast sukses.
+   toast sukses yang menyertakan `publicId`. Route tetap memakai `issueId`
+   numeric.
+
+### 5.1.1 Quality Issue List Identifier
+
+List Quality Issue menampilkan `publicId` sebagai kolom identifier publik.
+Klik row tetap membuka route numeric existing; `id` integer tidak ditampilkan
+sebagai identifier publik.
 
 ### 5.2 Add Progress
 
