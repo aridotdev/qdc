@@ -2,8 +2,9 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { migrate } from 'drizzle-orm/libsql/migrator'
 import { createDatabase } from '../../server/database/client'
+import { migrateDatabase } from '../../server/database/migrate'
+import { backfillPublicIds } from '../../server/database/public-id-backfill'
 import {
   insertQualityIssueSchema,
   insertSampleDefectSchema,
@@ -31,7 +32,8 @@ describe('public ID database schema', () => {
   beforeAll(async () => {
     directory = await mkdtemp(join(tmpdir(), 'qdc-public-id-schema-'))
     database = await createDatabase(`file:${join(directory, 'test.sqlite')}`)
-    await migrate(database.db, { migrationsFolder })
+    await migrateDatabase(database, migrationsFolder)
+    await backfillPublicIds(database)
   })
 
   afterAll(async () => {

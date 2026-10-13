@@ -20,6 +20,17 @@ pnpm db:migrate
 Migration aman untuk dijalankan ulang. Migration yang sudah diterapkan tidak
 akan dijalankan kembali.
 
+Untuk database yang sudah memiliki data sebelum kolom public ID ditambahkan,
+jalankan backfill setelah migration:
+
+```bash
+pnpm db:backfill-public-id
+```
+
+Command backfill juga menjalankan migration terlebih dahulu, hanya mengisi
+`public_id` yang masih `NULL`, memverifikasi hasil, dan menegakkan constraint
+`NOT NULL`. Command ini aman dijalankan ulang.
+
 ## Development Seed
 
 Seed membuat data contoh untuk development, bukan data produksi.
@@ -36,17 +47,19 @@ Jika hanya membutuhkan akun admin tanpa data demo, jalankan:
 pnpm db:seed:admin
 ```
 
-Command tersebut hanya menjalankan migration dan membuat akun admin seed.
+Command tersebut menjalankan migration, backfill public ID, dan membuat akun
+admin seed.
 
 Alurnya:
 
 1. Membuka database dan menjalankan migration.
-2. Membuat akun admin development melalui Better Auth agar password di-hash
+2. Menjalankan backfill public ID agar schema berada pada bentuk final.
+3. Membuat akun admin development melalui Better Auth agar password di-hash
    oleh provider auth.
-3. Membuat contoh Quality Issue, timeline, Sample Defect, Technical Report,
+4. Membuat contoh Quality Issue, timeline, Sample Defect, Technical Report,
    dan audit log.
-4. Menjalankan insert data terkait dalam satu transaction.
-5. Mengecek identifier seed agar command dapat dijalankan ulang tanpa membuat
+5. Menjalankan insert data terkait dalam satu transaction.
+6. Mengecek identifier seed agar command dapat dijalankan ulang tanpa membuat
    duplikat.
 
 Akun admin default:

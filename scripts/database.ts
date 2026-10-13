@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { createDatabase } from '../server/database/client'
 import { migrateDatabase } from '../server/database/migrate'
+import { backfillPublicIds } from '../server/database/public-id-backfill'
 import { seedAdminAccount, seedDatabase } from '../server/database/seed'
 
 const defaultDatabaseUrl = 'file:.data/qdc-local.db'
@@ -62,6 +63,7 @@ async function runSeed(databaseUrl: string): Promise<void> {
 
   try {
     await migrateDatabase(database)
+    await backfillPublicIds(database)
     const result = await seedDatabase(database.db)
     console.log(
       result.seeded
@@ -82,6 +84,7 @@ async function runSeedAdmin(databaseUrl: string): Promise<void> {
 
   try {
     await migrateDatabase(database)
+    await backfillPublicIds(database)
     const userId = await seedAdminAccount(database.db)
     console.log(
       `Admin seed completed. User ID: ${userId}. Email: ${process.env.SEED_ADMIN_EMAIL ?? 'admin@qdc.local'}`
@@ -101,6 +104,7 @@ async function runReset(databaseUrl: string): Promise<void> {
 
   try {
     await migrateDatabase(database)
+    await backfillPublicIds(database)
     const result = await seedDatabase(database.db)
     console.log(
       result.seeded
@@ -112,8 +116,24 @@ async function runReset(databaseUrl: string): Promise<void> {
   }
 }
 
+async function runBackfill(databaseUrl: string): Promise<void> {
+  const database = await openDatabase(databaseUrl)
+
+  try {
+    await migrateDatabase(database)
+    const result = await backfillPublicIds(database)
+    console.log(
+      `Public ID backfill completed. QI: ${result.qualityIssues}, SD: ${result.sampleDefects}, TR: ${result.technicalReports}.`
+    )
+  } finally {
+    database.client.close()
+  }
+}
+
 function printUsage(): void {
-  console.error('Usage: tsx scripts/database.ts <migrate|seed|seed-admin|reset>')
+  console.error(
+    'Usage: tsx scripts/database.ts <migrate|backfill-public-id|seed|seed-admin|reset>'
+  )
 }
 
 async function main(): Promise<void> {
@@ -132,6 +152,11 @@ async function main(): Promise<void> {
 
   if (command === 'seed-admin') {
     await runSeedAdmin(databaseUrl)
+    return
+  }
+
+  if (command === 'backfill-public-id') {
+    await runBackfill(databaseUrl)
     return
   }
 

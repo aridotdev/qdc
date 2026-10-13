@@ -87,4 +87,11 @@ pnpm typecheck
 `pnpm format` menjalankan `eslint --fix .`. VS Code juga dikonfigurasi untuk
 menjalankan ESLint fix saat file disimpan.
 
+Untuk migration dan backfill public ID database:
+
+```bash
+pnpm db:migrate
+pnpm db:backfill-public-id
+```
+
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

@@ -248,6 +248,6 @@ SQL. Drizzle memakai runtime default function yang memanggil helper public ID
 untuk memastikan direct insert server tetap menghasilkan nilai sebelum SQL
 dijalankan. Schema insert dan update client tidak mengekspos `publicId`.
 
-Migration schema tahap 2 menambahkan kolom `NOT NULL` dan unique index pada
-database kosong. Database existing membutuhkan migration bertahap, backfill,
-verifikasi, dan rebuild SQLite pada tahap 3.
+Migration schema tahap 2 menambahkan kolom nullable dan unique index yang aman
+selama transisi. Backfill tahap 3 mengisi database existing, memverifikasi
+nilai, lalu melakukan rebuild SQLite untuk menegakkan `NOT NULL`.

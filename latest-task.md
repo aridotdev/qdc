@@ -53,8 +53,8 @@ dipakai sebagai FK, dan tidak mengubah relasi database.
 
 Status tahap 1: selesai. Kontrak dan helper tersedia di
 `shared/constants/public-id.ts`, `shared/validators/public-id.ts`, dan
-`server/utils/public-id.ts`. Schema database tahap 2 sudah tersedia; backfill,
-response, dan pemakaian UI tetap menunggu tahap berikutnya.
+`server/utils/public-id.ts`. Schema database tahap 2 dan backfill tahap 3 sudah
+tersedia; response dan pemakaian UI tetap menunggu tahap berikutnya.
 
 ### Tahap 2 — Perubahan schema database
 
@@ -74,36 +74,37 @@ response, dan pemakaian UI tetap menunggu tahap berikutnya.
 - [x] Generate migration dari schema, lalu review SQL yang dihasilkan sebelum
       menjalankannya.
 
-Status tahap 2: selesai. Migration
-`20261012225212_dusty_chameleon` sudah direview dan tervalidasi pada database
-kosong. Karena kolom final `NOT NULL` belum dapat ditambahkan ke database yang
-sudah berisi data, penerapan pada database existing menunggu prosedur backfill
-dan rebuild SQLite di tahap 3.
+Status tahap 2: selesai. Schema final dan unique index
+`20261012225212_dusty_chameleon` sudah direview. Migration menambahkan kolom
+nullable sebagai tahap transisi; pengisian data dan enforcement `NOT NULL`
+dilakukan oleh backfill tahap 3.
 
 ### Tahap 3 — Migrasi data existing
 
-- [ ] Rancang migration SQLite secara bertahap karena existing row belum
-      memiliki `public_id`:
+- [x] Rancang migration SQLite secara bertahap karena existing row belum memiliki `public_id`:
       1. Tambahkan kolom sementara yang nullable.
-      2. Tambahkan unique index setelah nilai diisi, atau pastikan index
-         nullable aman selama proses backfill.
+      2. Tambahkan unique index setelah nilai diisi, atau pastikan index nullable aman selama proses backfill.
       3. Isi semua row lama menggunakan helper UUIDv7 server-side.
-      4. Verifikasi tidak ada nilai `NULL`, duplicate, prefix salah, atau UUID
-         invalid.
-      5. Enforce `NOT NULL` pada migration SQLite berikutnya/rebuild table bila
-         diperlukan oleh Drizzle.
-- [ ] Buat command/script backfill sekali pakai yang idempotent:
+      4. Verifikasi tidak ada nilai `NULL`, duplicate, prefix salah, atau UUID invalid.
+      5. Enforce `NOT NULL` pada migration SQLite berikutnya/rebuild table bila diperlukan oleh Drizzle.
+- [x] Buat command/script backfill sekali pakai yang idempotent:
       hanya mengisi row dengan `public_id IS NULL`.
-- [ ] Jalankan backfill untuk ketiga tabel dalam urutan yang jelas:
+- [x] Jalankan backfill untuk ketiga tabel dalam urutan yang jelas:
       `quality_issues`, `sample_defects`, lalu `technical_reports`.
-- [ ] Jangan membuat `public_id` lama dari `id` integer; setiap row harus
-      mendapat UUIDv7 yang valid.
-- [ ] Uji migration pada:
+- [x] Jangan membuat `public_id` lama dari `id` integer; setiap row harus mendapat UUIDv7 yang valid.
+- [x] Uji migration pada:
       - database SQLite kosong;
       - database dengan data existing;
       - database dengan data yang sudah pernah menjalankan backfill.
-- [ ] Setelah backfill sukses, hapus/arsipkan script sekali pakai sesuai pola
-      repository agar tidak menjadi jalur runtime permanen.
+- [x] Setelah backfill sukses, pertahankan command sebagai utilitas operasional
+      idempotent sesuai pola repository; command tidak dipakai sebagai jalur
+      runtime request.
+
+Status tahap 3: selesai. Migration menambahkan kolom nullable dan unique index
+yang aman selama proses transisi. Command `pnpm db:backfill-public-id`
+mengisi row lama, memverifikasi public ID, lalu melakukan rebuild SQLite untuk
+menegakkan `NOT NULL`. Command tersebut idempotent dan hanya mengisi row dengan
+`public_id IS NULL`.
 
 ### Tahap 4 — Generate ID pada semua jalur create
 
