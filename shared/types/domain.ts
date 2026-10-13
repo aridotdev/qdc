@@ -29,6 +29,7 @@ export interface AuthenticatedUser {
 
 export interface QualityIssue extends AuditFields {
   id: number
+  public_id: string
   issue_name: string
   model_name: string
   serial_number: string
@@ -51,6 +52,11 @@ export interface CreateQualityIssueInput {
 
 export type UpdateQualityIssueInput = Partial<CreateQualityIssueInput>
 
+export interface CreateQualityIssueResponse {
+  issueId: number
+  publicId: string
+}
+
 export interface QualityIssueDetail extends AuditFields {
   id: number
   issue_id: number
@@ -68,6 +74,7 @@ export interface CreateQualityIssueDetailInput {
 
 export interface SampleDefect extends AuditFields {
   id: number
+  public_id: string
   batch_id: string
   issue_id: number | null
   notification_number: string
@@ -105,6 +112,7 @@ export interface CreateSampleDefectBatchInput {
 
 export interface TechnicalReport extends AuditFields {
   id: number
+  public_id: string
   issue_id: number | null
   document_number: string
   document_type: DocumentType

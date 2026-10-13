@@ -249,6 +249,8 @@ public ID secara eksplisit sebelum insert. Drizzle juga memakai runtime default
 function yang memanggil helper yang sama sebagai fallback untuk direct insert
 server dan fixture, sehingga setiap insert tetap mendapat nilai baru sebelum
 SQL dijalankan. Schema insert dan update client tidak mengekspos `publicId`.
+Response domain mempertahankan `id` numeric dan menyertakan `publicId`; shared
+domain type menyimpan nama field canonical sebagai `public_id`.
 
 Migration schema tahap 2 menambahkan kolom nullable dan unique index yang aman
 selama transisi. Backfill tahap 3 mengisi database existing, memverifikasi

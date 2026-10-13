@@ -103,6 +103,7 @@ describe('Quality Issue service', () => {
       updatedByUserId: actorUserId
     })
     expect(qualityIssuePublicIdSchema.safeParse(issue?.publicId).success).toBe(true)
+    expect(result.publicId).toBe(issue?.publicId)
     expect(details).toHaveLength(1)
     expect(details[0]).toMatchObject({
       id: result.detailId,
@@ -319,6 +320,7 @@ describe('Quality Issue service', () => {
       status: QUALITY_ISSUE_STATUS.OPEN,
       updatedByUserId: actorUserId
     })
+    expect(updated.publicId).toBe(created.publicId)
 
     const logs = await database.db
       .select()

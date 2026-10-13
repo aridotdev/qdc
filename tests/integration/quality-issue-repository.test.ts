@@ -7,6 +7,7 @@ import { createDatabase } from '../../server/database/client'
 import { qualityIssueDetails } from '../../server/database/schema'
 import { createQualityIssueRepository } from '../../server/repositories/quality-issues'
 import { qualityIssuePaginationSchema } from '../../shared/validators/quality-issues'
+import { qualityIssuePublicIdSchema } from '../../shared/validators/public-id'
 
 const migrationsFolder = join(process.cwd(), 'server/database/migrations')
 
@@ -47,8 +48,10 @@ describe('quality issue repository', () => {
     })
 
     expect(created.status).toBe('OPEN')
+    expect(qualityIssuePublicIdSchema.safeParse(created.publicId).success).toBe(true)
     expect(await repository.findById(created.id)).toMatchObject({
       id: created.id,
+      publicId: created.publicId,
       issueName: 'Initial issue'
     })
 
@@ -130,8 +133,10 @@ describe('quality issue repository', () => {
     expect(result.items).toHaveLength(1)
     expect(result.items[0]).toMatchObject({
       issueName: 'Door scratch',
-      modelName: 'MODEL-A'
+      modelName: 'MODEL-A',
+      publicId: expect.any(String)
     })
+    expect(qualityIssuePublicIdSchema.safeParse(result.items[0]?.publicId).success).toBe(true)
     expect(result.meta).toEqual({
       page: 1,
       limit: 1,
@@ -205,6 +210,7 @@ describe('quality issue repository', () => {
 
     const detail = await repository.findDetailById(issue.id)
 
+    expect(detail?.publicId).toBe(issue.publicId)
     expect(detail?.details.map(item => item.action)).toEqual(['FIRST', 'SECOND', 'LATER'])
     expect(await repository.findDetailById(999999)).toBeUndefined()
   })

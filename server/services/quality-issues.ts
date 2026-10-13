@@ -65,6 +65,7 @@ export interface QualityIssueDetailMutationResult {
 
 export interface CreateQualityIssueResult extends QualityIssueDetailMutationResult {
   issueId: number
+  publicId: string
 }
 
 export class QualityIssueServiceNotFoundError extends Error {
@@ -171,6 +172,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
 
       return {
         issueId: issue.id,
+        publicId: issue.publicId,
         detailId: detail.id
       }
     })

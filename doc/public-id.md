@@ -1,7 +1,8 @@
 # Public ID Contract
 
-Dokumen ini mencatat kontrak tahap 1, schema tahap 2, backfill tahap 3, dan
-generate ID pada jalur create tahap 4 untuk public ID domain utama.
+Dokumen ini mencatat kontrak tahap 1, schema tahap 2, backfill tahap 3,
+generate ID pada jalur create tahap 4, dan response/type tahap 5 untuk public
+ID domain utama.
 
 ## Format
 
@@ -35,6 +36,21 @@ sebelum SQL dikirim. Ini bukan default SQL database. Setiap pemanggilan insert
 mendapat nilai baru, sehingga part dalam batch yang sama tidak berbagi ID.
 Tidak ada jalur client yang dapat mengirim atau mengubah `publicId`.
 
+## Response dan Type Tahap 5
+
+Response domain yang berasal dari row database mempertahankan `id` numeric dan
+menyertakan `publicId`. Response create Quality Issue mempertahankan
+`issueId` numeric untuk kompatibilitas dan menambahkan `publicId`.
+
+`shared/types/domain.ts` menambahkan `public_id` pada type Quality Issue, Sample
+Defect, dan Technical Report karena type domain canonical menggunakan
+`snake_case`. Tipe frontend yang sudah menerima response Quality Issue memakai
+`publicId`, mengikuti bentuk response server yang sudah menggunakan `camelCase`.
+
+List, detail, update, delete, dan state transition tetap menggunakan route serta
+lookup `id` numeric. Tahap ini tidak menambahkan `findByPublicId` sebelum URL
+public memang diperlukan.
+
 ## Backfill Tahap 3
 
 Migration menambahkan `public_id` sebagai kolom nullable terlebih dahulu karena
@@ -53,9 +69,9 @@ Command tersebut menjalankan migration, mengisi row `NULL` dalam urutan
 prefix/UUID/duplicate, dan rebuild tabel untuk menegakkan `NOT NULL`. Command
 aman dijalankan ulang; row yang sudah memiliki public ID tidak diubah.
 
-## Batas Tahap 4
+## Batas Tahap 5
 
-Tahap ini belum mengubah response domain, query repository public ID, URL
-numeric, atau tampilan UI. API create Sample Defect dan Technical Report belum
-tersedia pada codebase saat ini; ketika service masing-masing ditambahkan,
-service tersebut harus memberikan `publicId` secara eksplisit sebelum insert.
+Tahap ini belum mengubah URL numeric atau tampilan UI. API create Sample Defect
+dan Technical Report belum tersedia pada codebase saat ini; ketika service dan
+response masing-masing ditambahkan, keduanya harus mempertahankan `id` numeric
+dan menyertakan `publicId`.

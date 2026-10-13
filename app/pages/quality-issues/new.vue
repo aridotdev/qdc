@@ -8,7 +8,8 @@ import {
   businessDateSchema,
   ERROR_CODES,
   optionalNullableText,
-  requiredText
+  requiredText,
+  type CreateQualityIssueResponse
 } from '#shared'
 
 const toast = useToast()
@@ -164,7 +165,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       formData.append('attachment', attachment)
     }
 
-    const result = await $fetch<{ issueId: number }>('/api/quality-issues', {
+    const result = await $fetch<CreateQualityIssueResponse>('/api/quality-issues', {
       method: 'POST',
       body: formData
     })

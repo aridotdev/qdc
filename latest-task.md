@@ -53,8 +53,9 @@ dipakai sebagai FK, dan tidak mengubah relasi database.
 
 Status tahap 1: selesai. Kontrak dan helper tersedia di
 `shared/constants/public-id.ts`, `shared/validators/public-id.ts`, dan
-`server/utils/public-id.ts`. Schema database tahap 2 dan backfill tahap 3 sudah
-tersedia; response dan pemakaian UI tetap menunggu tahap berikutnya.
+`server/utils/public-id.ts`. Schema database tahap 2, backfill tahap 3, dan
+generate ID tahap 4 sudah tersedia; response dan pemakaian UI dikerjakan pada
+tahap berikutnya.
 
 ### Tahap 2 — Perubahan schema database
 
@@ -136,20 +137,29 @@ Sample Defect dalam batch yang sama mendapat public ID berbeda.
 
 ### Tahap 5 — Backend response dan type
 
-- [ ] Tambahkan `public_id` pada response domain untuk:
+- [x] Tambahkan `public_id` pada response domain untuk:
       - Quality Issue;
       - Sample Defect;
       - Technical Report.
-- [ ] Perbarui `shared/types/domain.ts` dan tipe frontend yang menerima tiga
-      entity tersebut.
-- [ ] Perbarui response create Quality Issue agar tetap mengembalikan
+- [x] Perbarui `shared/types/domain.ts` dan tipe frontend yang menerima tiga
+      entity tersebut. Shared domain type menggunakan `public_id`, sedangkan
+      response server/frontend existing menggunakan `publicId`.
+- [x] Perbarui response create Quality Issue agar tetap mengembalikan
       `issueId` numeric untuk kompatibilitas dan juga `publicId`.
-- [ ] Jangan menghapus field `id` numeric dari response pada tahap pertama.
-- [ ] Pastikan list, detail, create, update, dan delete tetap bekerja dengan
+- [x] Jangan menghapus field `id` numeric dari response pada tahap pertama.
+- [x] Pastikan list, detail, create, update, dan delete tetap bekerja dengan
       ID internal seperti sebelumnya.
-- [ ] Tambahkan query repository berdasarkan `public_id` hanya bila diperlukan
+- [x] Tambahkan query repository berdasarkan `public_id` hanya bila diperlukan
       oleh tahap penggunaan URL atau pencarian publik; jangan menambah
-      abstraction repository yang belum dipakai.
+      abstraction repository yang belum dipakai. Tahap ini belum membutuhkan
+      query tersebut.
+
+Status tahap 5: selesai. Response list, detail, update, dan state transition
+tetap mengembalikan `id` numeric serta `publicId` dari row domain. Response
+create Quality Issue mengembalikan `issueId` numeric dan `publicId`. Shared
+domain type untuk tiga entity memiliki `public_id`; tipe frontend yang sudah
+digunakan untuk Quality Issue dan create response ikut diperbarui. URL dan
+lookup public ID tetap menjadi tahap berikutnya.
 
 ### Tahap 6 — Pemakaian di UI
 
