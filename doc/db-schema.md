@@ -244,9 +244,11 @@ sebelum operasi delete berhasil.
 ## 9. Public ID
 
 `public_id` dibuat server-side menggunakan UUIDv7 dan tidak memiliki default
-SQL. Drizzle memakai runtime default function yang memanggil helper public ID
-untuk memastikan direct insert server tetap menghasilkan nilai sebelum SQL
-dijalankan. Schema insert dan update client tidak mengekspos `publicId`.
+SQL. Quality Issue service dan development seed memberikan nilai dari helper
+public ID secara eksplisit sebelum insert. Drizzle juga memakai runtime default
+function yang memanggil helper yang sama sebagai fallback untuk direct insert
+server dan fixture, sehingga setiap insert tetap mendapat nilai baru sebelum
+SQL dijalankan. Schema insert dan update client tidak mengekspos `publicId`.
 
 Migration schema tahap 2 menambahkan kolom nullable dan unique index yang aman
 selama transisi. Backfill tahap 3 mengisi database existing, memverifikasi

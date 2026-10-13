@@ -1,7 +1,7 @@
 # Public ID Contract
 
-Dokumen ini mencatat kontrak tahap 1, schema tahap 2, dan backfill tahap 3
-untuk public ID domain utama.
+Dokumen ini mencatat kontrak tahap 1, schema tahap 2, backfill tahap 3, dan
+generate ID pada jalur create tahap 4 untuk public ID domain utama.
 
 ## Format
 
@@ -14,7 +14,7 @@ untuk public ID domain utama.
 Prefix harus uppercase. UUID harus lowercase dalam format canonical UUIDv7.
 Primary key integer dan foreign key tetap menjadi identifier internal.
 
-## Implementasi Tahap 1
+## Implementasi Tahap 1 dan 4
 
 - Dependency: `uuid`, menggunakan API `v7()`.
 - Generator server-side: [server/utils/public-id.ts](../server/utils/public-id.ts).
@@ -25,8 +25,15 @@ Primary key integer dan foreign key tetap menjadi identifier internal.
   menghapus `publicId` dari kontrak insert/update.
 
 Generator tidak menerima timestamp dari client dan tidak memiliki retry loop.
-Insert server yang tidak memberikan `publicId` memakai runtime default function
-untuk membuat UUIDv7 sebelum SQL dikirim. Ini bukan default SQL database.
+Quality Issue service dan development seed memberikan `publicId` secara
+eksplisit sebelum insert. Seed juga mengisi Sample Defect dan Technical Report
+dengan generator yang sama.
+
+Insert server yang belum memiliki service/repository khusus, termasuk direct
+insert pada fixture, memakai runtime default function untuk membuat UUIDv7
+sebelum SQL dikirim. Ini bukan default SQL database. Setiap pemanggilan insert
+mendapat nilai baru, sehingga part dalam batch yang sama tidak berbagi ID.
+Tidak ada jalur client yang dapat mengirim atau mengubah `publicId`.
 
 ## Backfill Tahap 3
 
@@ -46,7 +53,9 @@ Command tersebut menjalankan migration, mengisi row `NULL` dalam urutan
 prefix/UUID/duplicate, dan rebuild tabel untuk menegakkan `NOT NULL`. Command
 aman dijalankan ulang; row yang sudah memiliki public ID tidak diubah.
 
-## Batas Tahap 3
+## Batas Tahap 4
 
 Tahap ini belum mengubah response domain, query repository public ID, URL
-numeric, atau tampilan UI.
+numeric, atau tampilan UI. API create Sample Defect dan Technical Report belum
+tersedia pada codebase saat ini; ketika service masing-masing ditambahkan,
+service tersebut harus memberikan `publicId` secara eksplisit sebelum insert.

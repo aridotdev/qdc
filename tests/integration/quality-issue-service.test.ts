@@ -19,6 +19,7 @@ import {
 import { createAttachmentService } from '../../server/services/attachments'
 import { createFileStorage, type FileStorage } from '../../server/services/file-storage'
 import { createQualityIssueService } from '../../server/services/quality-issues'
+import { qualityIssuePublicIdSchema } from '../../shared/validators/public-id'
 
 const migrationsFolder = join(process.cwd(), 'server/database/migrations')
 const now = '2026-10-08T00:00:00.000Z'
@@ -101,6 +102,7 @@ describe('Quality Issue service', () => {
       issueName: 'Initial no attachment',
       updatedByUserId: actorUserId
     })
+    expect(qualityIssuePublicIdSchema.safeParse(issue?.publicId).success).toBe(true)
     expect(details).toHaveLength(1)
     expect(details[0]).toMatchObject({
       id: result.detailId,

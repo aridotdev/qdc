@@ -12,6 +12,7 @@ import {
   type CreateQualityIssueInput,
   type UpdateQualityIssueInput
 } from '../repositories/quality-issues'
+import { createPublicId } from '../utils/public-id'
 import type { createAttachmentService, AttachmentUploadInput } from './attachments'
 import { recordAuditLog } from './audit-logs'
 
@@ -126,6 +127,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
       const repository = createQualityIssueRepository({ db: transaction })
       const now = clock().toISOString()
       const issueInput: CreateQualityIssueInput = {
+        publicId: createPublicId('QI'),
         issueName: input.issueName,
         modelName: input.modelName,
         serialNumber: input.serialNumber,

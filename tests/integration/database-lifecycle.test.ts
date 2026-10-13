@@ -15,6 +15,11 @@ import {
   technicalReports,
   user
 } from '../../server/database/schema'
+import {
+  qualityIssuePublicIdSchema,
+  sampleDefectPublicIdSchema,
+  technicalReportPublicIdSchema
+} from '../../shared/validators/public-id'
 
 const migrationsFolder = join(process.cwd(), 'server/database/migrations')
 
@@ -92,15 +97,15 @@ describe('database lifecycle', () => {
         .from(user)
         .where(eq(user.email, developmentSeed.userEmail))
       const seededIssues = await database.db
-        .select({ id: qualityIssues.id })
+        .select({ id: qualityIssues.id, publicId: qualityIssues.publicId })
         .from(qualityIssues)
         .where(eq(qualityIssues.serialNumber, developmentSeed.serialNumber))
       const seededSamples = await database.db
-        .select({ id: sampleDefects.id })
+        .select({ id: sampleDefects.id, publicId: sampleDefects.publicId })
         .from(sampleDefects)
         .where(eq(sampleDefects.serialNumber, developmentSeed.serialNumber))
       const seededReports = await database.db
-        .select({ id: technicalReports.id })
+        .select({ id: technicalReports.id, publicId: technicalReports.publicId })
         .from(technicalReports)
         .where(eq(technicalReports.documentNumber, developmentSeed.documentNumber))
       const seededAuditLogs = await database.db
@@ -115,6 +120,9 @@ describe('database lifecycle', () => {
       expect(seededIssues).toHaveLength(1)
       expect(seededSamples).toHaveLength(1)
       expect(seededReports).toHaveLength(1)
+      expect(qualityIssuePublicIdSchema.safeParse(seededIssues[0]?.publicId).success).toBe(true)
+      expect(sampleDefectPublicIdSchema.safeParse(seededSamples[0]?.publicId).success).toBe(true)
+      expect(technicalReportPublicIdSchema.safeParse(seededReports[0]?.publicId).success).toBe(true)
       expect(seededAuditLogs).toHaveLength(4)
 
       const auth = createAuth(database.db, {

@@ -108,20 +108,31 @@ menegakkan `NOT NULL`. Command tersebut idempotent dan hanya mengisi row dengan
 
 ### Tahap 4 — Generate ID pada semua jalur create
 
-- [ ] Isi `public_id` di server sebelum insert pada Quality Issue.
-- [ ] Isi `public_id` di server sebelum insert pada setiap Sample Defect.
+- [x] Isi `public_id` di server sebelum insert pada Quality Issue.
+- [x] Isi `public_id` di server sebelum insert pada setiap Sample Defect.
       Semua part dalam satu `batch_id` harus tetap memiliki `public_id`
       berbeda.
-- [ ] Isi `public_id` di server sebelum insert pada setiap Technical Report.
-- [ ] Audit semua jalur insert, termasuk:
-      - API/service utama;
+- [x] Isi `public_id` di server sebelum insert pada setiap Technical Report.
+- [x] Audit semua jalur insert, termasuk:
+      - API/service utama yang sudah tersedia;
       - seed database;
       - script import jika ada;
       - fixture atau helper test yang melakukan direct insert.
-- [ ] Pastikan retry request tidak memakai `public_id` dari request sebelumnya.
-- [ ] Jika terjadi unique constraint error, perlakukan sebagai error internal;
+      Jalur direct insert server dan fixture tetap memakai runtime default
+      function sebagai fallback; setiap pemanggilan insert menghasilkan UUIDv7
+      baru.
+- [x] Pastikan retry request tidak memakai `public_id` dari request sebelumnya.
+      ID dibuat ulang pada setiap create request dan tidak berasal dari payload
+      client.
+- [x] Jika terjadi unique constraint error, perlakukan sebagai error internal;
       jangan mengubah ID menjadi format timestamp custom atau melakukan retry
       tanpa batas.
+
+Status tahap 4: selesai. Quality Issue service dan development seed mengisi
+`public_id` secara eksplisit sebelum insert untuk masing-masing entity. Direct
+insert server yang belum memiliki service/repository khusus tetap dilindungi
+oleh runtime default function pada schema; fixture menguji bahwa setiap row
+Sample Defect dalam batch yang sama mendapat public ID berbeda.
 
 ### Tahap 5 — Backend response dan type
 

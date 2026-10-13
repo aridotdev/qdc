@@ -114,6 +114,23 @@ describe('public ID database schema', () => {
         updatedByUserId: 'user-1'
       })
       .returning({ publicId: sampleDefects.publicId })
+    const [secondSample] = await database.db
+      .insert(sampleDefects)
+      .values({
+        batchId: 'PUBLIC-ID-BATCH',
+        notificationNumber: 'PUBLIC-ID-NOTIFICATION',
+        modelName: 'MODEL-PUBLIC-ID',
+        serialNumber: 'SN-PUBLIC-ID-2',
+        cabang: 'Jakarta',
+        partNumber: 'PART-PUBLIC-ID-2',
+        partName: 'Second public ID part',
+        kerusakanCabang: 'Schema test',
+        createdAt: now,
+        updatedAt: now,
+        createdByUserId: 'user-1',
+        updatedByUserId: 'user-1'
+      })
+      .returning({ publicId: sampleDefects.publicId })
 
     const [report] = await database.db
       .insert(technicalReports)
@@ -132,6 +149,8 @@ describe('public ID database schema', () => {
 
     expect(qualityIssuePublicIdSchema.safeParse(issue?.publicId).success).toBe(true)
     expect(sampleDefectPublicIdSchema.safeParse(sample?.publicId).success).toBe(true)
+    expect(sampleDefectPublicIdSchema.safeParse(secondSample?.publicId).success).toBe(true)
+    expect(secondSample?.publicId).not.toBe(sample?.publicId)
     expect(technicalReportPublicIdSchema.safeParse(report?.publicId).success).toBe(true)
   })
 
