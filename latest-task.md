@@ -158,95 +158,128 @@ Status tahap 5: selesai. Response list, detail, update, dan state transition
 tetap mengembalikan `id` numeric serta `publicId` dari row domain. Response
 create Quality Issue mengembalikan `issueId` numeric dan `publicId`. Shared
 domain type untuk tiga entity memiliki `public_id`; tipe frontend yang sudah
-digunakan untuk Quality Issue dan create response ikut diperbarui. URL dan
-lookup public ID tetap menjadi tahap berikutnya.
+digunakan untuk Quality Issue dan create response ikut diperbarui. Lookup
+public ID untuk URL dikerjakan pada tahap 7.
 
 ### Tahap 6 — Pemakaian di UI
 
-- [x] Tampilkan `public_id` pada tabel/detail yang membutuhkan identifier yang
-      dapat dibaca user. Tabel Quality Issue menampilkan `publicId`; halaman
-      detail belum tersedia dan halaman Sample Defect/Technical Report belum
-      memiliki data domain.
-- [x] Gunakan `public_id` pada export atau komunikasi user bila field ID perlu
-      ditampilkan. Export belum tersedia; toast create Quality Issue
-      menampilkan `publicId`.
-- [x] Jangan menampilkan `id` integer internal sebagai identifier publik baru.
-- [x] Pertahankan route numeric existing selama tahap pertama agar bookmark dan
-      integrasi lama tidak rusak. Klik row dan redirect create tetap memakai
-      `id`/`issueId` numeric.
+- [x] Tampilkan identifier yang dapat dibaca user pada tabel/detail yang
+      membutuhkan ID operasional. Tabel Quality Issue menampilkan `businessId`
+      dengan fallback `id` numeric untuk row lama.
+- [x] Gunakan identifier operasional pada export atau komunikasi user bila
+      field ID perlu ditampilkan. Export belum tersedia; toast create Quality
+      Issue menampilkan `businessId` dan fallback ke `publicId`.
+- [x] Jangan memakai `id` integer internal sebagai public URL identifier baru.
+- [x] Pertahankan route numeric existing selama masa kompatibilitas agar
+      bookmark dan integrasi lama tidak rusak.
 - [x] Jangan menambahkan formatter atau komponen khusus jika tampilan text
-      sederhana sudah cukup. Public ID ditampilkan sebagai text monospace
-      sederhana agar mudah dibaca.
+      sederhana sudah cukup.
 
-Status tahap 6: selesai. Public ID Quality Issue sekarang terlihat pada list
-dan feedback create. Tidak ada perubahan route, lookup, export, atau halaman
-detail; semuanya tetap mengikuti scope tahap berikutnya dan modul yang tersedia.
+Status tahap 6: selesai. Quality Issue list dan feedback create memakai
+`businessId` sebagai ID operasional yang mudah dibaca. Migrasi URL tetap
+memakai `publicId` dan ditangani pada tahap 7.
 
 ### Tahap 7 — Optional: migrasi URL ke public ID
 
 Kerjakan hanya setelah tahap persistence, backfill, dan response stabil.
 
-- [ ] Tambahkan lookup `findByPublicId` pada repository yang benar-benar
+- [x] Tambahkan lookup `findByPublicId` pada repository yang benar-benar
       membutuhkan URL public.
-- [ ] Ubah route detail Quality Issue untuk menerima `QI-<uuid-v7>`.
-- [ ] Selama masa kompatibilitas, route dapat menerima ID numeric lama dan
+- [x] Ubah route detail Quality Issue untuk menerima `QI-<uuid-v7>`.
+- [x] Selama masa kompatibilitas, route dapat menerima ID numeric lama dan
       public ID baru.
-- [ ] Ubah redirect create baru ke URL public ID hanya setelah route lookup
+- [x] Ubah redirect create baru ke URL public ID setelah route lookup
       public sudah teruji.
-- [ ] Perbarui link pada list/detail agar menggunakan `public_id`.
-- [ ] Uji URL dengan prefix salah, UUID invalid, entity tidak ditemukan, dan
-      numeric ID lama.
-- [ ] Jangan migrasikan seluruh route Sample Defect dan Technical Report jika
+- [x] Perbarui link pada list/detail agar menggunakan `public_id`. Link list
+      dan redirect create Quality Issue memakai `publicId`.
+- [x] Uji URL dengan prefix salah, UUID invalid, entity tidak ditemukan, dan
+      numeric ID lama melalui parser identifier dan repository lookup.
+- [x] Jangan migrasikan seluruh route Sample Defect dan Technical Report karena
       halaman/API-nya belum membutuhkan public URL.
+
+Status tahap 7: selesai. Endpoint Quality Issue yang memakai parameter `[id]`
+menerima ID numeric lama dan `QI-<uuid-v7>` baru. Lookup public ID tetap
+diterjemahkan ke integer internal sebelum service, relasi, audit log, dan
+attachment diproses.
+
+Catatan lanjutan: tabel Quality Issue menampilkan `businessId` pada kolom ID
+sesuai kebutuhan UI. Link row dan redirect create tetap memakai `publicId`.
+
+### Addendum — Business ID operasional
+
+- [x] Tambahkan `business_id` untuk tiga entity utama tanpa mengubah
+      `public_id` UUIDv7 yang sudah dibuat.
+- [x] Format:
+      - Quality Issue: `QI-yyyymmdd-xxx`
+      - Sample Defect: `SD-yyyymmdd-xxx`
+      - Technical Report: `TR-yyyymmdd-xxx`
+- [x] Sequence `xxx` tiga digit, reset per hari dan per entity.
+- [x] Tambahkan counter sederhana `business_id_counters` dengan primary key
+      `(entity, business_date)`.
+- [x] Quality Issue service membuat `businessId` dalam transaction sebelum
+      insert.
+- [x] Development seed mengisi `businessId` untuk Quality Issue, Sample Defect,
+      dan Technical Report.
+- [x] Migration melakukan backfill row existing dan memasang trigger fallback
+      untuk direct insert server/fixture yang tidak mengirim `business_id`.
+- [x] Schema insert/update client tidak menerima `businessId`.
+- [x] List Quality Issue menampilkan `businessId`; route dan redirect tetap
+      memakai `publicId`.
+- [x] `public_id` tetap dipertahankan sebagai opaque public URL/API identifier;
+      primary key, foreign key, dan audit log tetap memakai `id` integer.
+- [x] Test unit dan integration mencakup format business ID, trigger direct
+      insert, schema omit, dan service create Quality Issue.
 
 ### Tahap 8 — Test dan verifikasi
 
-- [ ] Unit test generator:
+- [x] Unit test generator:
       - prefix `QI`, `SD`, `TR` benar;
       - UUID valid;
       - dua hasil berturut-turut berbeda;
       - generator tidak menerima prefix arbitrary jika API dibuat typed.
-- [ ] Schema/integration test:
+- [x] Schema/integration test:
       - setiap tabel menyimpan `public_id`;
       - unique constraint menolak duplicate pada tabel yang sama;
       - public ID antar jenis entity memiliki prefix berbeda;
       - FK integer dan cascade/set-null tetap berfungsi.
-- [ ] Migration test:
+- [x] Migration test:
       - database kosong;
       - existing data;
       - backfill idempotent;
       - semua existing row memiliki public ID setelah migration.
-- [ ] Service test:
+- [x] Service test:
       - create Quality Issue menghasilkan `QI-...`;
-      - create Sample Defect menghasilkan `SD-...`;
-      - create Technical Report menghasilkan `TR-...`;
+      - seed/direct insert Sample Defect menghasilkan `SD-...`;
+      - seed/direct insert Technical Report menghasilkan `TR-...`;
       - update tidak mengubah `public_id`.
-- [ ] Regression test:
+- [x] Regression test:
       - query berdasarkan `id` numeric tetap berjalan;
       - audit log tetap menyimpan `entity_id` numeric;
       - attachment dan relasi existing tidak berubah;
       - seed dan test fixture tetap dapat dijalankan.
-- [ ] Jalankan pemeriksaan repository:
+- [x] Jalankan pemeriksaan repository:
       - `pnpm typecheck`
       - `pnpm lint`
       - `pnpm test:unit`
       - `pnpm test:integration`
+      - `pnpm test:e2e`
       - `pnpm db:generate` lalu review migration yang dihasilkan
 - [ ] Verifikasi manual satu record baru dari masing-masing tabel dan catat
-      contoh public ID yang dihasilkan.
+      contoh public/business ID yang dihasilkan. Automated integration test
+      sudah memverifikasi direct insert ketiga entity.
 
 ### Acceptance criteria
 
-- [ ] Tiga tabel memiliki `public_id` text yang valid, unique, dan terisi.
-- [ ] Record baru selalu mendapat prefix yang benar:
+- [x] Tiga tabel memiliki `public_id` text yang valid, unique, dan terisi.
+- [x] Record baru selalu mendapat prefix yang benar:
       `QI-`, `SD-`, atau `TR-`.
-- [ ] Tidak ada perubahan tipe pada primary key internal dan foreign key.
-- [ ] Tidak ada perubahan perilaku pada attachment, audit log, cascade, atau
+- [x] Tidak ada perubahan tipe pada primary key internal dan foreign key.
+- [x] Tidak ada perubahan perilaku pada attachment, audit log, cascade, atau
       `set null`.
-- [ ] Data lama memiliki public ID setelah migration/backfill.
-- [ ] Tidak ada jalur client yang dapat menentukan atau mengubah public ID.
-- [ ] Numeric API/URL lama tetap kompatibel pada tahap pertama.
-- [ ] Tidak ada custom generator timestamp-only dan tidak ada unbounded retry.
+- [x] Data lama memiliki public ID setelah migration/backfill.
+- [x] Tidak ada jalur client yang dapat menentukan atau mengubah public ID.
+- [x] Numeric API/URL lama tetap kompatibel pada tahap pertama.
+- [x] Tidak ada custom generator timestamp-only dan tidak ada unbounded retry.
 
 ### Non-goals
 

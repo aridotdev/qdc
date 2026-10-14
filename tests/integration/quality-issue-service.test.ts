@@ -98,12 +98,14 @@ describe('Quality Issue service', () => {
       .where(eq(auditLogs.entityId, result.issueId))
 
     expect(issue).toMatchObject({
+      businessId: 'QI-20261008-001',
       status: QUALITY_ISSUE_STATUS.OPEN,
       issueName: 'Initial no attachment',
       updatedByUserId: actorUserId
     })
     expect(qualityIssuePublicIdSchema.safeParse(issue?.publicId).success).toBe(true)
     expect(result.publicId).toBe(issue?.publicId)
+    expect(result.businessId).toBe('QI-20261008-001')
     expect(details).toHaveLength(1)
     expect(details[0]).toMatchObject({
       id: result.detailId,

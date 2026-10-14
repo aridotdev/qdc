@@ -2,6 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { eq } from 'drizzle-orm'
 import { createDatabase } from '../../server/database/client'
 import { migrateDatabase } from '../../server/database/migrate'
 import { backfillPublicIds } from '../../server/database/public-id-backfill'
@@ -95,7 +96,7 @@ describe('public ID database schema', () => {
         createdByUserId: 'user-1',
         updatedByUserId: 'user-1'
       })
-      .returning({ publicId: qualityIssues.publicId })
+      .returning({ id: qualityIssues.id, publicId: qualityIssues.publicId })
 
     const [sample] = await database.db
       .insert(sampleDefects)
@@ -113,7 +114,7 @@ describe('public ID database schema', () => {
         createdByUserId: 'user-1',
         updatedByUserId: 'user-1'
       })
-      .returning({ publicId: sampleDefects.publicId })
+      .returning({ id: sampleDefects.id, publicId: sampleDefects.publicId })
     const [secondSample] = await database.db
       .insert(sampleDefects)
       .values({
@@ -130,7 +131,7 @@ describe('public ID database schema', () => {
         createdByUserId: 'user-1',
         updatedByUserId: 'user-1'
       })
-      .returning({ publicId: sampleDefects.publicId })
+      .returning({ id: sampleDefects.id, publicId: sampleDefects.publicId })
 
     const [report] = await database.db
       .insert(technicalReports)
@@ -145,13 +146,33 @@ describe('public ID database schema', () => {
         createdByUserId: 'user-1',
         updatedByUserId: 'user-1'
       })
-      .returning({ publicId: technicalReports.publicId })
+      .returning({ id: technicalReports.id, publicId: technicalReports.publicId })
+
+    const [storedIssue] = await database.db
+      .select({ businessId: qualityIssues.businessId })
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, issue!.id))
+    const storedSamples = await database.db
+      .select({ businessId: sampleDefects.businessId })
+      .from(sampleDefects)
+      .where(eq(sampleDefects.batchId, 'PUBLIC-ID-BATCH'))
+      .orderBy(sampleDefects.id)
+    const [storedReport] = await database.db
+      .select({ businessId: technicalReports.businessId })
+      .from(technicalReports)
+      .where(eq(technicalReports.id, report!.id))
 
     expect(qualityIssuePublicIdSchema.safeParse(issue?.publicId).success).toBe(true)
     expect(sampleDefectPublicIdSchema.safeParse(sample?.publicId).success).toBe(true)
     expect(sampleDefectPublicIdSchema.safeParse(secondSample?.publicId).success).toBe(true)
     expect(secondSample?.publicId).not.toBe(sample?.publicId)
     expect(technicalReportPublicIdSchema.safeParse(report?.publicId).success).toBe(true)
+    expect(storedIssue?.businessId).toBe('QI-20261013-001')
+    expect(storedSamples.map(row => row.businessId)).toEqual([
+      'SD-20261013-001',
+      'SD-20261013-002'
+    ])
+    expect(storedReport?.businessId).toBe('TR-20261013-001')
   })
 
   it('rejects duplicate public IDs within one table', async () => {
@@ -193,7 +214,8 @@ describe('public ID database schema', () => {
       serialNumber: 'Serial',
       tanggalKejadian: '2026-10-13',
       detail: 'Detail',
-      publicId: 'QI-invalid'
+      publicId: 'QI-invalid',
+      businessId: 'QI-20261013-001'
     })
     const sampleDefectInput = insertSampleDefectSchema.safeParse({
       batchId: 'Batch',
@@ -204,7 +226,8 @@ describe('public ID database schema', () => {
       partNumber: 'Part',
       partName: 'Part name',
       kerusakanCabang: 'Defect',
-      publicId: 'SD-invalid'
+      publicId: 'SD-invalid',
+      businessId: 'SD-20261013-001'
     })
     const technicalReportInput = insertTechnicalReportSchema.safeParse({
       documentNumber: 'Document',
@@ -212,20 +235,24 @@ describe('public ID database schema', () => {
       releaseDate: '2026-10-13',
       modelName: 'Model',
       issueName: 'Issue',
-      publicId: 'TR-invalid'
+      publicId: 'TR-invalid',
+      businessId: 'TR-20261013-001'
     })
     const qualityIssueUpdate = updateQualityIssueSchema.safeParse({
       detail: 'Updated detail',
-      publicId: 'QI-invalid'
+      publicId: 'QI-invalid',
+      businessId: 'QI-20261013-001'
     })
     const sampleDefectUpdate = updateSampleDefectSchema.safeParse({
       partName: 'Updated part',
-      publicId: 'SD-invalid'
+      publicId: 'SD-invalid',
+      businessId: 'SD-20261013-001'
     })
     const technicalReportUpdate = updateTechnicalReportSchema.safeParse({
       issueName: 'Updated issue',
       releaseDate: '2026-10-13',
-      publicId: 'TR-invalid'
+      publicId: 'TR-invalid',
+      businessId: 'TR-20261013-001'
     })
 
     for (const result of [
@@ -239,6 +266,7 @@ describe('public ID database schema', () => {
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).not.toHaveProperty('publicId')
+        expect(result.data).not.toHaveProperty('businessId')
       }
     }
   })

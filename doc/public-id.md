@@ -1,8 +1,8 @@
 # Public ID Contract
 
 Dokumen ini mencatat kontrak tahap 1, schema tahap 2, backfill tahap 3,
-generate ID pada jalur create tahap 4, response/type tahap 5, dan pemakaian UI
-tahap 6 untuk public ID domain utama.
+generate ID pada jalur create tahap 4, response/type tahap 5, pemakaian UI
+tahap 6, migrasi URL tahap 7, dan business/display ID domain utama.
 
 ## Format
 
@@ -14,6 +14,29 @@ tahap 6 untuk public ID domain utama.
 
 Prefix harus uppercase. UUID harus lowercase dalam format canonical UUIDv7.
 Primary key integer dan foreign key tetap menjadi identifier internal.
+Public ID adalah identifier opaque untuk URL/API, bukan nomor operasional yang
+ditampilkan sebagai ID utama di tabel.
+
+## Business ID Operasional
+
+| Entity | Format |
+| --- | --- |
+| Quality Issue | `QI-yyyymmdd-xxx` |
+| Sample Defect | `SD-yyyymmdd-xxx` |
+| Technical Report | `TR-yyyymmdd-xxx` |
+
+`xxx` adalah sequence tiga digit yang reset per hari dan per entity.
+Sequence disimpan sederhana di tabel `business_id_counters` dengan primary key
+`(entity, business_date)`. `public_id` UUIDv7 yang sudah dibuat tidak diubah.
+
+Quality Issue service membuat `businessId` dalam transaction sebelum insert.
+Development seed mengisi `businessId` untuk Quality Issue, Sample Defect, dan
+Technical Report. Migration menambahkan backfill dan trigger fallback untuk
+direct insert server/fixture yang tidak mengirim `business_id`.
+
+Input create/update client tidak menerima `businessId`. Shared domain type
+memakai field canonical `business_id`, sedangkan response server/frontend yang
+sudah camelCase memakai `businessId`.
 
 ## Implementasi Tahap 1 dan 4
 
@@ -47,20 +70,38 @@ Defect, dan Technical Report karena type domain canonical menggunakan
 `snake_case`. Tipe frontend yang sudah menerima response Quality Issue memakai
 `publicId`, mengikuti bentuk response server yang sudah menggunakan `camelCase`.
 
-List, detail, update, delete, dan state transition tetap menggunakan route serta
-lookup `id` numeric. Tahap ini tidak menambahkan `findByPublicId` sebelum URL
-public memang diperlukan.
+List, detail, update, delete, dan state transition tetap menjaga `id` numeric
+di response serta relasi internal. URL public dibahas pada Tahap 7.
 
 ## Pemakaian UI Tahap 6
 
-List Quality Issue menampilkan `publicId` sebagai identifier yang dibaca user.
-Create Quality Issue juga menampilkan `publicId` pada toast sukses. Route row
-dan redirect create tetap memakai `id`/`issueId` numeric agar URL dan bookmark
-existing tetap kompatibel.
+List Quality Issue menampilkan `businessId` sebagai ID operasional dengan
+fallback `id` numeric untuk row lama. Create Quality Issue menampilkan
+`businessId` pada toast sukses, dengan fallback `publicId` bila business ID
+belum tersedia. Route row dan redirect create tetap memakai `publicId` setelah
+migrasi URL tahap 7.
 
 Export dan halaman detail belum tersedia pada codebase saat ini. Sample Defect
 dan Technical Report juga belum memiliki list/detail UI yang menerima data
 domain, sehingga tidak ada identifier internal yang perlu ditampilkan di sana.
+
+## Migrasi URL Tahap 7
+
+Repository Quality Issue menyediakan `findByPublicId`. Semua endpoint Quality
+Issue yang memakai parameter `[id]` menerima dua format:
+
+- ID numeric lama, misalnya `/api/quality-issues/42`;
+- public ID baru, misalnya `/api/quality-issues/QI-<uuid-v7>`.
+
+Public ID divalidasi dengan prefix `QI-` dan UUIDv7 canonical, lalu di-lookup
+menjadi `id` integer sebelum service, relasi, audit log, dan attachment
+dijalankan. Prefix salah, UUID invalid, dan public ID yang tidak ditemukan
+menghasilkan error API yang sesuai. Numeric ID lama tetap didukung.
+
+Link list dan redirect create Quality Issue sekarang memakai `publicId`,
+meskipun kolom ID pada tabel menampilkan `businessId`.
+Route Sample Defect dan Technical Report tidak dimigrasikan karena belum ada
+halaman atau API domain yang membutuhkan public URL.
 
 ## Backfill Tahap 3
 
@@ -78,11 +119,16 @@ pnpm db:backfill-public-id
 Command tersebut menjalankan migration, mengisi row `NULL` dalam urutan
 `quality_issues`, `sample_defects`, lalu `technical_reports`, memvalidasi
 prefix/UUID/duplicate, dan rebuild tabel untuk menegakkan `NOT NULL`. Command
-aman dijalankan ulang; row yang sudah memiliki public ID tidak diubah.
+aman dijalankan ulang; row yang sudah memiliki public ID tidak diubah. Saat
+rebuild, command mempertahankan index dan trigger tabel, termasuk trigger
+fallback `business_id`.
 
-## Batas Tahap 6
+## Batas Tahap 7
 
-Tahap ini belum mengubah URL numeric, menambahkan lookup `findByPublicId`, atau
-membuat export/detail baru. API create Sample Defect dan Technical Report belum
-tersedia pada codebase saat ini; ketika UI masing-masing ditambahkan, identifier
-yang ditampilkan harus memakai `publicId`, sementara `id` tetap internal.
+Tahap ini belum mengubah primary key, foreign key, audit log, atau response
+numeric internal. Halaman detail frontend Quality Issue belum tersedia pada
+codebase saat ini; endpoint detail dan action sudah menerima public URL.
+API create Sample Defect dan Technical Report juga belum tersedia; ketika UI
+masing-masing ditambahkan, identifier yang ditampilkan harus memakai
+`businessId`, sementara URL/API publik tetap memakai `publicId` dan `id` tetap
+internal.

@@ -18,6 +18,7 @@ export const technicalReports = sqliteTable(
     publicId: text('public_id')
       .notNull()
       .$defaultFn(() => createPublicId('TR')),
+    businessId: text('business_id'),
     issueId: integer('issue_id').references(() => qualityIssues.id, { onDelete: 'set null' }),
     documentNumber: text('document_number').notNull().unique(),
     documentType: text('document_type').notNull(),
@@ -35,6 +36,7 @@ export const technicalReports = sqliteTable(
   },
   table => [
     uniqueIndex('technical_reports_public_id_unique').on(table.publicId),
+    uniqueIndex('technical_reports_business_id_unique').on(table.businessId),
     index('technical_reports_issue_id_idx').on(table.issueId),
     index('technical_reports_document_type_idx').on(table.documentType),
     index('technical_reports_release_date_idx').on(table.releaseDate),
@@ -65,7 +67,8 @@ export const insertTechnicalReportSchema = createInsertSchema(technicalReports, 
   updatedAt: true,
   createdByUserId: true,
   updatedByUserId: true,
-  publicId: true
+  publicId: true,
+  businessId: true
 })
 
 export const selectTechnicalReportSchema = createSelectSchema(technicalReports)
@@ -89,7 +92,8 @@ export const updateTechnicalReportSchema = createUpdateSchema(technicalReports, 
   updatedAt: true,
   createdByUserId: true,
   updatedByUserId: true,
-  publicId: true
+  publicId: true,
+  businessId: true
 })
 
 export type TechnicalReport = typeof technicalReports.$inferSelect

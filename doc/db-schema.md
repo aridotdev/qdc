@@ -25,6 +25,7 @@ Table: `quality_issues`
 | --- | --- | --- | --- |
 | id | integer | PK | ID quality issue |
 | public_id | text | NOT NULL, UNIQUE | Identifier publik `QI-<uuid-v7>` |
+| business_id | text | NULL, UNIQUE | ID operasional `QI-yyyymmdd-xxx` |
 | issue_name | text | NOT NULL | Nama masalah |
 | model_name | text | NOT NULL | Model produk |
 | serial_number | text | NOT NULL | Nomor seri produk |
@@ -41,6 +42,7 @@ Table: `quality_issues`
 Indexes:
 
 - unique `quality_issues_public_id_unique`
+- unique `quality_issues_business_id_unique`
 - `status`
 - `notification_number`
 - `model_name`
@@ -84,6 +86,7 @@ Table: `sample_defects`
 | --- | --- | --- | --- |
 | id | integer | PK | ID record per part |
 | public_id | text | NOT NULL, UNIQUE | Identifier publik `SD-<uuid-v7>` |
+| business_id | text | NULL, UNIQUE | ID operasional `SD-yyyymmdd-xxx` |
 | batch_id | text | NOT NULL | Identitas satu request multi-part |
 | issue_id | integer | NULL, FK, ON DELETE SET NULL | Relasi optional ke Quality Issue |
 | notification_number | text | NOT NULL | Nomor notifikasi cabang |
@@ -121,6 +124,7 @@ SUPPLIER_ANALYZED
 Indexes:
 
 - unique `sample_defects_public_id_unique`
+- unique `sample_defects_business_id_unique`
 - `batch_id`
 - `issue_id`
 - `notification_number`
@@ -139,6 +143,7 @@ Table: `technical_reports`
 | --- | --- | --- | --- |
 | id | integer | PK | ID report |
 | public_id | text | NOT NULL, UNIQUE | Identifier publik `TR-<uuid-v7>` |
+| business_id | text | NULL, UNIQUE | ID operasional `TR-yyyymmdd-xxx` |
 | issue_id | integer | NULL, FK, ON DELETE SET NULL | Relasi optional |
 | document_number | text | NOT NULL, UNIQUE | Nomor dokumen |
 | document_type | text | NOT NULL | `TECHNICAL_REPORT` atau `SERVICE_TIPS` |
@@ -159,6 +164,7 @@ Table: `technical_reports`
 Indexes:
 
 - unique `technical_reports_public_id_unique`
+- unique `technical_reports_business_id_unique`
 - unique `document_number`
 - `issue_id`
 - `document_type`
@@ -228,7 +234,26 @@ Indexes:
 Audit log bersifat append-only. Delete domain harus menulis event delete
 sebelum operasi delete berhasil.
 
-## 8. Referential Integrity dan Transaction
+## 8. Business ID Counter
+
+Table: `business_id_counters`
+
+| Kolom | Tipe | Constraint | Keterangan |
+| --- | --- | --- | --- |
+| entity | text | PK | `QI`, `SD`, atau `TR` |
+| business_date | text | PK | Tanggal sequence format `yyyymmdd` |
+| last_sequence | integer | NOT NULL | Sequence terakhir untuk entity dan tanggal |
+
+`business_id` adalah ID operasional yang ditampilkan ke user:
+`QI-yyyymmdd-xxx`, `SD-yyyymmdd-xxx`, atau `TR-yyyymmdd-xxx`. Sequence reset per
+hari dan per entity. `public_id` tetap menjadi identifier opaque untuk URL/API,
+sedangkan primary key, foreign key, dan audit log tetap memakai `id` integer.
+
+Quality Issue service membuat `business_id` dalam transaction. Migration
+menyediakan backfill dan trigger fallback untuk direct insert server/fixture
+yang belum melewati service khusus.
+
+## 9. Referential Integrity dan Transaction
 
 - `quality_issues -> quality_issue_details`: cascade delete.
 - `quality_issues -> sample_defects`: set null.
@@ -241,7 +266,7 @@ sebelum operasi delete berhasil.
   kompensasi.
 - Status transition dan audit log ditulis dalam transaction yang sama.
 
-## 9. Public ID
+## 10. Public ID
 
 `public_id` dibuat server-side menggunakan UUIDv7 dan tidak memiliki default
 SQL. Quality Issue service dan development seed memberikan nilai dari helper
@@ -255,3 +280,6 @@ domain type menyimpan nama field canonical sebagai `public_id`.
 Migration schema tahap 2 menambahkan kolom nullable dan unique index yang aman
 selama transisi. Backfill tahap 3 mengisi database existing, memverifikasi
 nilai, lalu melakukan rebuild SQLite untuk menegakkan `NOT NULL`.
+
+Script backfill public ID mempertahankan index dan trigger yang sudah ada saat
+rebuild tabel, termasuk trigger fallback `business_id`.

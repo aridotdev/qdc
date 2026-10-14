@@ -6,11 +6,11 @@ import {
 import { qualityIssueDetails } from '../../../database/schema'
 import db from '../../../database'
 import { uploadAttachment } from '../../../utils/attachment-api'
-import { parseAttachmentId } from '../../../utils/attachment-validation'
 import { createApiError } from '../../../utils/api-error'
+import { resolveQualityIssueId } from '../../../utils/quality-issue-api'
 
 export default eventHandler(async (event) => {
-  const issueId = parseAttachmentId(getRouterParam(event, 'id'))
+  const issueId = await resolveQualityIssueId(getRouterParam(event, 'id'))
   const [initialEvidence] = await db
     .select({ id: qualityIssueDetails.id })
     .from(qualityIssueDetails)

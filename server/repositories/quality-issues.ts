@@ -64,6 +64,7 @@ function buildListConditions(query: QualityIssuePagination) {
     query.search === undefined
       ? undefined
       : or(
+          like(qualityIssues.businessId, `%${query.search}%`),
           like(qualityIssues.issueName, `%${query.search}%`),
           like(qualityIssues.modelName, `%${query.search}%`),
           like(qualityIssues.serialNumber, `%${query.search}%`),
@@ -90,6 +91,16 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
       .select()
       .from(qualityIssues)
       .where(eq(qualityIssues.id, id))
+      .limit(1)
+
+    return issue
+  }
+
+  async function findByPublicId(publicId: string): Promise<QualityIssue | undefined> {
+    const [issue] = await config.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.publicId, publicId))
       .limit(1)
 
     return issue
@@ -204,6 +215,7 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
   return {
     create,
     findById,
+    findByPublicId,
     findDetailById,
     createDetail,
     list,

@@ -97,9 +97,9 @@ function statusColor(status: QualityIssueStatus) {
 
 const columns: TableColumn<QualityIssueListItem>[] = [
   {
-    accessorKey: 'publicId',
-    header: 'Public ID',
-    cell: ({ row }) => h('span', { class: 'break-all font-mono text-xs' }, row.original.publicId)
+    accessorKey: 'businessId',
+    header: 'ID',
+    cell: ({ row }) => row.original.businessId ?? `#${row.original.id}`
   },
   {
     accessorKey: 'issueName',
@@ -145,7 +145,7 @@ const errorMessage = computed(() => {
 })
 
 function openDetail(_: Event, row: { original: QualityIssueListItem }) {
-  return navigateTo(`/quality-issues/${row.original.id}`)
+  return navigateTo(`/quality-issues/${row.original.publicId}`)
 }
 </script>
 

@@ -10,6 +10,7 @@ import type { createDatabase } from './client'
 import { createAuth } from '../lib/auth-config'
 import { qualityIssueDetails, qualityIssues, sampleDefects, technicalReports, user } from './schema'
 import { recordAuditLog } from '../services/audit-logs'
+import { createBusinessId } from '../utils/business-id'
 import { createPublicId } from '../utils/public-id'
 
 const DEVELOPMENT_AUTH_SECRET = 'JH6GCnacSZVgpIbeFnyjJVtoGDZEP13r'
@@ -110,6 +111,7 @@ export async function seedDatabase(database: Database['db']): Promise<SeedResult
       .insert(qualityIssues)
       .values({
         publicId: createPublicId('QI'),
+        businessId: await createBusinessId(transaction, 'QI', new Date(now)),
         issueName: 'Development sample quality issue',
         modelName: 'QDC-DEV-MODEL',
         serialNumber: SEED_SERIAL_NUMBER,
@@ -146,6 +148,7 @@ export async function seedDatabase(database: Database['db']): Promise<SeedResult
       .insert(sampleDefects)
       .values({
         publicId: createPublicId('SD'),
+        businessId: await createBusinessId(transaction, 'SD', new Date(now)),
         batchId: 'DEV-SEED-BATCH-001',
         issueId: issue.id,
         notificationNumber: 'DEV-SEED-NOTIFICATION-001',
@@ -166,6 +169,7 @@ export async function seedDatabase(database: Database['db']): Promise<SeedResult
       .insert(technicalReports)
       .values({
         publicId: createPublicId('TR'),
+        businessId: await createBusinessId(transaction, 'TR', new Date(now)),
         issueId: issue.id,
         documentNumber: SEED_DOCUMENT_NUMBER,
         documentType: DOCUMENT_TYPE.TECHNICAL_REPORT,

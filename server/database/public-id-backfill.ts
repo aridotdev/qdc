@@ -180,6 +180,15 @@ async function rebuildTableWithNotNull(
     `,
     args: [tableName]
   })
+  const triggers = await client.execute({
+    sql: `
+      SELECT sql
+      FROM sqlite_master
+      WHERE type = 'trigger' AND tbl_name = ? AND sql IS NOT NULL
+      ORDER BY name
+    `,
+    args: [tableName]
+  })
   const columns = tableInfo.rows.map(row => `"${String(getRowValue(row as Record<string, unknown>, 'name'))}"`)
   const newTableName = `__public_id_new_${tableName}`
   const newCreateSql = replaceTableName(createSql, tableName, newTableName)
@@ -201,6 +210,13 @@ async function rebuildTableWithNotNull(
       const indexSql = getRowValue(index as Record<string, unknown>, 'sql')
       if (typeof indexSql === 'string') {
         await transaction.execute(indexSql)
+      }
+    }
+
+    for (const trigger of triggers.rows) {
+      const triggerSql = getRowValue(trigger as Record<string, unknown>, 'sql')
+      if (typeof triggerSql === 'string') {
+        await transaction.execute(triggerSql)
       }
     }
 

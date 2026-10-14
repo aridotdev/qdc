@@ -1,6 +1,7 @@
 import { defineRelations } from 'drizzle-orm'
 import { attachments } from './attachments'
 import { auditLogs } from './audit-logs'
+import { businessIdCounters } from './business-id-counters'
 import { qualityIssues } from './quality-issues'
 import { qualityIssueDetails } from './quality-issue-details'
 import { sampleDefects } from './sample-defects'
@@ -9,6 +10,7 @@ import { user, session, account, verification } from './auth-schema'
 
 export * from './attachments'
 export * from './audit-logs'
+export * from './business-id-counters'
 export * from './quality-issues'
 export * from './quality-issue-details'
 export * from './sample-defects'
@@ -18,6 +20,7 @@ export * from './auth-schema'
 export const schema = {
   attachments,
   auditLogs,
+  businessIdCounters,
   qualityIssues,
   qualityIssueDetails,
   sampleDefects,

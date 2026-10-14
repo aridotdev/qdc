@@ -22,6 +22,7 @@ export const sampleDefects = sqliteTable(
     publicId: text('public_id')
       .notNull()
       .$defaultFn(() => createPublicId('SD')),
+    businessId: text('business_id'),
     batchId: text('batch_id').notNull(),
     issueId: integer('issue_id').references(() => qualityIssues.id, { onDelete: 'set null' }),
     notificationNumber: text('notification_number').notNull(),
@@ -47,6 +48,7 @@ export const sampleDefects = sqliteTable(
   },
   table => [
     uniqueIndex('sample_defects_public_id_unique').on(table.publicId),
+    uniqueIndex('sample_defects_business_id_unique').on(table.businessId),
     index('sample_defects_batch_id_idx').on(table.batchId),
     index('sample_defects_issue_id_idx').on(table.issueId),
     index('sample_defects_notification_number_idx').on(table.notificationNumber),
@@ -85,7 +87,8 @@ export const insertSampleDefectSchema = createInsertSchema(sampleDefects, {
   updatedAt: true,
   createdByUserId: true,
   updatedByUserId: true,
-  publicId: true
+  publicId: true,
+  businessId: true
 })
 
 export const selectSampleDefectSchema = createSelectSchema(sampleDefects)
@@ -115,7 +118,8 @@ export const updateSampleDefectSchema = createUpdateSchema(sampleDefects, {
   updatedAt: true,
   createdByUserId: true,
   updatedByUserId: true,
-  publicId: true
+  publicId: true,
+  businessId: true
 })
 
 export type SampleDefect = typeof sampleDefects.$inferSelect

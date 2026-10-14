@@ -54,6 +54,11 @@ describe('quality issue repository', () => {
       publicId: created.publicId,
       issueName: 'Initial issue'
     })
+    expect(await repository.findByPublicId(created.publicId)).toMatchObject({
+      id: created.id,
+      publicId: created.publicId,
+      issueName: 'Initial issue'
+    })
 
     const updated = await repository.update(created.id, {
       detail: 'Updated detail',
@@ -213,5 +218,7 @@ describe('quality issue repository', () => {
     expect(detail?.publicId).toBe(issue.publicId)
     expect(detail?.details.map(item => item.action)).toEqual(['FIRST', 'SECOND', 'LATER'])
     expect(await repository.findDetailById(999999)).toBeUndefined()
+    expect(await repository.findByPublicId('QI-00000000-0000-7000-8000-000000000000'))
+      .toBeUndefined()
   })
 })

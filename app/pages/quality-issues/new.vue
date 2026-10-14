@@ -172,12 +172,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     toast.add({
       title: 'Quality Issue berhasil dibuat',
-      description: `Public ID: ${result.publicId}`,
+      description: result.businessId ? `ID: ${result.businessId}` : `Public ID: ${result.publicId}`,
       color: 'success',
       icon: 'i-lucide-circle-check'
     })
 
-    await navigateTo(`/quality-issues/${result.issueId}`)
+    await navigateTo(`/quality-issues/${result.publicId}`)
   } catch (error) {
     const apiError = getApiError(error)
 

@@ -2,11 +2,11 @@ import { qualityIssueStatusOperationSchema } from '../../../../shared/validators
 import { getAuthActor } from '../../../lib/auth-http'
 import { requireAdmin } from '../../../lib/auth-policy'
 import { createValidationError, toApiError } from '../../../utils/api-error'
-import { createRuntimeQualityIssueStateMachine, parseQualityIssueId } from '../../../utils/quality-issue-api'
+import { createRuntimeQualityIssueStateMachine, resolveQualityIssueId } from '../../../utils/quality-issue-api'
 
 export default eventHandler(async (event) => {
   const actor = getAuthActor(event)
-  const issueId = parseQualityIssueId(getRouterParam(event, 'id'))
+  const issueId = await resolveQualityIssueId(getRouterParam(event, 'id'))
   const result = qualityIssueStatusOperationSchema.safeParse(await readBody(event))
 
   if (!result.success) {

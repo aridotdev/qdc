@@ -48,12 +48,13 @@ describe('database lifecycle', () => {
         'SELECT id, hash, name FROM __drizzle_migrations'
       )
       const tables = await database.client.execute({
-        sql: 'SELECT name FROM sqlite_master WHERE type = ? AND name IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY name',
+        sql: 'SELECT name FROM sqlite_master WHERE type = ? AND name IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY name',
         args: [
           'table',
           'account',
           'attachments',
           'audit_logs',
+          'business_id_counters',
           'quality_issue_details',
           'quality_issues',
           'sample_defects',
@@ -64,12 +65,13 @@ describe('database lifecycle', () => {
         ]
       })
 
-      expect(firstMigrations.rows).toHaveLength(4)
+      expect(firstMigrations.rows).toHaveLength(5)
       expect(secondMigrations.rows).toEqual(firstMigrations.rows)
       expect(tables.rows).toEqual([
         { name: 'account' },
         { name: 'attachments' },
         { name: 'audit_logs' },
+        { name: 'business_id_counters' },
         { name: 'quality_issue_details' },
         { name: 'quality_issues' },
         { name: 'sample_defects' },
@@ -97,15 +99,27 @@ describe('database lifecycle', () => {
         .from(user)
         .where(eq(user.email, developmentSeed.userEmail))
       const seededIssues = await database.db
-        .select({ id: qualityIssues.id, publicId: qualityIssues.publicId })
+        .select({
+          id: qualityIssues.id,
+          publicId: qualityIssues.publicId,
+          businessId: qualityIssues.businessId
+        })
         .from(qualityIssues)
         .where(eq(qualityIssues.serialNumber, developmentSeed.serialNumber))
       const seededSamples = await database.db
-        .select({ id: sampleDefects.id, publicId: sampleDefects.publicId })
+        .select({
+          id: sampleDefects.id,
+          publicId: sampleDefects.publicId,
+          businessId: sampleDefects.businessId
+        })
         .from(sampleDefects)
         .where(eq(sampleDefects.serialNumber, developmentSeed.serialNumber))
       const seededReports = await database.db
-        .select({ id: technicalReports.id, publicId: technicalReports.publicId })
+        .select({
+          id: technicalReports.id,
+          publicId: technicalReports.publicId,
+          businessId: technicalReports.businessId
+        })
         .from(technicalReports)
         .where(eq(technicalReports.documentNumber, developmentSeed.documentNumber))
       const seededAuditLogs = await database.db
@@ -123,6 +137,9 @@ describe('database lifecycle', () => {
       expect(qualityIssuePublicIdSchema.safeParse(seededIssues[0]?.publicId).success).toBe(true)
       expect(sampleDefectPublicIdSchema.safeParse(seededSamples[0]?.publicId).success).toBe(true)
       expect(technicalReportPublicIdSchema.safeParse(seededReports[0]?.publicId).success).toBe(true)
+      expect(seededIssues[0]?.businessId).toMatch(/^QI-\d{8}-001$/)
+      expect(seededSamples[0]?.businessId).toMatch(/^SD-\d{8}-001$/)
+      expect(seededReports[0]?.businessId).toMatch(/^TR-\d{8}-001$/)
       expect(seededAuditLogs).toHaveLength(4)
 
       const auth = createAuth(database.db, {

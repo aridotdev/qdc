@@ -82,7 +82,11 @@ POST   /api/quality-issues/:id/attachments
 ```
 
 `PATCH` tidak boleh menerima status arbitrary. Perubahan status memakai
-operation service yang menerima transition valid.
+operation service yang menerima transition valid. Parameter `:id` pada seluruh
+endpoint Quality Issue menerima ID numeric lama atau `QI-<uuid-v7>` public ID;
+public ID di-resolve ke integer internal sebelum repository/service dipanggil.
+Response list/create juga membawa `businessId` untuk display operasional
+format `QI-yyyymmdd-xxx`; route tetap memakai `publicId`.
 
 ### Sample Defect
 
@@ -427,10 +431,10 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Depends on: TASK-002, TASK-022, TASK-026
   - Priority: P0
   - Acceptance:
-    - Table menampilkan field penting termasuk public ID, status badge, search,
+    - Table menampilkan field penting termasuk ID internal, status badge, search,
       filter, sorting, pagination, loading, empty, dan error state.
-    - ID integer internal tidak ditampilkan sebagai identifier publik.
-    - Route row tetap kompatibel dengan ID numeric existing.
+    - Public ID dipakai untuk route row baru, sementara ID numeric existing
+      tetap kompatibel.
     - Query state tersimpan di URL.
     - Klik row membuka detail.
   - Test:
@@ -443,7 +447,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Form field dan file uploader tersedia.
     - Client validation tidak menggantikan API validation.
     - Submit disabled saat pending dan tidak membuat duplicate submit.
-    - Berhasil redirect ke detail.
+    - Berhasil redirect ke detail dengan `publicId`; toast menampilkan
+      `businessId`.
   - Test:
     - Browser test valid create, field error, file error, retry, dan redirect.
 
