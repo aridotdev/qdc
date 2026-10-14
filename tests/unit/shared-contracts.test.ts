@@ -9,7 +9,13 @@ import {
   QUALITY_ISSUE_STATUS,
   SAMPLE_DEFECT_STATUS
 } from '#shared'
-import type { PaginatedResponse, QualityIssue } from '#shared'
+import type {
+  CreateQualityIssueResponse,
+  PaginatedResponse,
+  QualityIssue,
+  SampleDefect,
+  TechnicalReport
+} from '#shared'
 
 describe('shared contracts', () => {
   it('exposes canonical domain status and document values', () => {
@@ -46,8 +52,15 @@ describe('shared contracts', () => {
   })
 
   it('supports typed paginated domain responses', () => {
-    const response: PaginatedResponse<Pick<QualityIssue, 'id' | 'status'>> = {
-      items: [{ id: 1, status: QUALITY_ISSUE_STATUS.OPEN }],
+    const response: PaginatedResponse<
+      Pick<QualityIssue, 'id' | 'public_id' | 'business_id' | 'status'>
+    > = {
+      items: [{
+        id: 1,
+        public_id: 'QI-test',
+        business_id: 'QI-20261014-001',
+        status: QUALITY_ISSUE_STATUS.OPEN
+      }],
       meta: {
         page: 1,
         limit: 20,
@@ -56,6 +69,39 @@ describe('shared contracts', () => {
       }
     }
 
-    expect(response.items[0]).toEqual({ id: 1, status: 'OPEN' })
+    expect(response.items[0]).toEqual({
+      id: 1,
+      public_id: 'QI-test',
+      business_id: 'QI-20261014-001',
+      status: 'OPEN'
+    })
+  })
+
+  it('exposes public IDs in domain and create response types', () => {
+    const sampleDefect: Pick<SampleDefect, 'id' | 'public_id' | 'business_id'> = {
+      id: 1,
+      public_id: 'SD-test',
+      business_id: 'SD-20261014-001'
+    }
+    const technicalReport: Pick<TechnicalReport, 'id' | 'public_id' | 'business_id'> = {
+      id: 1,
+      public_id: 'TR-test',
+      business_id: 'TR-20261014-001'
+    }
+    const createResponse: CreateQualityIssueResponse = {
+      issueId: 1,
+      publicId: 'QI-test',
+      businessId: 'QI-20261014-001'
+    }
+
+    expect(sampleDefect.public_id).toBe('SD-test')
+    expect(sampleDefect.business_id).toBe('SD-20261014-001')
+    expect(technicalReport.public_id).toBe('TR-test')
+    expect(technicalReport.business_id).toBe('TR-20261014-001')
+    expect(createResponse).toEqual({
+      issueId: 1,
+      publicId: 'QI-test',
+      businessId: 'QI-20261014-001'
+    })
   })
 })

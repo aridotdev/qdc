@@ -12,6 +12,8 @@ import {
   type CreateQualityIssueInput,
   type UpdateQualityIssueInput
 } from '../repositories/quality-issues'
+import { createBusinessId } from '../utils/business-id'
+import { createPublicId } from '../utils/public-id'
 import type { createAttachmentService, AttachmentUploadInput } from './attachments'
 import { recordAuditLog } from './audit-logs'
 
@@ -64,6 +66,8 @@ export interface QualityIssueDetailMutationResult {
 
 export interface CreateQualityIssueResult extends QualityIssueDetailMutationResult {
   issueId: number
+  publicId: string
+  businessId: string | null
 }
 
 export class QualityIssueServiceNotFoundError extends Error {
@@ -124,8 +128,11 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
   ): Promise<CreateQualityIssueResult> {
     const created = await config.db.transaction(async (transaction) => {
       const repository = createQualityIssueRepository({ db: transaction })
-      const now = clock().toISOString()
+      const nowDate = clock()
+      const now = nowDate.toISOString()
       const issueInput: CreateQualityIssueInput = {
+        publicId: createPublicId('QI'),
+        businessId: await createBusinessId(transaction, 'QI', nowDate),
         issueName: input.issueName,
         modelName: input.modelName,
         serialNumber: input.serialNumber,
@@ -169,6 +176,8 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
 
       return {
         issueId: issue.id,
+        publicId: issue.publicId,
+        businessId: issue.businessId,
         detailId: detail.id
       }
     })

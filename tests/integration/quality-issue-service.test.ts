@@ -19,6 +19,7 @@ import {
 import { createAttachmentService } from '../../server/services/attachments'
 import { createFileStorage, type FileStorage } from '../../server/services/file-storage'
 import { createQualityIssueService } from '../../server/services/quality-issues'
+import { qualityIssuePublicIdSchema } from '../../shared/validators/public-id'
 
 const migrationsFolder = join(process.cwd(), 'server/database/migrations')
 const now = '2026-10-08T00:00:00.000Z'
@@ -97,10 +98,14 @@ describe('Quality Issue service', () => {
       .where(eq(auditLogs.entityId, result.issueId))
 
     expect(issue).toMatchObject({
+      businessId: 'QI-20261008-001',
       status: QUALITY_ISSUE_STATUS.OPEN,
       issueName: 'Initial no attachment',
       updatedByUserId: actorUserId
     })
+    expect(qualityIssuePublicIdSchema.safeParse(issue?.publicId).success).toBe(true)
+    expect(result.publicId).toBe(issue?.publicId)
+    expect(result.businessId).toBe('QI-20261008-001')
     expect(details).toHaveLength(1)
     expect(details[0]).toMatchObject({
       id: result.detailId,
@@ -317,6 +322,7 @@ describe('Quality Issue service', () => {
       status: QUALITY_ISSUE_STATUS.OPEN,
       updatedByUserId: actorUserId
     })
+    expect(updated.publicId).toBe(created.publicId)
 
     const logs = await database.db
       .select()

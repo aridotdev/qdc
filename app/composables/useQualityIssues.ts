@@ -24,6 +24,8 @@ export type QualityIssueSortField = (typeof QUALITY_ISSUE_SORT_FIELDS)[number]
 
 export interface QualityIssueListItem {
   id: number
+  publicId: string
+  businessId: string | null
   issueName: string
   modelName: string
   serialNumber: string

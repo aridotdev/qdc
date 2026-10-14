@@ -1,11 +1,11 @@
 import { updateQualityIssueSchema } from '../../../shared/validators/quality-issues'
 import { getAuthActor } from '../../lib/auth-http'
 import { createValidationError, toApiError } from '../../utils/api-error'
-import { createRuntimeQualityIssueRepository, createRuntimeQualityIssueService, getQualityIssueDetailOrThrow, parseQualityIssueId } from '../../utils/quality-issue-api'
+import { createRuntimeQualityIssueRepository, createRuntimeQualityIssueService, getQualityIssueDetailOrThrow, resolveQualityIssueId } from '../../utils/quality-issue-api'
 
 export default eventHandler(async (event) => {
   const actor = getAuthActor(event)
-  const issueId = parseQualityIssueId(getRouterParam(event, 'id'))
+  const issueId = await resolveQualityIssueId(getRouterParam(event, 'id'))
   const result = updateQualityIssueSchema.safeParse(await readBody(event))
 
   if (!result.success) {

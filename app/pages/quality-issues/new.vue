@@ -8,7 +8,8 @@ import {
   businessDateSchema,
   ERROR_CODES,
   optionalNullableText,
-  requiredText
+  requiredText,
+  type CreateQualityIssueResponse
 } from '#shared'
 
 const toast = useToast()
@@ -164,18 +165,19 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       formData.append('attachment', attachment)
     }
 
-    const result = await $fetch<{ issueId: number }>('/api/quality-issues', {
+    const result = await $fetch<CreateQualityIssueResponse>('/api/quality-issues', {
       method: 'POST',
       body: formData
     })
 
     toast.add({
       title: 'Quality Issue berhasil dibuat',
+      description: result.businessId ? `ID: ${result.businessId}` : `Public ID: ${result.publicId}`,
       color: 'success',
       icon: 'i-lucide-circle-check'
     })
 
-    await navigateTo(`/quality-issues/${result.issueId}`)
+    await navigateTo(`/quality-issues/${result.publicId}`)
   } catch (error) {
     const apiError = getApiError(error)
 

@@ -10,7 +10,7 @@ import { createFileStorage } from '../services/file-storage'
 import db from '../database'
 import { createApiError, createValidationError } from './api-error'
 import { ERROR_CODES } from '../../shared/constants'
-import { positiveIdSchema } from '../../shared/validators/common'
+import { parseQualityIssueIdentifier } from './quality-issue-validation'
 import type { ZodType } from 'zod'
 
 type QualityIssueEvent = Parameters<Parameters<typeof eventHandler>[0]>[0]
@@ -42,17 +42,23 @@ export function createRuntimeQualityIssueStateMachine() {
   return createQualityIssueStateMachine({ db })
 }
 
-export function parseQualityIssueId(value: string | undefined): number {
-  const result = positiveIdSchema.safeParse(Number(value))
+export async function resolveQualityIssueId(value: string | undefined): Promise<number> {
+  const identifier = parseQualityIssueIdentifier(value)
 
-  if (!result.success) {
+  if (identifier.type === 'numeric') {
+    return identifier.value
+  }
+
+  const issue = await createRuntimeQualityIssueRepository().findByPublicId(identifier.value)
+
+  if (!issue) {
     throw createApiError({
-      code: ERROR_CODES.VALIDATION_ERROR,
-      fieldErrors: { id: ['ID Quality Issue tidak valid.'] }
+      code: ERROR_CODES.NOT_FOUND,
+      message: `Quality Issue ${identifier.value} tidak ditemukan.`
     })
   }
 
-  return result.data
+  return issue.id
 }
 
 function parseMultipartFields(
