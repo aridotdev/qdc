@@ -392,7 +392,7 @@ async function confirmStatusChange(): Promise<void> {
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div class="flex gap-3">
-              <p class="text-sm text-muted">
+              <p class="font-bold text-primary">
                 {{ issue.businessId ?? issue.publicId }}
               </p>
               <UBadge
@@ -531,7 +531,7 @@ async function confirmStatusChange(): Promise<void> {
           </UCard>
 
           <UCard
-            class="flex min-h-0 max-h-[calc(100dvh_-_var(--ui-header-height)_-_8rem)] flex-col overflow-hidden sm:col-span-2"
+            class="flex min-h-0 max-h-[calc(100dvh-var(--ui-header-height)-8rem)] flex-col overflow-hidden sm:col-span-2"
             :ui="{ body: 'min-h-0 flex-1 overflow-y-auto' }"
           >
             <template #header>
