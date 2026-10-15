@@ -39,6 +39,16 @@ export default eventHandler(async (event) => {
       user: publicAuthUser(result.response.user)
     }
   } catch (error) {
-    throw toApiError(error)
+    const apiError = toApiError(error)
+
+    if (apiError.statusCode === 401) {
+      throw createApiError({
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: 'Email atau password tidak valid.',
+        cause: error
+      })
+    }
+
+    throw apiError
   }
 })
