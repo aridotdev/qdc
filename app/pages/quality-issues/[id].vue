@@ -644,44 +644,41 @@ async function confirmStatusChange(): Promise<void> {
               </template>
             </UAlert>
 
-            <div v-else-if="isTimelineLoading && !progressDetails.length" class="space-y-4">
-              <USkeleton class="h-20" />
-              <USkeleton class="h-20" />
+            <div v-else-if="isTimelineLoading && !progressDetails.length" class="space-y-3">
+              <USkeleton class="h-12" />
+              <USkeleton class="h-12" />
             </div>
 
-            <div v-else-if="progressDetails.length" class="space-y-5">
+            <div v-else-if="progressDetails.length" class="divide-y divide-default">
               <article
                 v-for="detail in progressDetails"
                 :key="detail.id"
-                class="relative border-l border-default pl-5"
+                class="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[10rem_minmax(0,1fr)_auto] md:items-start md:gap-4"
               >
-                <span
-                  class="absolute -left-1.5 top-1.5 size-3 rounded-full bg-primary ring-4 ring-default"
-                />
-                <div class="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p class="font-medium text-highlighted">
-                      <time class="text-xs text-muted" :datetime="detail.tanggal">
-                        {{ formatIndonesianDateTime(detail.tanggal) }}
-                      </time>
-                      : {{ detail.action }}
-                    </p>
-                  </div>
+                <time class="text-xs text-muted md:pt-0.5" :datetime="detail.tanggal">
+                  {{ formatIndonesianDateTime(detail.tanggal) }}
+                </time>
+
+                <div class="min-w-0">
+                  <p class="font-medium text-highlighted">
+                    {{ detail.action }}
+                  </p>
+                  <p v-if="detail.remark" class="mt-0.5 whitespace-pre-wrap text-sm text-muted">
+                    {{ detail.remark }}
+                  </p>
                 </div>
 
-                <p v-if="detail.remark" class="mt-3 whitespace-pre-wrap text-sm text-muted">
-                  {{ detail.remark }}
-                </p>
-
-                <div v-if="detail.attachments.length" class="mt-3 flex flex-wrap gap-2">
+                <div v-if="detail.attachments.length" class="flex flex-wrap gap-1.5 md:justify-end">
                   <UButton
                     v-for="attachment in detail.attachments"
                     :key="attachment.id"
                     :to="attachmentUrl(attachment.id)"
                     :label="attachment.fileName"
+                    icon="i-lucide-paperclip"
                     target="_blank"
                     color="neutral"
                     variant="outline"
+                    size="xs"
                     class="max-w-full"
                     :ui="{ label: 'break-all whitespace-normal text-left' }"
                   />
