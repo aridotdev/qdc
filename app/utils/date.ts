@@ -15,7 +15,7 @@ export function formatIndonesianDate(value: DateInput): string {
 }
 
 export function formatIndonesianDateTime(value: DateInput): string {
-  return format(toDate(value), 'dd-MM-yyyy HH:mm')
+  return format(toDate(value), 'dd-MM-yyyy')
 }
 
 export function formatIndonesianTime(value: DateInput): string {

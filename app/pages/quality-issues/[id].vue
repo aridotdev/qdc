@@ -3,6 +3,7 @@ import {
   ATTACHMENT_MIME_TYPE,
   ATTACHMENT_SIZE_LIMIT_BYTES,
   ERROR_CODES,
+  QUALITY_ISSUE_DETAIL_ACTION,
   QUALITY_ISSUE_STATUS,
   USER_ROLE,
   type QualityIssueStatus
@@ -82,6 +83,12 @@ const isIssueLoading = computed(() => issueStatus.value === 'pending')
 const isTimelineLoading = computed(() => timelineStatus.value === 'pending')
 const hasIssue = computed(() => issue.value !== null)
 const details = computed(() => timelineResponse.value?.details ?? issue.value?.details ?? [])
+const initialEvidence = computed(() => details.value.find(
+  detail => detail.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
+))
+const progressDetails = computed(() => details.value.filter(
+  detail => detail.action !== QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
+))
 
 const statusLabels: Record<QualityIssueStatus, string> = {
   [QUALITY_ISSUE_STATUS.OPEN]: 'Open',
@@ -121,6 +128,7 @@ const previousStatus = computed(() => getTargetStatus('ROLLBACK'))
 const canForward = computed(() => nextStatus.value !== undefined)
 const canRollback = computed(() => isAdmin.value && previousStatus.value !== undefined)
 
+const progressModalOpen = ref(false)
 const progressAttachments = ref<File[]>([])
 const progressState = reactive({
   action: '',
@@ -264,6 +272,7 @@ async function submitProgress(): Promise<void> {
     progressState.remark = ''
     progressAttachments.value = []
     progressError.value = ''
+    progressModalOpen.value = false
     toast.add({
       title: 'Progress berhasil ditambahkan',
       color: 'success',
@@ -336,14 +345,17 @@ async function confirmStatusChange(): Promise<void> {
     <template #header>
       <UDashboardNavbar :title="issue?.issueName ?? 'Quality Issue Detail'">
         <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+        <template #right>
           <UButton
             to="/quality-issues"
-            color="neutral"
-            variant="ghost"
+            color="primary"
+            variant="soft"
             icon="i-lucide-arrow-left"
-            aria-label="Kembali ke Quality Issues"
+            label="Back"
+            aria-label="Back to Quality Issues List"
           />
-          <UDashboardSidebarCollapse />
         </template>
       </UDashboardNavbar>
     </template>
@@ -376,51 +388,33 @@ async function confirmStatusChange(): Promise<void> {
         <USkeleton class="h-96" />
       </div>
 
-      <div v-else-if="issue" class="space-y-4">
+      <div v-else-if="issue" class="space-y-4 w-7xl mx-auto">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p class="text-sm text-muted">
-              {{ issue.businessId ?? issue.publicId }}
-            </p>
+            <div class="flex gap-3">
+              <p class="text-sm text-muted">
+                {{ issue.businessId ?? issue.publicId }}
+              </p>
+              <UBadge
+                :color="statusColors[issue.status]"
+                variant="subtle"
+                class="capitalize"
+              >
+                {{ formatStatus(issue.status) }}
+              </UBadge>
+            </div>
             <h1 class="mt-1 text-2xl font-semibold text-highlighted">
               {{ issue.issueName }}
             </h1>
-            <p class="mt-1 text-sm text-muted">
-              Dibuat {{ formatIndonesianDateTime(issue.createdAt) }}
-            </p>
           </div>
-
-          <UBadge
-            :color="statusColors[issue.status]"
-            variant="subtle"
-            class="capitalize"
-          >
-            {{ formatStatus(issue.status) }}
-          </UBadge>
-        </div>
-
-        <UCard>
-          <template #header>
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <h2 class="font-semibold text-highlighted">
-                  Status
-                </h2>
-                <p class="text-sm text-muted">
-                  Perubahan status mengikuti alur Quality Issue.
-                </p>
-              </div>
-              <span class="text-xs text-muted">
-                Diperbarui {{ formatIndonesianDateTime(issue.updatedAt) }}
-              </span>
-            </div>
-          </template>
 
           <div class="flex flex-wrap items-center gap-2">
             <UButton
               v-if="canForward"
               :label="`Lanjut ke ${formatStatus(nextStatus!)}`"
               icon="i-lucide-arrow-right"
+              variant="solid"
+              color="success"
               :disabled="isUpdatingStatus"
               @click="openStatusConfirmation('FORWARD')"
             />
@@ -437,9 +431,9 @@ async function confirmStatusChange(): Promise<void> {
               Tidak ada action status yang tersedia.
             </span>
           </div>
-        </UCard>
+        </div>
 
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 lg:grid-cols-3">
           <UCard>
             <template #header>
               <h2 class="font-semibold text-highlighted">
@@ -450,18 +444,18 @@ async function confirmStatusChange(): Promise<void> {
             <dl class="grid gap-4 sm:grid-cols-2">
               <div>
                 <dt class="text-xs text-muted">
-                  Public ID
-                </dt>
-                <dd class="mt-1 break-all font-mono text-sm">
-                  {{ issue.publicId }}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-xs text-muted">
                   Tanggal kejadian
                 </dt>
                 <dd class="mt-1 text-sm">
                   {{ formatIndonesianDate(issue.tanggalKejadian) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted">
+                  Notification number
+                </dt>
+                <dd class="mt-1 text-sm">
+                  {{ issue.notificationNumber || '—' }}
                 </dd>
               </div>
               <div>
@@ -481,25 +475,6 @@ async function confirmStatusChange(): Promise<void> {
                 </dd>
               </div>
               <div class="sm:col-span-2">
-                <dt class="text-xs text-muted">
-                  Notification number
-                </dt>
-                <dd class="mt-1 text-sm">
-                  {{ issue.notificationNumber || '—' }}
-                </dd>
-              </div>
-            </dl>
-          </UCard>
-
-          <UCard>
-            <template #header>
-              <h2 class="font-semibold text-highlighted">
-                Deskripsi
-              </h2>
-            </template>
-
-            <div class="space-y-4 text-sm">
-              <div>
                 <p class="text-xs text-muted">
                   Detail
                 </p>
@@ -507,7 +482,7 @@ async function confirmStatusChange(): Promise<void> {
                   {{ issue.detail }}
                 </p>
               </div>
-              <div>
+              <div class="sm:col-span-2">
                 <p class="text-xs text-muted">
                   Keterangan
                 </p>
@@ -515,176 +490,210 @@ async function confirmStatusChange(): Promise<void> {
                   {{ issue.keterangan || '—' }}
                 </p>
               </div>
-            </div>
-          </UCard>
-        </div>
-
-        <UCard>
-          <template #header>
-            <div>
-              <h2 class="font-semibold text-highlighted">
-                Timeline
-              </h2>
-              <p class="text-sm text-muted">
-                Riwayat evidence dan progress Quality Issue.
-              </p>
-            </div>
-          </template>
-
-          <UAlert
-            v-if="timelineError"
-            color="error"
-            variant="subtle"
-            title="Timeline gagal dimuat"
-            :description="errorMessage(timelineError, 'Timeline gagal dimuat. Silakan coba lagi.')"
-          >
-            <template #actions>
-              <UButton
-                label="Coba lagi"
-                color="error"
-                variant="outline"
-                :loading="isTimelineLoading"
-                @click="retryTimeline"
-              />
-            </template>
-          </UAlert>
-
-          <div v-else-if="isTimelineLoading && !details.length" class="space-y-4">
-            <USkeleton class="h-20" />
-            <USkeleton class="h-20" />
-          </div>
-
-          <div v-else-if="details.length" class="space-y-5">
-            <article
-              v-for="(detail, index) in details"
-              :key="detail.id"
-              class="relative border-l border-default pl-5"
-            >
-              <span
-                class="absolute -left-1.5 top-1.5 size-3 rounded-full bg-primary ring-4 ring-default"
-              />
-              <div class="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p class="font-medium text-highlighted">
-                    {{ detail.action }}
+              <div v-if="initialEvidence" class="sm:col-span-2">
+                <dd class="mt-1 space-y-3">
+                  <p v-if="initialEvidence.remark" class="whitespace-pre-wrap text-sm text-muted">
+                    {{ initialEvidence.remark }}
                   </p>
-                  <p class="text-xs text-muted">
-                    {{ index === 0 ? 'Initial evidence' : 'Progress' }}
-                  </p>
-                </div>
-                <time class="text-xs text-muted" :datetime="detail.tanggal">
-                  {{ formatIndonesianDateTime(detail.tanggal) }}
-                </time>
-              </div>
 
-              <p v-if="detail.remark" class="mt-3 whitespace-pre-wrap text-sm text-muted">
-                {{ detail.remark }}
-              </p>
-
-              <div v-if="detail.attachments.length" class="mt-3 space-y-2">
-                <p class="text-xs font-medium text-muted">
-                  Attachment
-                </p>
-                <div
-                  v-for="attachment in detail.attachments"
-                  :key="attachment.id"
-                  class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-default px-3 py-2"
-                >
-                  <div class="flex min-w-0 items-center gap-2">
-                    <UIcon name="i-lucide-paperclip" class="size-4 shrink-0 text-muted" />
-                    <span class="truncate text-sm">{{ attachment.fileName }}</span>
-                    <span class="shrink-0 text-xs uppercase text-muted">
-                      {{ attachment.fileType }}
-                    </span>
-                    <span class="shrink-0 text-xs text-muted">
-                      {{ formatFileSize(attachment.fileSize) }}
-                    </span>
+                  <div v-if="initialEvidence.attachments.length" class="space-y-2">
+                    <div
+                      v-for="attachment in initialEvidence.attachments"
+                      :key="attachment.id"
+                      class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-default px-3 py-2"
+                    >
+                      <div class="flex min-w-0 flex-1 items-start gap-2">
+                        <UIcon name="i-lucide-paperclip" class="size-4 shrink-0 text-muted" />
+                        <div class="min-w-0">
+                          <p class="break-all text-sm">
+                            {{ attachment.fileName }}
+                          </p>
+                          <p class="text-xs text-muted">
+                            <span class="uppercase">{{ attachment.fileType }}</span>
+                            <span class="ml-2">{{ formatFileSize(attachment.fileSize) }}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <UButton
+                        :to="attachmentUrl(attachment.id)"
+                        target="_blank"
+                        color="neutral"
+                        variant="ghost"
+                        size="xs"
+                        icon="i-lucide-external-link"
+                        label="Buka"
+                      />
+                    </div>
                   </div>
-                  <UButton
-                    :to="attachmentUrl(attachment.id)"
-                    target="_blank"
-                    color="neutral"
-                    variant="ghost"
-                    size="xs"
-                    icon="i-lucide-external-link"
-                    label="Buka"
-                  />
-                </div>
+                </dd>
               </div>
-            </article>
-          </div>
+            </dl>
+          </UCard>
 
-          <p v-else class="py-6 text-center text-sm text-muted">
-            Belum ada timeline Quality Issue.
-          </p>
-        </UCard>
+          <UCard
+            class="flex min-h-0 max-h-[calc(100dvh_-_var(--ui-header-height)_-_8rem)] flex-col overflow-hidden sm:col-span-2"
+            :ui="{ body: 'min-h-0 flex-1 overflow-y-auto' }"
+          >
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 class="font-semibold text-highlighted">
+                    Timeline
+                  </h2>
+                  <p class="text-sm text-muted">
+                    Riwayat progress Quality Issue.
+                  </p>
+                </div>
+                <UModal
+                  v-model:open="progressModalOpen"
+                  title="Tambah progress"
+                  description="Catat action terbaru dan lampiran pendukung."
+                  :ui="{ content: 'max-w-xl' }"
+                  :dismissible="!isSubmittingProgress"
+                  :close="!isSubmittingProgress"
+                >
+                  <UButton
+                    label="Tambah progress"
+                    icon="i-lucide-plus"
+                    variant="solid"
+                    color="primary"
+                    class="mt-3"
+                  />
 
-        <UCard>
-          <template #header>
-            <div>
-              <h2 class="font-semibold text-highlighted">
-                Tambah progress
-              </h2>
-              <p class="text-sm text-muted">
-                Catat action terbaru dan lampiran pendukung.
-              </p>
-            </div>
-          </template>
+                  <template #body>
+                    <form class="space-y-4" @submit.prevent="submitProgress">
+                      <UAlert
+                        v-if="progressError"
+                        color="error"
+                        variant="subtle"
+                        title="Progress gagal disimpan"
+                        :description="progressError"
+                      />
 
-          <form class="space-y-4" @submit.prevent="submitProgress">
+                      <UFormField label="Action" required>
+                        <UInput
+                          v-model="progressState.action"
+                          class="w-full"
+                          placeholder="Contoh: Pemeriksaan lanjutan"
+                          :disabled="isSubmittingProgress"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Remark">
+                        <UTextarea
+                          v-model="progressState.remark"
+                          class="w-full"
+                          :rows="4"
+                          placeholder="Catatan progress jika ada"
+                          :disabled="isSubmittingProgress"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Attachment">
+                        <UFileUpload
+                          v-model="progressAttachments"
+                          position="inside"
+                          layout="list"
+                          multiple
+                          :accept="attachmentAccept"
+                          label="Pilih atau seret file ke sini"
+                          description="JPG, PNG, PDF, DOCX, XLSX maksimal 1 MB | MP4 maksimal 10 MB"
+                          :disabled="isSubmittingProgress"
+                          class="w-full"
+                          :ui="{ base: 'min-h-32' }"
+                        />
+                      </UFormField>
+
+                      <div class="flex justify-end gap-2">
+                        <UButton
+                          label="Batal"
+                          color="neutral"
+                          variant="outline"
+                          :disabled="isSubmittingProgress"
+                          @click="progressModalOpen = false"
+                        />
+                        <UButton
+                          type="submit"
+                          icon="i-lucide-save"
+                          label="Simpan progress"
+                          :loading="isSubmittingProgress"
+                          :disabled="isSubmittingProgress"
+                        />
+                      </div>
+                    </form>
+                  </template>
+                </UModal>
+              </div>
+            </template>
+
             <UAlert
-              v-if="progressError"
+              v-if="timelineError"
               color="error"
               variant="subtle"
-              title="Progress gagal disimpan"
-              :description="progressError"
-            />
+              title="Timeline gagal dimuat"
+              :description="errorMessage(timelineError, 'Timeline gagal dimuat. Silakan coba lagi.')"
+            >
+              <template #actions>
+                <UButton
+                  label="Coba lagi"
+                  color="error"
+                  variant="outline"
+                  :loading="isTimelineLoading"
+                  @click="retryTimeline"
+                />
+              </template>
+            </UAlert>
 
-            <UFormField label="Action" required>
-              <UInput
-                v-model="progressState.action"
-                class="w-full"
-                placeholder="Contoh: Pemeriksaan lanjutan"
-                :disabled="isSubmittingProgress"
-              />
-            </UFormField>
-
-            <UFormField label="Remark">
-              <UTextarea
-                v-model="progressState.remark"
-                class="w-full"
-                :rows="4"
-                placeholder="Catatan progress jika ada"
-                :disabled="isSubmittingProgress"
-              />
-            </UFormField>
-
-            <UFormField label="Attachment">
-              <UFileUpload
-                v-model="progressAttachments"
-                position="inside"
-                layout="list"
-                multiple
-                :accept="attachmentAccept"
-                label="Pilih atau seret file ke sini"
-                description="JPG, PNG, PDF, DOCX, XLSX maksimal 1 MB | MP4 maksimal 10 MB"
-                :disabled="isSubmittingProgress"
-                class="w-full"
-                :ui="{ base: 'min-h-32' }"
-              />
-            </UFormField>
-
-            <div class="flex justify-end">
-              <UButton
-                type="submit"
-                icon="i-lucide-plus"
-                label="Tambah progress"
-                :loading="isSubmittingProgress"
-                :disabled="isSubmittingProgress"
-              />
+            <div v-else-if="isTimelineLoading && !progressDetails.length" class="space-y-4">
+              <USkeleton class="h-20" />
+              <USkeleton class="h-20" />
             </div>
-          </form>
-        </UCard>
+
+            <div v-else-if="progressDetails.length" class="space-y-5">
+              <article
+                v-for="detail in progressDetails"
+                :key="detail.id"
+                class="relative border-l border-default pl-5"
+              >
+                <span
+                  class="absolute -left-1.5 top-1.5 size-3 rounded-full bg-primary ring-4 ring-default"
+                />
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p class="font-medium text-highlighted">
+                      <time class="text-xs text-muted" :datetime="detail.tanggal">
+                        {{ formatIndonesianDateTime(detail.tanggal) }}
+                      </time>
+                      : {{ detail.action }}
+                    </p>
+                  </div>
+                </div>
+
+                <p v-if="detail.remark" class="mt-3 whitespace-pre-wrap text-sm text-muted">
+                  {{ detail.remark }}
+                </p>
+
+                <div v-if="detail.attachments.length" class="mt-3 flex flex-wrap gap-2">
+                  <UButton
+                    v-for="attachment in detail.attachments"
+                    :key="attachment.id"
+                    :to="attachmentUrl(attachment.id)"
+                    :label="attachment.fileName"
+                    target="_blank"
+                    color="neutral"
+                    variant="outline"
+                    class="max-w-full"
+                    :ui="{ label: 'break-all whitespace-normal text-left' }"
+                  />
+                </div>
+              </article>
+            </div>
+
+            <p v-else class="py-6 text-center text-sm text-muted">
+              Belum ada progress Quality Issue.
+            </p>
+          </UCard>
+        </div>
       </div>
     </template>
   </UDashboardPanel>
