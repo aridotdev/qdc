@@ -296,13 +296,17 @@ function openStatusConfirmation(operation: StatusOperation): void {
   confirmationOpen.value = true
 }
 
-function closeStatusConfirmation(): void {
-  if (isUpdatingStatus.value) return
-
+function resetStatusConfirmation(): void {
   confirmationOpen.value = false
   confirmationOperation.value = null
   rollbackReason.value = ''
   statusError.value = ''
+}
+
+function closeStatusConfirmation(): void {
+  if (isUpdatingStatus.value) return
+
+  resetStatusConfirmation()
 }
 
 async function confirmStatusChange(): Promise<void> {
@@ -330,7 +334,7 @@ async function confirmStatusChange(): Promise<void> {
       color: 'success',
       icon: 'i-lucide-circle-check'
     })
-    closeStatusConfirmation()
+    resetStatusConfirmation()
     await refreshData()
   } catch (error) {
     statusError.value = errorMessage(error, 'Status gagal diperbarui. Silakan coba lagi.')
