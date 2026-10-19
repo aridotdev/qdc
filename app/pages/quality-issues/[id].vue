@@ -496,6 +496,9 @@ async function confirmStatusChange(): Promise<void> {
               </div>
               <div v-if="initialEvidence" class="sm:col-span-2">
                 <dd class="mt-1 space-y-3">
+                  <p class="text-xs text-muted">
+                    Attachments
+                  </p>
                   <p v-if="initialEvidence.remark" class="whitespace-pre-wrap text-sm text-muted">
                     {{ initialEvidence.remark }}
                   </p>
@@ -504,28 +507,16 @@ async function confirmStatusChange(): Promise<void> {
                     <div
                       v-for="attachment in initialEvidence.attachments"
                       :key="attachment.id"
-                      class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-default px-3 py-2"
                     >
-                      <div class="flex min-w-0 flex-1 items-start gap-2">
-                        <UIcon name="i-lucide-paperclip" class="size-4 shrink-0 text-muted" />
-                        <div class="min-w-0">
-                          <p class="break-all text-sm">
-                            {{ attachment.fileName }}
-                          </p>
-                          <p class="text-xs text-muted">
-                            <span class="uppercase">{{ attachment.fileType }}</span>
-                            <span class="ml-2">{{ formatFileSize(attachment.fileSize) }}</span>
-                          </p>
-                        </div>
-                      </div>
                       <UButton
                         :to="attachmentUrl(attachment.id)"
+                        :label="attachment.fileName"
                         target="_blank"
                         color="neutral"
                         variant="ghost"
                         size="xs"
-                        icon="i-lucide-external-link"
-                        label="Buka"
+                        icon="i-lucide-paperclip"
+                        class="rounded-md border border-default px-3 py-2"
                       />
                     </div>
                   </div>
