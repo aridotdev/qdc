@@ -43,5 +43,16 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@tanstack/table-core',
+        '@unovis/vue',
+        'date-fns',
+        'zod',
+      ]
+    }
   }
 })
