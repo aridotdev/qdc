@@ -657,7 +657,7 @@ async function confirmStatusChange(): Promise<void> {
               <article
                 v-for="detail in progressDetails"
                 :key="detail.id"
-                class="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[10rem_minmax(0,1fr)_auto] md:items-start md:gap-4"
+                class="grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
               >
                 <time class="text-xs text-muted md:pt-0.5" :datetime="detail.tanggal">
                   {{ formatIndonesianDateTime(detail.tanggal) }}
@@ -673,19 +673,19 @@ async function confirmStatusChange(): Promise<void> {
                 </div>
 
                 <div v-if="detail.attachments.length" class="flex flex-wrap gap-1.5 md:justify-end">
-                  <UButton
-                    v-for="attachment in detail.attachments"
-                    :key="attachment.id"
-                    :to="attachmentUrl(attachment.id)"
-                    :label="attachment.fileName"
-                    icon="i-lucide-paperclip"
-                    target="_blank"
-                    color="neutral"
-                    variant="outline"
-                    size="xs"
-                    class="max-w-full"
-                    :ui="{ label: 'break-all whitespace-normal text-left' }"
-                  />
+                  <UTooltip v-for="attachment in detail.attachments" :text="attachment.fileName" >
+                    <UButton
+                      :key="attachment.id"
+                      :to="attachmentUrl(attachment.id)"
+                      icon="i-lucide-paperclip"
+                      target="_blank"
+                      color="neutral"
+                      variant="outline"
+                      size="xs"
+                      class="max-w-full"
+                      :ui="{ label: 'break-all whitespace-normal text-left' }"
+                    />
+                  </UTooltip>
                 </div>
               </article>
             </div>
