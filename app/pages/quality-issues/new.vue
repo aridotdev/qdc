@@ -210,10 +210,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <template #right>
           <UButton
             to="/quality-issues"
-            color="neutral"
-            variant="ghost"
+            color="primary"
+            variant="soft"
             icon="i-lucide-arrow-left"
             label="Back"
+            aria-label="Back to Quality Issues List"
           />
         </template>
       </UDashboardNavbar>

@@ -452,7 +452,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Browser test valid create, field error, file error, retry, dan redirect.
 
-- [ ] TASK-029 - Implement Quality Issue detail, timeline, dan actions UI
+- [x] TASK-029 - Implement Quality Issue detail, timeline, dan actions UI
   - Depends on: TASK-024, TASK-026, TASK-028
   - Priority: P0
   - Acceptance:
@@ -850,17 +850,17 @@ policy, dan pagination harus disepakati lebih dahulu.
 
 ## 15. Risk Register
 
-| Risk | Dampak | Mitigasi |
-| --- | --- | --- |
-| Arbitrary status string | High | Canonical constants dan service state machine |
-| Partial sample batch | High | Satu transaction untuk seluruh part |
-| Orphan physical file | High | Compensation dan reconciliation |
-| Ambiguous attachment owner | High | Exactly-one-owner di DB dan service |
-| Unauthorized rollback/delete | High | Server-side Admin policy |
-| Inconsistent SQLite backup | High | SQLite-safe backup dan restore verification |
-| Schema drift | Medium | Drizzle migration dari clean database |
-| Slow large table/export | Medium | Index, server pagination, server-side export |
-| Inconsistent UI behavior | Medium | Shared components dan composables |
+| Risk                         | Dampak | Mitigasi                                      |
+| ---------------------------- | ------ | --------------------------------------------- |
+| Arbitrary status string      | High   | Canonical constants dan service state machine |
+| Partial sample batch         | High   | Satu transaction untuk seluruh part           |
+| Orphan physical file         | High   | Compensation dan reconciliation               |
+| Ambiguous attachment owner   | High   | Exactly-one-owner di DB dan service           |
+| Unauthorized rollback/delete | High   | Server-side Admin policy                      |
+| Inconsistent SQLite backup   | High   | SQLite-safe backup dan restore verification   |
+| Schema drift                 | Medium | Drizzle migration dari clean database         |
+| Slow large table/export      | Medium | Index, server pagination, server-side export  |
+| Inconsistent UI behavior     | Medium | Shared components dan composables             |
 
 ## 16. Technical Debt yang Tidak Boleh Ditunda
 
