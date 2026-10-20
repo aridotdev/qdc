@@ -28,6 +28,17 @@ export default defineNuxtConfig({
     }
   },
 
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@tanstack/table-core',
+        '@unovis/vue',
+        'date-fns',
+        'zod'
+      ]
+    }
+  },
+
   typescript: {
     tsConfig: {
       compilerOptions: {
@@ -42,17 +53,6 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
-    }
-  },
-
-  vite: {
-    optimizeDeps: {
-      include: [
-        '@tanstack/table-core',
-        '@unovis/vue',
-        'date-fns',
-        'zod',
-      ]
     }
   }
 })

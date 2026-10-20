@@ -664,7 +664,7 @@ async function confirmStatusChange(): Promise<void> {
                 </div>
 
                 <div v-if="detail.attachments.length" class="flex flex-wrap gap-1.5 md:justify-end">
-                  <UTooltip v-for="attachment in detail.attachments" :text="attachment.fileName" >
+                  <UTooltip v-for="attachment in detail.attachments" :key="attachment.id" :text="attachment.fileName">
                     <UButton
                       :key="attachment.id"
                       :to="attachmentUrl(attachment.id)"
