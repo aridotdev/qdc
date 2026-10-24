@@ -99,7 +99,11 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'businessId',
     header: 'ID',
-    cell: ({ row }) => row.original.businessId ?? `#${row.original.id}`,
+    cell: ({ row }) =>
+      h('a', {
+        href: `/quality-issues/${row.original.publicId}`,
+        class: 'inline-block hover:font-bold'
+      }, row.original.businessId ?? `#${row.original.id}`),
     meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
   },
   {
@@ -145,10 +149,6 @@ const errorMessage = computed(() => {
     payload?.error?.message ?? payload?.message ?? 'Quality Issue gagal dimuat. Silakan coba lagi.'
   )
 })
-
-function openDetail(_: Event, row: { original: QualityIssueListItem }) {
-  return navigateTo(`/quality-issues/${row.original.publicId}`)
-}
 </script>
 
 <template>
@@ -213,7 +213,6 @@ function openDetail(_: Event, row: { original: QualityIssueListItem }) {
               ? 'Tidak ada Quality Issue yang sesuai.'
               : 'Belum ada Quality Issue.'
           "
-          :on-select="openDetail"
           :ui="{
             base: 'table-auto border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
