@@ -7,12 +7,13 @@ import {
   type QualityIssueSortField,
   useQualityIssues
 } from '~/composables/useQualityIssues'
-import type { Row } from '@tanstack/vue-table'
+import type { Row } from '@tanstack/table-core'
 import { formatIndonesianDate } from '~/utils/date'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
+const NuxtLink = resolveComponent('NuxtLink')
 const toast = useToast()
 
 const { data, error, status: requestStatus, refresh, query, updateQuery } = useQualityIssues()
@@ -107,8 +108,8 @@ const columns: TableColumn<QualityIssueListItem>[] = [
     accessorKey: 'businessId',
     header: 'ID',
     cell: ({ row }) =>
-      h('a', {
-        href: `/quality-issues/${row.original.publicId}`,
+      h(NuxtLink, {
+        to: `/quality-issues/${row.original.publicId}`,
         class: 'inline-block hover:font-bold'
       }, row.original.businessId ?? `#${row.original.id}`),
     meta: { class: { th: 'w-[160px]', td: 'whitespace-nowrap' } }
@@ -127,7 +128,11 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'issueName',
     header: sortableHeader('issueName'),
-    cell: ({ row }) => row.original.issueName,
+    cell: ({ row }) => 
+      h(NuxtLink, {
+        to: `/quality-issues/${row.original.publicId}`,
+        class: 'hover:underline'
+      }, row.original.issueName),
     meta: { class: { th: 'w-[45%]', td: 'min-w-0 text-primary' } }
   },
   {
