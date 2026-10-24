@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h } from 'vue'
+import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { QUALITY_ISSUE_STATUS, type QualityIssueStatus } from '#shared'
 import {
@@ -7,12 +7,19 @@ import {
   type QualityIssueSortField,
   useQualityIssues
 } from '~/composables/useQualityIssues'
+import type { Row } from '@tanstack/vue-table'
 import { formatIndonesianDate } from '~/utils/date'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
+const toast = useToast()
 
 const { data, error, status: requestStatus, refresh, query, updateQuery } = useQualityIssues()
+const deleteModalOpen = ref(false)
+const issueToDelete = ref<QualityIssueListItem | null>(null)
+const isDeleting = ref(false)
+const deleteError = ref('')
 
 const searchInput = ref(query.value.search ?? '')
 let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -104,7 +111,7 @@ const columns: TableColumn<QualityIssueListItem>[] = [
         href: `/quality-issues/${row.original.publicId}`,
         class: 'inline-block hover:font-bold'
       }, row.original.businessId ?? `#${row.original.id}`),
-    meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
+    meta: { class: { th: 'w-[160px]', td: 'whitespace-nowrap' } }
   },
   {
     accessorKey: 'tanggalKejadian',
@@ -121,7 +128,7 @@ const columns: TableColumn<QualityIssueListItem>[] = [
     accessorKey: 'issueName',
     header: sortableHeader('issueName'),
     cell: ({ row }) => row.original.issueName,
-    meta: { class: { th: 'w-[45%]', td: 'min-w-0' } }
+    meta: { class: { th: 'w-[45%]', td: 'min-w-0 text-primary' } }
   },
   {
     accessorKey: 'status',
@@ -137,8 +144,81 @@ const columns: TableColumn<QualityIssueListItem>[] = [
         () => row.original.status.replace('_', ' ').toLowerCase()
       ),
     meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
+  },
+  {
+    id: 'actions',
+    meta: {
+      class: {
+        td: 'text-right'
+      }
+    },
+    cell: ({ row }) => {
+      return h(
+        UDropdownMenu,
+        {
+          content: {
+            align: 'end'
+          },
+          items: getRowItems(row),
+          'aria-label': 'Actions dropdown'
+        },
+        () =>
+          h(UButton, {
+            icon: 'i-lucide-ellipsis-vertical',
+            color: 'neutral',
+            variant: 'ghost',
+            'aria-label': 'Actions dropdown'
+          })
+      )
+    }
   }
 ]
+
+function getRowItems(row: Row<QualityIssueListItem>) {
+  return [
+    {
+      type: 'label',
+      label: 'Actions'
+    },
+    {
+      label: 'View Detail',
+      icon: 'i-lucide-book-open-text',
+      onSelect() {
+        navigateTo(`/quality-issues/${row.original.publicId}`)
+      }
+    },
+    {
+      label: 'Delete Issue',
+      color: 'error',
+      icon: 'i-lucide-trash-2',
+      onSelect() {
+        issueToDelete.value = row.original
+        deleteError.value = ''
+        deleteModalOpen.value = true
+      }
+    }
+  ]
+}
+
+async function confirmDelete() {
+  if (!issueToDelete.value) return
+
+  isDeleting.value = true
+  deleteError.value = ''
+  try {
+    await $fetch(`/api/quality-issues/${encodeURIComponent(issueToDelete.value.publicId)}`, {
+      method: 'DELETE'
+    })
+    deleteModalOpen.value = false
+    toast.add({ title: 'Issue deleted', description: 'Quality Issue berhasil dihapus.', color: 'success' })
+    await refresh()
+  } catch (deleteRequestError: unknown) {
+    const payload = deleteRequestError as { data?: { message?: string } }
+    deleteError.value = payload.data?.message ?? 'Quality Issue gagal dihapus.'
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 const isLoading = computed(() => requestStatus.value === 'pending')
 const hasError = computed(() => requestStatus.value === 'error')
@@ -237,4 +317,38 @@ const errorMessage = computed(() => {
       </div>
     </template>
   </UDashboardPanel>
+
+  <UModal
+    v-model:open="deleteModalOpen"
+    title="Delete Issue"
+    :description="`Hapus ${issueToDelete?.businessId ?? 'Quality Issue'}? Tindakan ini tidak dapat dibatalkan.`"
+  >
+    <template #body>
+      <div class="space-y-4">
+        <UAlert
+          v-if="deleteError"
+          color="error"
+          variant="subtle"
+          title="Delete gagal"
+          :description="deleteError"
+        />
+        <div class="flex justify-end gap-2">
+          <UButton
+            label="Batal"
+            color="neutral"
+            variant="outline"
+            :disabled="isDeleting"
+            @click="deleteModalOpen = false"
+          />
+          <UButton
+            label="Delete Issue"
+            color="error"
+            :loading="isDeleting"
+            :disabled="isDeleting"
+            @click="confirmDelete"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
 </template>
