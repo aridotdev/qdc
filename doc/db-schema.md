@@ -182,8 +182,8 @@ Table: `attachments`
 | sample_id | integer | NULL, FK, ON DELETE CASCADE | Owner Sample Defect |
 | report_id | integer | NULL, FK, ON DELETE CASCADE | Owner Technical Report |
 | file_name | text | NOT NULL | Nama file asli dari user |
-| storage_name | text | NOT NULL, UNIQUE | Nama fisik unik |
-| file_url | text | NOT NULL | Logical URL `/uploads/...` |
+| storage_name | text | NOT NULL, UNIQUE | Path relatif dan nama fisik unik |
+| file_url | text | NOT NULL | URL akses attachment; file baru memakai `/api/attachments/:id` |
 | file_type | text | NOT NULL | MIME type canonical |
 | file_size | integer | NOT NULL | Ukuran bytes |
 | created_at | text | NOT NULL | Timestamp upload |
@@ -201,6 +201,22 @@ Invariant owner wajib ditegakkan di service dan database:
 
 Tidak boleh ada attachment tanpa owner atau dengan lebih dari satu owner.
 Attachment awal Quality Issue memakai `detail_id` dari `INITIAL_EVIDENCE`.
+
+`storage_name` menyimpan path relatif terhadap root `public/uploads`. Untuk file
+baru, pola path adalah:
+
+```text
+<section>/<tahun_laporan>/<businessId>/<UUID>
+```
+
+`section` bernilai `quality-issue`, `sample-defect`, atau `technical-report`.
+`tahun_laporan` berasal dari tahun `created_at` laporan dan tetap sama ketika
+attachment ditambahkan kemudian. File lama dengan pola `YYYY/MM/DD/<UUID>` tetap
+valid dan tidak dipindahkan.
+
+Pembacaan file dilakukan melalui `GET /api/attachments/:id` setelah autentikasi.
+Nilai `file_url` pada metadata baru menunjuk ke endpoint tersebut; `storage_name`
+tetap menjadi sumber kebenaran untuk resolve dan penghapusan file fisik.
 
 Indexes:
 

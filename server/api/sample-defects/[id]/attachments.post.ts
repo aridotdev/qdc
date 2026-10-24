@@ -10,14 +10,25 @@ export default eventHandler(async (event) => {
   return uploadAttachment(event, {
     field: 'sampleId',
     id,
-    exists: async () => {
+    getStorageContext: async () => {
       const [sample] = await db
-        .select({ id: sampleDefects.id })
+        .select({
+          businessId: sampleDefects.businessId,
+          createdAt: sampleDefects.createdAt
+        })
         .from(sampleDefects)
         .where(eq(sampleDefects.id, id))
         .limit(1)
 
-      return Boolean(sample)
+      if (!sample?.businessId) {
+        return undefined
+      }
+
+      return {
+        section: 'sample-defect' as const,
+        reportYear: new Date(sample.createdAt).getUTCFullYear(),
+        businessId: sample.businessId
+      }
     }
   })
 })

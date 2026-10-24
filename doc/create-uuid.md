@@ -274,8 +274,10 @@ sesuai kebutuhan UI. Link row dan redirect create tetap memakai `publicId`.
 - [x] Record baru selalu mendapat prefix yang benar:
       `QI-`, `SD-`, atau `TR-`.
 - [x] Tidak ada perubahan tipe pada primary key internal dan foreign key.
-- [x] Tidak ada perubahan perilaku pada attachment, audit log, cascade, atau
-      `set null`.
+- [x] Owner, audit log, cascade, dan `set null` pada attachment tetap
+      dipertahankan.
+- [x] Layout storage attachment baru memakai section, tahun laporan, dan
+      `businessId`; file lama tetap menggunakan path sebelumnya.
 - [x] Data lama memiliki public ID setelah migration/backfill.
 - [x] Tidak ada jalur client yang dapat menentukan atau mengubah public ID.
 - [x] Numeric API/URL lama tetap kompatibel pada tahap pertama.

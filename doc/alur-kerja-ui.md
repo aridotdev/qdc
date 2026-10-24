@@ -69,6 +69,9 @@ auth, input, transition, transaction, dan ownership attachment.
    `quality_issue_details` dengan action `INITIAL_EVIDENCE`, lalu menyimpan
    attachment dengan `detail_id` tersebut.
 6. File ditulis memakai generated physical name; metadata menyimpan nama asli.
+   File baru masuk ke `public/uploads/quality-issue/<tahun_laporan>/<businessId>/`.
+   Tahun berasal dari saat laporan dibuat, sehingga attachment tambahan tetap
+   berada di folder laporan yang sama.
 7. Jika sebagian upload gagal, file yang sudah ditulis tetapi belum tercatat
    dibersihkan dan response menjelaskan item yang gagal.
 8. Setelah berhasil, UI mengarahkan ke `/quality-issues/[publicId]` dan
@@ -90,6 +93,8 @@ dan integrasi existing.
 4. Service membuat detail timeline, menyimpan file, dan mengembalikan timeline
    terbaru.
 5. Attachment menggunakan `detail_id`; `sample_id` dan `report_id` null.
+   File tetap menggunakan section `quality-issue`, tahun pembuatan laporan,
+   dan `businessId` laporan sebagai folder storage.
 6. Perubahan status, jika diminta oleh operation, hanya melalui state machine
    dan ditulis ke audit log.
 
@@ -157,6 +162,7 @@ memperbarui badge, action, timeline, dan audit state.
 2. Pengguna mengisi `kondisi_pqa` (`NG` atau `NDF`), hasil verifikasi,
    `repair`, dan attachment foto optional.
 3. Attachment dimiliki oleh `sample_id`.
+   File baru memakai folder `sample-defect/<tahun_laporan>/<businessId>/`.
 4. Service menyimpan data dan mengubah status ke `PQA_ANALYZED`.
 
 ### 6.6 Supplier Analysis
@@ -186,8 +192,10 @@ memperbarui badge, action, timeline, dan audit state.
 5. Service membuat report, menyimpan attachment PDF/XLSX, dan mengembalikan
    detail.
 6. Attachment menggunakan `report_id`; owner lain harus null.
+   File baru memakai folder `technical-report/<tahun_laporan>/<businessId>/`.
 7. Detail menyediakan search, download/open attachment, dan relasi Quality
-   Issue bila tersedia.
+   Issue bila tersedia. Pembukaan file menggunakan `/api/attachments/:id` yang
+   terautentikasi, bukan URL static `/uploads/...`.
 
 ## 8. Delete dan Cleanup
 

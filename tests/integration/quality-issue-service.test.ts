@@ -143,7 +143,9 @@ describe('Quality Issue service', () => {
 
     expect(attachment).toMatchObject({
       detailId: result.detailId,
-      fileName: 'initial.png'
+      fileName: 'initial.png',
+      storageName: 'quality-issue/2026/QI-20261008-002/file-1',
+      fileUrl: `/api/attachments/${attachment!.id}`
     })
     expect(await readFile(join(storageRoot, attachment!.storageName), 'utf8')).toBe(
       'initial evidence'

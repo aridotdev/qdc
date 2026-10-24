@@ -24,7 +24,7 @@ export interface FileStorage {
   rootDir: string
   publicPath: string
   resolvePath: (storageName: string) => string
-  write: (data: Uint8Array) => Promise<StoredFile>
+  write: (data: Uint8Array, directory?: string) => Promise<StoredFile>
   remove: (storageName: string) => Promise<void>
   list: () => Promise<string[]>
 }
@@ -105,11 +105,11 @@ export function createFileStorage(config: FileStorageConfig): FileStorage {
     return absolutePath
   }
 
-  async function write(data: Uint8Array): Promise<StoredFile> {
-    const dateDirectory = getDateDirectory(clock())
+  async function write(data: Uint8Array, directory?: string): Promise<StoredFile> {
+    const storageDirectory = directory ?? getDateDirectory(clock())
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const storageName = `${dateDirectory}/${idGenerator()}`
+      const storageName = `${storageDirectory}/${idGenerator()}`
       const absolutePath = resolvePath(storageName)
       const directory = dirname(absolutePath)
 

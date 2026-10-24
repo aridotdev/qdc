@@ -14,7 +14,11 @@ import {
 } from '../repositories/quality-issues'
 import { createBusinessId } from '../utils/business-id'
 import { createPublicId } from '../utils/public-id'
-import type { createAttachmentService, AttachmentUploadInput } from './attachments'
+import type {
+  AttachmentStorageContext,
+  createAttachmentService,
+  AttachmentUploadInput
+} from './attachments'
 import { recordAuditLog } from './audit-logs'
 
 type QualityIssueDatabase = Awaited<ReturnType<typeof createDatabase>>['db']
@@ -87,13 +91,15 @@ export interface QualityIssueServiceConfig {
 
 function toAttachmentInputs(
   detailId: number,
-  attachments: QualityIssueFileInput[] | undefined
+  attachments: QualityIssueFileInput[] | undefined,
+  storageContext: AttachmentStorageContext
 ): AttachmentUploadInput[] {
   return (attachments ?? []).map(attachment => ({
     detailId,
     fileName: attachment.fileName,
     mimeType: attachment.mimeType,
-    data: attachment.data
+    data: attachment.data,
+    storageContext
   }))
 }
 
@@ -101,18 +107,34 @@ function toAttachmentIds(attachments: Attachment[]): number[] {
   return attachments.map(attachment => attachment.id)
 }
 
+function createAttachmentStorageContext(
+  businessId: string | null,
+  createdAt: string
+): AttachmentStorageContext {
+  if (!businessId) {
+    throw new Error('Business ID laporan belum tersedia.')
+  }
+
+  return {
+    section: 'quality-issue',
+    reportYear: new Date(createdAt).getUTCFullYear(),
+    businessId
+  }
+}
+
 async function createDetailAttachments(
   service: AttachmentService,
   detailId: number,
   files: QualityIssueFileInput[] | undefined,
-  context: QualityIssueMutationContext
+  context: QualityIssueMutationContext,
+  storageContext: AttachmentStorageContext
 ): Promise<number[]> {
   if (!files || files.length === 0) {
     return []
   }
 
   const attachments = await service.createAttachments(
-    toAttachmentInputs(detailId, files),
+    toAttachmentInputs(detailId, files, storageContext),
     { actorUserId: context.actorUserId }
   )
 
@@ -178,18 +200,22 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
         issueId: issue.id,
         publicId: issue.publicId,
         businessId: issue.businessId,
-        detailId: detail.id
+        detailId: detail.id,
+        storageContext: createAttachmentStorageContext(issue.businessId, issue.createdAt)
       }
     })
 
     try {
+      const { storageContext, ...result } = created
+
       return {
-        ...created,
+        ...result,
         attachmentIds: await createDetailAttachments(
           config.attachments,
           created.detailId,
           input.attachments,
-          context
+          context,
+          storageContext
         )
       }
     } catch (error) {
@@ -233,18 +259,22 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
       })
 
       return {
-        detailId: detail.id
+        detailId: detail.id,
+        storageContext: createAttachmentStorageContext(issue.businessId, issue.createdAt)
       }
     })
 
     try {
+      const { storageContext, ...result } = created
+
       return {
-        ...created,
+        ...result,
         attachmentIds: await createDetailAttachments(
           config.attachments,
           created.detailId,
           input.attachments,
-          context
+          context,
+          storageContext
         )
       }
     } catch (error) {

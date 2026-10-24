@@ -3,7 +3,7 @@ import {
   ERROR_CODES,
   QUALITY_ISSUE_DETAIL_ACTION
 } from '../../../../shared/constants'
-import { qualityIssueDetails } from '../../../database/schema'
+import { qualityIssueDetails, qualityIssues } from '../../../database/schema'
 import db from '../../../database'
 import { uploadAttachment } from '../../../utils/attachment-api'
 import { createApiError } from '../../../utils/api-error'
@@ -12,8 +12,13 @@ import { resolveQualityIssueId } from '../../../utils/quality-issue-api'
 export default eventHandler(async (event) => {
   const issueId = await resolveQualityIssueId(getRouterParam(event, 'id'))
   const [initialEvidence] = await db
-    .select({ id: qualityIssueDetails.id })
+    .select({
+      id: qualityIssueDetails.id,
+      businessId: qualityIssues.businessId,
+      createdAt: qualityIssues.createdAt
+    })
     .from(qualityIssueDetails)
+    .innerJoin(qualityIssues, eq(qualityIssues.id, qualityIssueDetails.issueId))
     .where(and(
       eq(qualityIssueDetails.issueId, issueId),
       eq(qualityIssueDetails.action, QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE)
@@ -30,6 +35,16 @@ export default eventHandler(async (event) => {
   return uploadAttachment(event, {
     field: 'detailId',
     id: initialEvidence.id,
-    exists: async () => true
+    getStorageContext: async () => {
+      if (!initialEvidence.businessId) {
+        return undefined
+      }
+
+      return {
+        section: 'quality-issue' as const,
+        reportYear: new Date(initialEvidence.createdAt).getUTCFullYear(),
+        businessId: initialEvidence.businessId
+      }
+    }
   })
 })

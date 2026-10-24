@@ -55,6 +55,21 @@ describe('file storage service', () => {
     expect(stored.fileUrl).toBe('/private-files/2026/10/03/generated-id')
   })
 
+  it('writes a file into the supplied report directory', async () => {
+    const storage = await createTemporaryStorage({
+      idGenerator: () => 'generated-id'
+    })
+
+    const stored = await storage.write(
+      new TextEncoder().encode('file contents'),
+      'quality-issue/2024/QI-20240115-0001'
+    )
+
+    expect(stored.storageName).toBe('quality-issue/2024/QI-20240115-0001/generated-id')
+    expect(stored.fileUrl)
+      .toBe('/uploads/quality-issue/2024/QI-20240115-0001/generated-id')
+  })
+
   it('rejects path traversal and absolute storage names', async () => {
     const storage = await createTemporaryStorage()
 

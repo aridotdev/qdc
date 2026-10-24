@@ -186,3 +186,17 @@ Alur utama yang harus selesai:
 - [ ] Alur E2E create -> detail -> progress -> attachment -> status transition
       berhasil.
 - [ ] Typecheck, lint, unit test, integration test, dan E2E terkait lulus.
+
+## Addendum — Struktur storage attachment
+
+- [x] Root storage tetap `public/uploads`.
+- [x] File baru dikelompokkan dengan pola
+      `public/uploads/<section>/<tahun_laporan>/<businessId>/<UUID>`.
+- [x] Section yang didukung: `quality-issue`, `sample-defect`, dan
+      `technical-report`.
+- [x] Tahun memakai tahun laporan dibuat dan `businessId` memakai nilai lengkap.
+- [x] File lama dengan pola `YYYY/MM/DD/<UUID>` tidak dipindahkan.
+- [x] File dibuka melalui `GET /api/attachments/:id` setelah autentikasi;
+      URL static `/uploads/...` bukan jalur akses aplikasi.
+- [x] Upload, download, delete, compensation, dan cleanup tetap memakai
+      `storage_name` sebagai path relatif terhadap root storage.

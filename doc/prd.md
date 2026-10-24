@@ -161,8 +161,20 @@ Batas ukuran per file:
 | Image, document, PDF | 1 MB |
 | Video | 10 MB |
 
-Nama file asli disimpan sebagai metadata. Nama fisik dibuat unik dan file
-disimpan di storage lokal bertanggal, misalnya `/uploads/YYYY/MM/DD/<uuid>`.
+Nama file asli disimpan sebagai metadata. Nama fisik dibuat unik dan file baru
+disimpan di storage lokal dengan pola:
+
+```text
+public/uploads/<section>/<tahun_laporan>/<businessId>/<uuid>
+```
+
+Section yang didukung adalah `quality-issue`, `sample-defect`, dan
+`technical-report`. Tahun folder mengikuti tahun saat laporan dibuat dan
+`businessId` memakai nilai lengkap, misalnya `QI-20240115-0001`. File lama
+dengan pola `YYYY/MM/DD/<uuid>` tetap dipertahankan selama development.
+
+Pengguna membuka attachment melalui endpoint API terautentikasi
+`/api/attachments/:id`; path static `/uploads/...` bukan kontrak akses aplikasi.
 Attachment hanya boleh memiliki satu owner: Quality Issue Detail, Sample
 Defect, atau Technical Report.
 
@@ -222,7 +234,9 @@ seluruh tabel ke browser.
 - Validation: Zod pada API boundary dan service business validation.
 - Testing: Vitest untuk unit/integration; E2E untuk critical flow.
 - Export: `xlsx` untuk Excel dan `pdfmake` untuk PDF.
-- Storage: local filesystem, logical URL `/uploads`.
+- Storage: local filesystem dengan root `public/uploads`; file baru dikelompokkan
+  berdasarkan section, tahun laporan, dan `businessId`.
+- Akses file: endpoint API terautentikasi `/api/attachments/:id`.
 - Formatting: ESLint sebagai formatter default, 2-space indentation, LF, tanpa
   trailing whitespace.
 - Vue component memakai `<script setup lang="ts">`.

@@ -51,6 +51,8 @@ server/
 shared/{constants,types,validators}/
 tests/{unit,integration,e2e}/
 public/uploads/
+  <section>/<tahun_laporan>/<businessId>/<UUID>  # file baru
+  <YYYY>/<MM>/<DD>/<UUID>                         # file lama
 ```
 
 ## 1.1 API Contract Baseline
@@ -303,12 +305,19 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Depends on: TASK-003
   - Priority: P0
   - Acceptance:
-    - Root storage configurable dan logical URL dimulai dari `/uploads`.
-    - Physical path memakai `YYYY/MM/DD` dan generated unique name.
+    - Root storage configurable dengan default `public/uploads`.
+    - File baru memakai physical path
+      `<section>/<tahun_laporan>/<businessId>/<UUID>`.
+    - Section yang didukung adalah `quality-issue`, `sample-defect`, dan
+      `technical-report`.
+    - Tahun memakai tahun `created_at` laporan, bukan tahun upload.
+    - File lama dengan path `YYYY/MM/DD/<UUID>` tetap dapat dibaca dan dihapus
+      melalui metadata `storage_name`.
     - Original filename tidak dipakai sebagai physical filename.
     - Path traversal dan overwrite dicegah.
   - Test:
-    - Unique filename, date partition, path traversal, dan overwrite test.
+    - Unique filename, report-directory partition, legacy date partition,
+      path traversal, dan overwrite test.
 
 - [x] TASK-017 - Implement central file policy validation
   - Depends on: TASK-003
@@ -340,7 +349,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Acceptance:
     - Upload dilakukan melalui endpoint Quality Issue, Sample Defect, dan
       Technical Report.
-    - `GET /api/attachments/:id` hanya mengembalikan attachment valid.
+    - `GET /api/attachments/:id` adalah jalur baca file yang terautentikasi.
+    - Path static `/uploads/...` tidak digunakan sebagai jalur akses pengguna.
     - `DELETE /api/attachments/:id` Admin-only dan menghapus physical file.
   - Test:
     - Ownership, auth, invalid owner, download, dan delete test.

@@ -13,6 +13,14 @@ import { recordAuditLog } from './audit-logs'
 
 type AttachmentDatabase = Awaited<ReturnType<typeof createDatabase>>['db']
 
+export type AttachmentSection = 'quality-issue' | 'sample-defect' | 'technical-report'
+
+export interface AttachmentStorageContext {
+  section: AttachmentSection
+  reportYear: number
+  businessId: string
+}
+
 export interface AttachmentOwnerInput {
   detailId?: number | null
   sampleId?: number | null
@@ -23,6 +31,7 @@ export interface AttachmentUploadInput extends AttachmentOwnerInput {
   fileName: string
   mimeType: string
   data: Uint8Array
+  storageContext?: AttachmentStorageContext
 }
 
 export interface AttachmentServiceConfig {
@@ -88,6 +97,27 @@ function toAttachmentFileInput(input: AttachmentUploadInput): AttachmentFileInpu
   }
 }
 
+function isSafePathSegment(value: string): boolean {
+  return /^[a-zA-Z0-9_-]+$/.test(value)
+}
+
+function getStorageDirectory(context: AttachmentStorageContext | undefined): string | undefined {
+  if (!context) {
+    return undefined
+  }
+
+  if (
+    !Number.isInteger(context.reportYear)
+    || context.reportYear < 1000
+    || context.reportYear > 9999
+    || !isSafePathSegment(context.businessId)
+  ) {
+    throw new Error('Konteks storage attachment tidak valid.')
+  }
+
+  return `${context.section}/${context.reportYear}/${context.businessId}`
+}
+
 function normalizeOwner(input: AttachmentOwnerInput): Required<AttachmentOwnerInput> {
   return {
     detailId: input.detailId ?? null,
@@ -122,6 +152,7 @@ interface PreparedUpload {
   owner: Required<AttachmentOwnerInput>
   file: ValidatedAttachmentFile
   stored: StoredFile
+  storageContext?: AttachmentStorageContext
 }
 
 export function createAttachmentService(config: AttachmentServiceConfig) {
@@ -154,13 +185,17 @@ export function createAttachmentService(config: AttachmentServiceConfig) {
         assertExactlyOneAttachmentOwner(owner)
 
         const file = validateAttachmentFile(toAttachmentFileInput(input))
-        const stored = await config.storage.write(input.data)
+        const stored = await config.storage.write(
+          input.data,
+          getStorageDirectory(input.storageContext)
+        )
         writtenFiles.push(stored)
 
         preparedUploads.push({
           owner,
           file,
-          stored
+          stored,
+          storageContext: input.storageContext
         })
       }
 
@@ -192,6 +227,17 @@ export function createAttachmentService(config: AttachmentServiceConfig) {
             throw new Error('Metadata attachment gagal dibuat.')
           }
 
+          const fileUrl = upload.storageContext
+            ? `/api/attachments/${attachment.id}`
+            : attachment.fileUrl
+
+          if (fileUrl !== attachment.fileUrl) {
+            await transaction
+              .update(attachments)
+              .set({ fileUrl })
+              .where(eq(attachments.id, attachment.id))
+          }
+
           await recordAuditLog(transaction, {
             entityType: AUDIT_ENTITY_TYPE.ATTACHMENT,
             entityId: attachment.id,
@@ -200,7 +246,7 @@ export function createAttachmentService(config: AttachmentServiceConfig) {
             createdAt: now
           })
 
-          insertedAttachments.push(attachment)
+          insertedAttachments.push({ ...attachment, fileUrl })
         }
 
         return insertedAttachments

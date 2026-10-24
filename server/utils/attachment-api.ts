@@ -1,7 +1,8 @@
 import { useRuntimeConfig } from '#imports'
 import { createFileStorage } from '../services/file-storage'
 import {
-  createAttachmentService
+  createAttachmentService,
+  type AttachmentStorageContext
 } from '../services/attachments'
 import { getAuthActor } from '../lib/auth-http'
 import db from '../database'
@@ -30,10 +31,12 @@ export async function uploadAttachment(
   owner: {
     field: AttachmentOwnerField
     id: number
-    exists: () => Promise<boolean>
+    getStorageContext: () => Promise<AttachmentStorageContext | undefined>
   }
 ) {
-  if (!await owner.exists()) {
+  const storageContext = await owner.getStorageContext()
+
+  if (!storageContext) {
     throw createApiError({
       code: ERROR_CODES.NOT_FOUND,
       message: 'Owner attachment tidak ditemukan.'
@@ -59,7 +62,8 @@ export async function uploadAttachment(
       [owner.field]: owner.id,
       fileName: file.filename!,
       mimeType: file.type ?? '',
-      data: file.data
+      data: file.data,
+      storageContext
     }, {
       actorUserId: actor.userId
     })
