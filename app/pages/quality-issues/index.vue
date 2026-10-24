@@ -99,24 +99,25 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'businessId',
     header: 'ID',
-    cell: ({ row }) => row.original.businessId ?? `#${row.original.id}`
+    cell: ({ row }) => row.original.businessId ?? `#${row.original.id}`,
+    meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
+  },
+  {
+    accessorKey: 'tanggalKejadian',
+    header: sortableHeader('tanggalKejadian'),
+    cell: ({ row }) => formatIndonesianDate(row.original.tanggalKejadian),
+    meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
+  },
+  {
+    accessorKey: 'modelName',
+    header: sortableHeader('modelName'),
+    meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
   },
   {
     accessorKey: 'issueName',
     header: sortableHeader('issueName'),
-    cell: ({ row }) => row.original.issueName
-  },
-  { accessorKey: 'modelName', header: sortableHeader('modelName') },
-  { accessorKey: 'serialNumber', header: sortableHeader('serialNumber') },
-  {
-    accessorKey: 'tanggalKejadian',
-    header: sortableHeader('tanggalKejadian'),
-    cell: ({ row }) => formatIndonesianDate(row.original.tanggalKejadian)
-  },
-  {
-    accessorKey: 'notificationNumber',
-    header: sortableHeader('notificationNumber'),
-    cell: ({ row }) => row.original.notificationNumber ?? '—'
+    cell: ({ row }) => row.original.issueName,
+    meta: { class: { th: 'w-[45%]', td: 'min-w-0' } }
   },
   {
     accessorKey: 'status',
@@ -130,7 +131,8 @@ const columns: TableColumn<QualityIssueListItem>[] = [
           class: 'capitalize'
         },
         () => row.original.status.replace('_', ' ').toLowerCase()
-      )
+      ),
+    meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
   }
 ]
 
@@ -163,74 +165,76 @@ function openDetail(_: Event, row: { original: QualityIssueListItem }) {
     </template>
 
     <template #body>
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <UInput
-          v-model="searchInput"
-          class="max-w-sm"
-          icon="i-lucide-search"
-          placeholder="Cari quality issue..."
-          aria-label="Cari quality issue"
-        />
-
-        <USelect
-          v-model="selectedStatus"
-          :items="statusOptions"
-          value-key="value"
-          class="min-w-40"
-          placeholder="Filter status"
-          aria-label="Filter status"
-        />
-      </div>
-
-      <UAlert
-        v-if="hasError"
-        class="mt-4"
-        color="error"
-        variant="subtle"
-        title="Data gagal dimuat"
-        :description="errorMessage"
-      >
-        <template #actions>
-          <UButton
-            label="Coba lagi"
-            color="error"
-            variant="outline"
-            @click="refresh()"
+      <div class="mx-auto flex w-full max-w-7xl flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <UInput
+            v-model="searchInput"
+            class="min-w-2xs"
+            icon="i-lucide-search"
+            placeholder="Cari quality issue..."
+            aria-label="Cari quality issue"
           />
-        </template>
-      </UAlert>
 
-      <UTable
-        class="mt-4 shrink-0"
-        :data="data?.items ?? []"
-        :columns="columns"
-        :loading="isLoading"
-        :empty="
-          query.search || query.status
-            ? 'Tidak ada Quality Issue yang sesuai.'
-            : 'Belum ada Quality Issue.'
-        "
-        :on-select="openDetail"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default'
-        }"
-      />
+          <USelect
+            v-model="selectedStatus"
+            :items="statusOptions"
+            value-key="value"
+            class="min-w-40"
+            placeholder="Filter status"
+            aria-label="Filter status"
+          />
+        </div>
 
-      <div
-        class="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-default pt-4"
-      >
-        <p class="text-sm text-muted">
-          {{ data?.meta.total ?? 0 }} Quality Issue
-        </p>
-        <UPagination
-          :page="query.page"
-          :items-per-page="query.limit"
-          :total="data?.meta.total ?? 0"
-          @update:page="(page: number) => updateQuery({ page })"
+        <UAlert
+          v-if="hasError"
+          class="mt-4"
+          color="error"
+          variant="subtle"
+          title="Data gagal dimuat"
+          :description="errorMessage"
+        >
+          <template #actions>
+            <UButton
+              label="Coba lagi"
+              color="error"
+              variant="outline"
+              @click="refresh()"
+            />
+          </template>
+        </UAlert>
+
+        <UTable
+          class="mt-4 shrink-0"
+          :data="data?.items ?? []"
+          :columns="columns"
+          :loading="isLoading"
+          :empty="
+            query.search || query.status
+              ? 'Tidak ada Quality Issue yang sesuai.'
+              : 'Belum ada Quality Issue.'
+          "
+          :on-select="openDetail"
+          :ui="{
+            base: 'table-auto border-separate border-spacing-0',
+            thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+            th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+            td: 'border-b border-default'
+          }"
         />
+
+        <div
+          class="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-default pt-4"
+        >
+          <p class="text-sm text-muted">
+            {{ data?.meta.total ?? 0 }} Quality Issue
+          </p>
+          <UPagination
+            :page="query.page"
+            :items-per-page="query.limit"
+            :total="data?.meta.total ?? 0"
+            @update:page="(page: number) => updateQuery({ page })"
+          />
+        </div>
       </div>
     </template>
   </UDashboardPanel>
