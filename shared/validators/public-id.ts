@@ -13,3 +13,4 @@ export function publicIdSchema(entity: PublicIdEntity): z.ZodString {
 export const qualityIssuePublicIdSchema = publicIdSchema('QI')
 export const sampleDefectPublicIdSchema = publicIdSchema('SD')
 export const technicalReportPublicIdSchema = publicIdSchema('TR')
+export const attachmentPublicIdSchema = publicIdSchema('ATT')

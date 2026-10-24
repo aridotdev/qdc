@@ -318,6 +318,20 @@ export function createAttachmentService(config: AttachmentServiceConfig) {
     return attachment
   }
 
+  async function getAttachmentByPublicId(publicId: string): Promise<Attachment> {
+    const [attachment] = await config.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.publicId, publicId))
+      .limit(1)
+
+    if (!attachment) {
+      throw new AttachmentNotFoundError()
+    }
+
+    return attachment
+  }
+
   async function cleanupOrphanFiles(): Promise<string[]> {
     const storedFiles = await config.storage.list()
     const attachmentRows = await config.db
@@ -339,6 +353,7 @@ export function createAttachmentService(config: AttachmentServiceConfig) {
     createAttachments,
     deleteAttachment,
     getAttachment,
+    getAttachmentByPublicId,
     cleanupOrphanFiles
   }
 }

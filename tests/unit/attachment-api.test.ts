@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { parseAttachmentId } from '../../server/utils/attachment-validation'
+import {
+  parseAttachmentId,
+  parseAttachmentPublicId
+} from '../../server/utils/attachment-validation'
 
 describe('attachment API boundary', () => {
   const originalCreateError = globalThis.createError
@@ -24,5 +27,15 @@ describe('attachment API boundary', () => {
     expect(() => parseAttachmentId('0')).toThrow('ID attachment tidak valid.')
     expect(() => parseAttachmentId('1.5')).toThrow('ID attachment tidak valid.')
     expect(() => parseAttachmentId('../1')).toThrow('ID attachment tidak valid.')
+  })
+
+  it('accepts an opaque attachment public ID', () => {
+    expect(parseAttachmentPublicId('ATT-00000000-0000-7000-8000-000000000000'))
+      .toBe('ATT-00000000-0000-7000-8000-000000000000')
+  })
+
+  it('rejects numeric IDs for attachment links', () => {
+    expect(() => parseAttachmentPublicId('1'))
+      .toThrow('Public ID attachment tidak valid.')
   })
 })

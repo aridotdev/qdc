@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
-import { check, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { ATTACHMENT_MIME_TYPES } from '../../../shared/constants/domain'
+import { PUBLIC_ID_ENTITY } from '../../../shared/constants/public-id'
 import { auditFields } from './_audit-fields'
 import { checkEnum } from './_check-enum'
 import { qualityIssueDetails } from './quality-issue-details'
@@ -8,6 +9,7 @@ import { sampleDefects } from './sample-defects'
 import { technicalReports } from './technical-reports'
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
+import { createPublicId } from '../../utils/public-id'
 
 /**
  * db-schema.md §6 — Attachment.
@@ -21,6 +23,9 @@ export const attachments = sqliteTable(
   'attachments',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    publicId: text('public_id')
+      .notNull()
+      .$defaultFn(() => createPublicId(PUBLIC_ID_ENTITY.ATTACHMENT)),
     detailId: integer('detail_id').references(() => qualityIssueDetails.id, {
       onDelete: 'cascade'
     }),
@@ -36,6 +41,7 @@ export const attachments = sqliteTable(
     ...auditFields
   },
   table => [
+    uniqueIndex('attachments_public_id_unique').on(table.publicId),
     index('attachments_detail_id_idx').on(table.detailId),
     index('attachments_sample_id_idx').on(table.sampleId),
     index('attachments_report_id_idx').on(table.reportId),
@@ -64,6 +70,7 @@ export const insertAttachmentSchema = createInsertSchema(attachments, {
   fileSize: z.number().int().nonnegative()
 }).omit({
   id: true,
+  publicId: true,
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,
@@ -95,6 +102,7 @@ export const updateAttachmentSchema = createUpdateSchema(attachments, {
   fileSize: z.number().int().nonnegative().optional()
 }).omit({
   id: true,
+  publicId: true,
   createdAt: true,
   updatedAt: true,
   createdByUserId: true,

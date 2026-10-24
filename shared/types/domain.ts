@@ -150,6 +150,7 @@ export type UpdateTechnicalReportInput = Partial<CreateTechnicalReportInput>
 
 interface AttachmentMetadata extends AuditFields {
   id: number
+  public_id: string
   file_name: string
   storage_name: string
   file_url: string

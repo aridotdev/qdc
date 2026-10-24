@@ -12,6 +12,7 @@ import { formatIndonesianDate, formatIndonesianDateTime } from '~/utils/date'
 
 interface QualityIssueAttachment {
   id: number
+  publicId: string
   fileName: string
   fileType: string
   fileSize: number
@@ -221,8 +222,8 @@ watch(progressAttachments, (files) => {
   progressError.value = validateAttachments(files)
 })
 
-function attachmentUrl(attachmentId: number): string {
-  return `/api/attachments/${attachmentId}`
+function attachmentUrl(attachmentPublicId: string): string {
+  return `/api/attachments/${encodeURIComponent(attachmentPublicId)}`
 }
 
 async function refreshData(): Promise<void> {
@@ -509,7 +510,7 @@ async function confirmStatusChange(): Promise<void> {
                       :key="attachment.id"
                     >
                       <UButton
-                        :to="attachmentUrl(attachment.id)"
+                        :to="attachmentUrl(attachment.publicId)"
                         :label="attachment.fileName"
                         target="_blank"
                         color="neutral"
@@ -667,7 +668,7 @@ async function confirmStatusChange(): Promise<void> {
                   <UTooltip v-for="attachment in detail.attachments" :key="attachment.id" :text="attachment.fileName">
                     <UButton
                       :key="attachment.id"
-                      :to="attachmentUrl(attachment.id)"
+                      :to="attachmentUrl(attachment.publicId)"
                       icon="i-lucide-paperclip"
                       target="_blank"
                       color="neutral"

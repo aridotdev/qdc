@@ -65,7 +65,7 @@ describe('database lifecycle', () => {
         ]
       })
 
-      expect(firstMigrations.rows).toHaveLength(5)
+      expect(firstMigrations.rows).toHaveLength(6)
       expect(secondMigrations.rows).toEqual(firstMigrations.rows)
       expect(tables.rows).toEqual([
         { name: 'account' },

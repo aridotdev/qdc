@@ -1,7 +1,7 @@
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { createRuntimeAttachmentService } from '../../utils/attachment-api'
-import { parseAttachmentId } from '../../utils/attachment-validation'
+import { parseAttachmentPublicId } from '../../utils/attachment-validation'
 import { AttachmentNotFoundError } from '../../services/attachments'
 import { getAuthActor } from '../../lib/auth-http'
 import { ERROR_CODES } from '../../../shared/constants'
@@ -10,12 +10,12 @@ import { createApiError, toApiError } from '../../utils/api-error'
 export default eventHandler(async (event) => {
   getAuthActor(event)
 
-  const id = parseAttachmentId(getRouterParam(event, 'id'))
+  const publicId = parseAttachmentPublicId(getRouterParam(event, 'id'))
   const service = createRuntimeAttachmentService()
   let attachment
 
   try {
-    attachment = await service.getAttachment(id)
+    attachment = await service.getAttachmentByPublicId(publicId)
   } catch (error) {
     if (error instanceof AttachmentNotFoundError) {
       throw createApiError({ code: ERROR_CODES.NOT_FOUND })
