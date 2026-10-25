@@ -423,6 +423,62 @@ describe('Quality Issue service', () => {
     expect(logs.some(log => log.action === AUDIT_ACTION.UPDATE)).toBe(true)
   })
 
+  it('deletes progress detail, attachments, physical files, and audit logs', async () => {
+    const service = createService()
+    const created = await service.create({
+      issueName: 'Delete progress issue',
+      modelName: 'MODEL-QI',
+      serialNumber: 'SN-QI-DELETE-PROGRESS',
+      tanggalKejadian: '2026-10-08',
+      detail: 'Issue with deletable progress'
+    }, { actorUserId })
+    const progress = await service.addProgress(created.issueId, {
+      action: 'TO_DELETE',
+      attachments: [{
+        fileName: 'delete-progress.png',
+        mimeType: 'image/png',
+        data: new TextEncoder().encode('delete progress')
+      }]
+    }, { actorUserId })
+    const [attachment] = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, progress.attachmentIds[0]!))
+
+    await service.removeProgress(created.issueId, progress.detailId, { actorUserId })
+
+    expect(await database.db
+      .select()
+      .from(qualityIssueDetails)
+      .where(eq(qualityIssueDetails.id, progress.detailId))).toEqual([])
+    expect(await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, progress.attachmentIds[0]!))).toEqual([])
+    const logs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, progress.detailId))
+    expect(logs.some(log => log.action === AUDIT_ACTION.DELETE)).toBe(true)
+    await expect(stat(join(storageRoot, attachment!.storageName))).rejects.toMatchObject({
+      code: 'ENOENT'
+    })
+  })
+
+  it('does not delete initial evidence as a progress detail', async () => {
+    const service = createService()
+    const created = await service.create({
+      issueName: 'Protected initial evidence',
+      modelName: 'MODEL-QI',
+      serialNumber: 'SN-QI-PROTECTED-DETAIL',
+      tanggalKejadian: '2026-10-08',
+      detail: 'Initial evidence must remain'
+    }, { actorUserId })
+
+    await expect(service.removeProgress(created.issueId, created.detailId, { actorUserId }))
+      .rejects.toThrow('Detail awal Quality Issue tidak dapat dihapus.')
+  })
+
   it('deletes an issue, its timeline attachments, and physical files', async () => {
     const service = createService()
     const created = await service.create({

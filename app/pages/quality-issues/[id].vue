@@ -151,6 +151,11 @@ const rollbackReason = ref('')
 const statusError = ref('')
 const isUpdatingStatus = ref(false)
 
+const deleteProgressModalOpen = ref(false)
+const progressToDelete = ref<QualityIssueDetail | null>(null)
+const deleteProgressError = ref('')
+const isDeletingProgress = ref(false)
+
 const attachmentAccept = '.jpg,.jpeg,.png,.pdf,.docx,.xlsx,.mp4'
 const attachmentPolicies: Record<string, { mimeType: string, maxSize: number }> = {
   jpg: { mimeType: ATTACHMENT_MIME_TYPE.JPG, maxSize: ATTACHMENT_SIZE_LIMIT_BYTES.IMAGE_DOCUMENT },
@@ -292,6 +297,49 @@ function closeProgressModal(): void {
 function removeProgressAttachment(attachmentId: number): void {
   if (!removedProgressAttachmentIds.value.includes(attachmentId)) {
     removedProgressAttachmentIds.value.push(attachmentId)
+  }
+}
+
+function openDeleteProgress(detail: QualityIssueDetail): void {
+  progressToDelete.value = detail
+  deleteProgressError.value = ''
+  deleteProgressModalOpen.value = true
+}
+
+function closeDeleteProgress(): void {
+  if (isDeletingProgress.value) return
+
+  deleteProgressModalOpen.value = false
+  progressToDelete.value = null
+  deleteProgressError.value = ''
+}
+
+async function confirmDeleteProgress(): Promise<void> {
+  const detail = progressToDelete.value
+
+  if (!detail || isDeletingProgress.value) return
+
+  isDeletingProgress.value = true
+  deleteProgressError.value = ''
+
+  try {
+    await $fetch(`${detailsUrl.value}/${detail.id}`, { method: 'DELETE' })
+    deleteProgressModalOpen.value = false
+    progressToDelete.value = null
+    deleteProgressError.value = ''
+    toast.add({
+      title: 'Progress berhasil dihapus',
+      color: 'success',
+      icon: 'i-lucide-circle-check'
+    })
+    await refreshData()
+  } catch (error) {
+    deleteProgressError.value = errorMessage(
+      error,
+      'Progress gagal dihapus. Silakan coba lagi.'
+    )
+  } finally {
+    isDeletingProgress.value = false
   }
 }
 
@@ -770,7 +818,7 @@ async function confirmStatusChange(): Promise<void> {
               <article
                 v-for="detail in progressDetails"
                 :key="detail.id"
-                class="grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
+                class="group grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
               >
                 <time class="text-xs text-muted md:pt-0.5" :datetime="detail.tanggal">
                   {{ formatIndonesianDateTime(detail.tanggal) }}
@@ -781,6 +829,29 @@ async function confirmStatusChange(): Promise<void> {
                     <p class="font-medium text-highlighted">
                       {{ detail.action }}
                     </p>
+                  </div>
+                  <p v-if="detail.remark" class="mt-0.5 whitespace-pre-wrap text-sm text-muted">
+                    {{ detail.remark }}
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                  <div v-if="detail.attachments.length" class="flex flex-wrap items-center justify-end gap-1.5">
+                    <UTooltip v-for="attachment in detail.attachments" :key="attachment.id" :text="attachment.fileName">
+                      <UButton
+                        :key="attachment.id"
+                        :to="attachmentUrl(attachment.publicId)"
+                        icon="i-lucide-paperclip"
+                        target="_blank"
+                        color="neutral"
+                        variant="outline"
+                        size="xs"
+                        class="max-w-full"
+                        :ui="{ label: 'break-all whitespace-normal text-left' }"
+                      />
+                    </UTooltip>
+                  </div>
+                  <div class="flex items-center gap-1 opacity-100 transition-opacity duration-150 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
                     <UButton
                       icon="i-lucide-pencil"
                       color="neutral"
@@ -789,26 +860,17 @@ async function confirmStatusChange(): Promise<void> {
                       aria-label="Edit progress"
                       @click="openEditProgress(detail)"
                     />
-                  </div>
-                  <p v-if="detail.remark" class="mt-0.5 whitespace-pre-wrap text-sm text-muted">
-                    {{ detail.remark }}
-                  </p>
-                </div>
-
-                <div v-if="detail.attachments.length" class="flex flex-wrap gap-1.5 md:justify-end">
-                  <UTooltip v-for="attachment in detail.attachments" :key="attachment.id" :text="attachment.fileName">
                     <UButton
-                      :key="attachment.id"
-                      :to="attachmentUrl(attachment.publicId)"
-                      icon="i-lucide-paperclip"
-                      target="_blank"
-                      color="neutral"
-                      variant="outline"
+                      v-if="isAdmin"
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
                       size="xs"
-                      class="max-w-full"
-                      :ui="{ label: 'break-all whitespace-normal text-left' }"
+                      aria-label="Hapus progress"
+                      :disabled="isDeletingProgress"
+                      @click="openDeleteProgress(detail)"
                     />
-                  </UTooltip>
+                  </div>
                 </div>
               </article>
             </div>
@@ -865,6 +927,52 @@ async function confirmStatusChange(): Promise<void> {
             :loading="isUpdatingStatus"
             :disabled="isUpdatingStatus"
             @click="confirmStatusChange"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="deleteProgressModalOpen"
+    title="Hapus progress"
+    :description="progressToDelete
+      ? `Progress ${progressToDelete.action} dan attachment terkait akan dihapus permanen.`
+      : 'Progress akan dihapus permanen.'"
+    :dismissible="!isDeletingProgress"
+    :close="!isDeletingProgress"
+  >
+    <template #body>
+      <div class="space-y-4">
+        <UAlert
+          v-if="deleteProgressError"
+          color="error"
+          variant="subtle"
+          title="Progress gagal dihapus"
+          :description="deleteProgressError"
+        />
+
+        <p class="text-sm text-muted">
+          Tindakan ini tidak dapat dibatalkan.
+        </p>
+
+        <div class="flex justify-end gap-2">
+          <UButton
+            type="button"
+            label="Batal"
+            color="neutral"
+            variant="outline"
+            :disabled="isDeletingProgress"
+            @click="closeDeleteProgress"
+          />
+          <UButton
+            type="button"
+            label="Hapus"
+            color="error"
+            icon="i-lucide-trash-2"
+            :loading="isDeletingProgress"
+            :disabled="isDeletingProgress"
+            @click="confirmDeleteProgress"
           />
         </div>
       </div>

@@ -99,6 +99,15 @@ export class QualityIssueInitialEvidenceUpdateForbiddenError extends Error {
   }
 }
 
+export class QualityIssueInitialEvidenceDeleteForbiddenError extends Error {
+  readonly code = ERROR_CODES.FORBIDDEN
+
+  constructor() {
+    super('Detail awal Quality Issue tidak dapat dihapus.')
+    this.name = 'QualityIssueInitialEvidenceDeleteForbiddenError'
+  }
+}
+
 export class QualityIssueProgressAttachmentNotFoundError extends Error {
   readonly code = ERROR_CODES.NOT_FOUND
 
@@ -414,6 +423,52 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
     return { detailId, attachmentIds }
   }
 
+  async function removeProgress(
+    issueId: number,
+    detailId: number,
+    context: QualityIssueMutationContext
+  ): Promise<void> {
+    const repository = createQualityIssueRepository({ db: config.db })
+    const issue = await repository.findDetailById(issueId)
+
+    if (!issue) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    const detail = issue.details.find(item => item.id === detailId)
+
+    if (!detail) {
+      throw new QualityIssueServiceNotFoundError(detailId)
+    }
+
+    if (detail.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE) {
+      throw new QualityIssueInitialEvidenceDeleteForbiddenError()
+    }
+
+    for (const attachment of detail.attachments) {
+      await config.attachments.deleteAttachment(attachment.id, context)
+    }
+
+    await config.db.transaction(async (transaction) => {
+      const transactionRepository = createQualityIssueRepository({ db: transaction })
+      const now = clock().toISOString()
+      const deleted = await transactionRepository.deleteDetail(detailId)
+
+      if (!deleted) {
+        throw new QualityIssueServiceNotFoundError(detailId)
+      }
+
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE_DETAIL,
+        entityId: detailId,
+        action: AUDIT_ACTION.DELETE,
+        metadata: { issueId },
+        actorUserId: context.actorUserId,
+        createdAt: now
+      })
+    })
+  }
+
   async function update(
     issueId: number,
     input: UpdateQualityIssueServiceInput,
@@ -497,6 +552,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
     create: createInitialIssue,
     addProgress,
     updateProgress,
+    removeProgress,
     update,
     remove
   }
