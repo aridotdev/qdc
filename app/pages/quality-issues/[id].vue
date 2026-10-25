@@ -126,7 +126,9 @@ function getTargetStatus(operation: StatusOperation): QualityIssueStatus | undef
 
 const nextStatus = computed(() => getTargetStatus('FORWARD'))
 const previousStatus = computed(() => getTargetStatus('ROLLBACK'))
-const canForward = computed(() => nextStatus.value !== undefined)
+const isAwaitingFirstProgress = computed(() => issue.value?.status === QUALITY_ISSUE_STATUS.OPEN
+  && progressDetails.value.length === 0)
+const canForward = computed(() => nextStatus.value !== undefined && !isAwaitingFirstProgress.value)
 const canRollback = computed(() => isAdmin.value && previousStatus.value !== undefined)
 
 const progressModalOpen = ref(false)

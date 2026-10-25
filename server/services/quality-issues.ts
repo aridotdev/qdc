@@ -231,12 +231,14 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
   ): Promise<QualityIssueDetailMutationResult> {
     const created = await config.db.transaction(async (transaction) => {
       const repository = createQualityIssueRepository({ db: transaction })
-      const issue = await repository.findById(issueId)
+      const issue = await repository.findDetailById(issueId)
 
       if (!issue) {
         throw new QualityIssueServiceNotFoundError(issueId)
       }
 
+      const shouldStartProgress = issue.status === QUALITY_ISSUE_STATUS.OPEN
+        && !issue.details.some(detail => detail.action !== QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE)
       const now = clock().toISOString()
       const detail = await repository.createDetail({
         issueId,
@@ -260,23 +262,53 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
 
       return {
         detailId: detail.id,
-        storageContext: createAttachmentStorageContext(issue.businessId, issue.createdAt)
+        storageContext: createAttachmentStorageContext(issue.businessId, issue.createdAt),
+        shouldStartProgress
       }
     })
 
     try {
-      const { storageContext, ...result } = created
+      const attachmentIds = await createDetailAttachments(
+        config.attachments,
+        created.detailId,
+        input.attachments,
+        context,
+        created.storageContext
+      )
 
-      return {
-        ...result,
-        attachmentIds: await createDetailAttachments(
-          config.attachments,
-          created.detailId,
-          input.attachments,
-          context,
-          storageContext
-        )
+      if (created.shouldStartProgress) {
+        await config.db.transaction(async (transaction) => {
+          const repository = createQualityIssueRepository({ db: transaction })
+          const issue = await repository.findById(issueId)
+
+          if (!issue || issue.status !== QUALITY_ISSUE_STATUS.OPEN) {
+            return
+          }
+
+          const now = clock().toISOString()
+          const updated = await repository.update(issueId, {
+            status: QUALITY_ISSUE_STATUS.IN_PROGRESS,
+            updatedAt: now,
+            updatedByUserId: context.actorUserId
+          })
+
+          if (!updated) {
+            throw new QualityIssueServiceNotFoundError(issueId)
+          }
+
+          await recordAuditLog(transaction, {
+            entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE,
+            entityId: issueId,
+            action: AUDIT_ACTION.STATUS_CHANGE,
+            fromStatus: QUALITY_ISSUE_STATUS.OPEN,
+            toStatus: QUALITY_ISSUE_STATUS.IN_PROGRESS,
+            actorUserId: context.actorUserId,
+            createdAt: now
+          })
+        })
       }
+
+      return { detailId: created.detailId, attachmentIds }
     } catch (error) {
       await createQualityIssueRepository({ db: config.db }).deleteDetail(created.detailId)
       throw error

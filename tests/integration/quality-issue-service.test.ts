@@ -183,6 +183,14 @@ describe('Quality Issue service', () => {
     )
 
     const details = await getIssueDetails(created.issueId)
+    const [updatedIssue] = await database.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, created.issueId))
+    const issueLogs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, created.issueId))
     const [attachment] = await database.db
       .select()
       .from(attachments)
@@ -192,6 +200,12 @@ describe('Quality Issue service', () => {
       QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE,
       'INVESTIGATION'
     ])
+    expect(updatedIssue?.status).toBe(QUALITY_ISSUE_STATUS.IN_PROGRESS)
+    expect(issueLogs).toContainEqual(expect.objectContaining({
+      action: AUDIT_ACTION.STATUS_CHANGE,
+      fromStatus: QUALITY_ISSUE_STATUS.OPEN,
+      toStatus: QUALITY_ISSUE_STATUS.IN_PROGRESS
+    }))
     expect(attachment).toMatchObject({
       detailId: progress.detailId,
       fileName: 'progress.png'
@@ -294,10 +308,15 @@ describe('Quality Issue service', () => {
     ).rejects.toThrow('write failed')
 
     const details = await getIssueDetails(created.issueId)
+    const [issue] = await database.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, created.issueId))
 
     expect(details.map(detail => detail.action)).toEqual([
       QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
     ])
+    expect(issue?.status).toBe(QUALITY_ISSUE_STATUS.OPEN)
     await expect(stat(join(storageRoot, '2026/10/08/progress-failure'))).rejects.toMatchObject({
       code: 'ENOENT'
     })
