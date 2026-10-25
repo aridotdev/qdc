@@ -446,7 +446,7 @@ async function confirmStatusChange(): Promise<void> {
               </h2>
             </template>
 
-            <dl class="grid gap-4 sm:grid-cols-2">
+            <dl class="grid gap-4 sm:grid-cols-2 text-sm">
               <div>
                 <dt class="text-xs text-muted">
                   Tanggal kejadian
