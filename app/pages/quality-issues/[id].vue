@@ -50,6 +50,7 @@ interface QualityIssueDetailsResponse {
 }
 
 type StatusOperation = 'FORWARD' | 'ROLLBACK'
+type ProgressModalMode = 'CREATE' | 'EDIT'
 
 const route = useRoute()
 const toast = useToast()
@@ -126,11 +127,17 @@ function getTargetStatus(operation: StatusOperation): QualityIssueStatus | undef
 
 const nextStatus = computed(() => getTargetStatus('FORWARD'))
 const previousStatus = computed(() => getTargetStatus('ROLLBACK'))
-const canForward = computed(() => nextStatus.value !== undefined)
+const isAwaitingFirstProgress = computed(() => issue.value?.status === QUALITY_ISSUE_STATUS.OPEN
+  && progressDetails.value.length === 0)
+const canForward = computed(() => nextStatus.value !== undefined && !isAwaitingFirstProgress.value)
 const canRollback = computed(() => isAdmin.value && previousStatus.value !== undefined)
 
 const progressModalOpen = ref(false)
+const progressModalMode = ref<ProgressModalMode>('CREATE')
+const editingProgressId = ref<number | null>(null)
 const progressAttachments = ref<File[]>([])
+const existingProgressAttachments = ref<QualityIssueAttachment[]>([])
+const removedProgressAttachmentIds = ref<number[]>([])
 const progressState = reactive({
   action: '',
   remark: ''
@@ -144,6 +151,11 @@ const rollbackReason = ref('')
 const statusError = ref('')
 const isUpdatingStatus = ref(false)
 
+const deleteProgressModalOpen = ref(false)
+const progressToDelete = ref<QualityIssueDetail | null>(null)
+const deleteProgressError = ref('')
+const isDeletingProgress = ref(false)
+
 const attachmentAccept = '.jpg,.jpeg,.png,.pdf,.docx,.xlsx,.mp4'
 const attachmentPolicies: Record<string, { mimeType: string, maxSize: number }> = {
   jpg: { mimeType: ATTACHMENT_MIME_TYPE.JPG, maxSize: ATTACHMENT_SIZE_LIMIT_BYTES.IMAGE_DOCUMENT },
@@ -154,6 +166,16 @@ const attachmentPolicies: Record<string, { mimeType: string, maxSize: number }> 
   xlsx: { mimeType: ATTACHMENT_MIME_TYPE.XLSX, maxSize: ATTACHMENT_SIZE_LIMIT_BYTES.IMAGE_DOCUMENT },
   mp4: { mimeType: ATTACHMENT_MIME_TYPE.MP4, maxSize: ATTACHMENT_SIZE_LIMIT_BYTES.VIDEO }
 }
+
+const visibleProgressAttachments = computed(() => existingProgressAttachments.value.filter(
+  attachment => !removedProgressAttachmentIds.value.includes(attachment.id)
+))
+const progressModalTitle = computed(() => progressModalMode.value === 'EDIT'
+  ? 'Edit progress'
+  : 'Tambah progress')
+const progressModalDescription = computed(() => progressModalMode.value === 'EDIT'
+  ? 'Perbarui data progress dan attachment pendukung.'
+  : 'Catat action terbaru dan lampiran pendukung.')
 
 function getApiError(error: unknown, fallback: string): {
   code?: string
@@ -238,6 +260,89 @@ function retryTimeline(): void {
   void refreshTimeline()
 }
 
+function resetProgressForm(): void {
+  progressModalMode.value = 'CREATE'
+  editingProgressId.value = null
+  progressState.action = ''
+  progressState.remark = ''
+  progressAttachments.value = []
+  existingProgressAttachments.value = []
+  removedProgressAttachmentIds.value = []
+  progressError.value = ''
+}
+
+function openCreateProgress(): void {
+  resetProgressForm()
+  progressModalOpen.value = true
+}
+
+function openEditProgress(detail: QualityIssueDetail): void {
+  progressModalMode.value = 'EDIT'
+  editingProgressId.value = detail.id
+  progressState.action = detail.action
+  progressState.remark = detail.remark ?? ''
+  progressAttachments.value = []
+  existingProgressAttachments.value = detail.attachments
+  removedProgressAttachmentIds.value = []
+  progressError.value = ''
+  progressModalOpen.value = true
+}
+
+function closeProgressModal(): void {
+  if (isSubmittingProgress.value) return
+
+  progressModalOpen.value = false
+}
+
+function removeProgressAttachment(attachmentId: number): void {
+  if (!removedProgressAttachmentIds.value.includes(attachmentId)) {
+    removedProgressAttachmentIds.value.push(attachmentId)
+  }
+}
+
+function openDeleteProgress(detail: QualityIssueDetail): void {
+  progressToDelete.value = detail
+  deleteProgressError.value = ''
+  deleteProgressModalOpen.value = true
+}
+
+function closeDeleteProgress(): void {
+  if (isDeletingProgress.value) return
+
+  deleteProgressModalOpen.value = false
+  progressToDelete.value = null
+  deleteProgressError.value = ''
+}
+
+async function confirmDeleteProgress(): Promise<void> {
+  const detail = progressToDelete.value
+
+  if (!detail || isDeletingProgress.value) return
+
+  isDeletingProgress.value = true
+  deleteProgressError.value = ''
+
+  try {
+    await $fetch(`${detailsUrl.value}/${detail.id}`, { method: 'DELETE' })
+    deleteProgressModalOpen.value = false
+    progressToDelete.value = null
+    deleteProgressError.value = ''
+    toast.add({
+      title: 'Progress berhasil dihapus',
+      color: 'success',
+      icon: 'i-lucide-circle-check'
+    })
+    await refreshData()
+  } catch (error) {
+    deleteProgressError.value = errorMessage(
+      error,
+      'Progress gagal dihapus. Silakan coba lagi.'
+    )
+  } finally {
+    isDeletingProgress.value = false
+  }
+}
+
 async function submitProgress(): Promise<void> {
   if (isSubmittingProgress.value) return
 
@@ -253,35 +358,53 @@ async function submitProgress(): Promise<void> {
   isSubmittingProgress.value = true
 
   try {
+    const isEditing = progressModalMode.value === 'EDIT'
+
+    if (isEditing && editingProgressId.value === null) {
+      progressError.value = 'Progress yang akan diedit tidak ditemukan.'
+      return
+    }
+
     const formData = new FormData()
     formData.append('action', progressState.action.trim())
 
-    if (progressState.remark.trim()) {
+    if (progressModalMode.value === 'EDIT' || progressState.remark.trim()) {
       formData.append('remark', progressState.remark.trim())
+    }
+
+    if (progressModalMode.value === 'EDIT' && removedProgressAttachmentIds.value.length) {
+      formData.append(
+        'remove_attachment_ids',
+        JSON.stringify(removedProgressAttachmentIds.value)
+      )
     }
 
     for (const file of progressAttachments.value) {
       formData.append('attachment', file)
     }
 
-    await $fetch(`${detailsUrl.value}`, {
-      method: 'POST',
+    await $fetch(isEditing
+      ? `${detailsUrl.value}/${editingProgressId.value}`
+      : detailsUrl.value, {
+      method: isEditing ? 'PATCH' : 'POST',
       body: formData
     })
 
-    progressState.action = ''
-    progressState.remark = ''
-    progressAttachments.value = []
-    progressError.value = ''
+    resetProgressForm()
     progressModalOpen.value = false
     toast.add({
-      title: 'Progress berhasil ditambahkan',
+      title: isEditing ? 'Progress berhasil diperbarui' : 'Progress berhasil ditambahkan',
       color: 'success',
       icon: 'i-lucide-circle-check'
     })
     await refreshData()
   } catch (error) {
-    progressError.value = errorMessage(error, 'Progress gagal ditambahkan. Silakan coba lagi.')
+    progressError.value = errorMessage(
+      error,
+      progressModalMode.value === 'EDIT'
+        ? 'Progress gagal diperbarui. Silakan coba lagi.'
+        : 'Progress gagal ditambahkan. Silakan coba lagi.'
+    )
   } finally {
     isSubmittingProgress.value = false
   }
@@ -446,7 +569,7 @@ async function confirmStatusChange(): Promise<void> {
               </h2>
             </template>
 
-            <dl class="grid gap-4 sm:grid-cols-2">
+            <dl class="grid gap-4 sm:grid-cols-2 text-sm">
               <div>
                 <dt class="text-xs text-muted">
                   Tanggal kejadian
@@ -540,29 +663,32 @@ async function confirmStatusChange(): Promise<void> {
                     Riwayat progress Quality Issue.
                   </p>
                 </div>
+                <UButton
+                  label="Tambah progress"
+                  icon="i-lucide-plus"
+                  variant="solid"
+                  color="primary"
+                  class="mt-3"
+                  @click="openCreateProgress"
+                />
+
                 <UModal
                   v-model:open="progressModalOpen"
-                  title="Tambah progress"
-                  description="Catat action terbaru dan lampiran pendukung."
+                  :title="progressModalTitle"
+                  :description="progressModalDescription"
                   :ui="{ content: 'max-w-xl' }"
                   :dismissible="!isSubmittingProgress"
                   :close="!isSubmittingProgress"
                 >
-                  <UButton
-                    label="Tambah progress"
-                    icon="i-lucide-plus"
-                    variant="solid"
-                    color="primary"
-                    class="mt-3"
-                  />
-
                   <template #body>
                     <form class="space-y-4" @submit.prevent="submitProgress">
                       <UAlert
                         v-if="progressError"
                         color="error"
                         variant="subtle"
-                        title="Progress gagal disimpan"
+                        :title="progressModalMode === 'EDIT'
+                          ? 'Progress gagal diperbarui'
+                          : 'Progress gagal disimpan'"
                         :description="progressError"
                       />
 
@@ -585,7 +711,47 @@ async function confirmStatusChange(): Promise<void> {
                         />
                       </UFormField>
 
-                      <UFormField label="Attachment">
+                      <UFormField
+                        v-if="progressModalMode === 'EDIT' && existingProgressAttachments.length"
+                        label="Attachment saat ini"
+                      >
+                        <div class="space-y-2">
+                          <div
+                            v-for="attachment in visibleProgressAttachments"
+                            :key="attachment.id"
+                            class="flex items-center justify-between gap-2 rounded-md border border-default px-3 py-2"
+                          >
+                            <UButton
+                              :to="attachmentUrl(attachment.publicId)"
+                              :label="attachment.fileName"
+                              target="_blank"
+                              color="neutral"
+                              variant="ghost"
+                              size="xs"
+                              icon="i-lucide-paperclip"
+                              class="min-w-0 justify-start"
+                            />
+                            <UButton
+                              type="button"
+                              icon="i-lucide-trash-2"
+                              color="error"
+                              variant="ghost"
+                              size="xs"
+                              aria-label="Hapus attachment"
+                              :disabled="isSubmittingProgress"
+                              @click="removeProgressAttachment(attachment.id)"
+                            />
+                          </div>
+                          <p
+                            v-if="!visibleProgressAttachments.length"
+                            class="text-sm text-muted"
+                          >
+                            Semua attachment lama akan dihapus.
+                          </p>
+                        </div>
+                      </UFormField>
+
+                      <UFormField label="Attachment baru">
                         <UFileUpload
                           v-model="progressAttachments"
                           position="inside"
@@ -602,16 +768,19 @@ async function confirmStatusChange(): Promise<void> {
 
                       <div class="flex justify-end gap-2">
                         <UButton
+                          type="button"
                           label="Batal"
                           color="neutral"
                           variant="outline"
                           :disabled="isSubmittingProgress"
-                          @click="progressModalOpen = false"
+                          @click="closeProgressModal"
                         />
                         <UButton
                           type="submit"
                           icon="i-lucide-save"
-                          label="Simpan progress"
+                          :label="progressModalMode === 'EDIT'
+                            ? 'Update progress'
+                            : 'Simpan progress'"
                           :loading="isSubmittingProgress"
                           :disabled="isSubmittingProgress"
                         />
@@ -649,35 +818,59 @@ async function confirmStatusChange(): Promise<void> {
               <article
                 v-for="detail in progressDetails"
                 :key="detail.id"
-                class="grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
+                class="group grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
               >
                 <time class="text-xs text-muted md:pt-0.5" :datetime="detail.tanggal">
                   {{ formatIndonesianDateTime(detail.tanggal) }}
                 </time>
 
                 <div class="min-w-0">
-                  <p class="font-medium text-highlighted">
-                    {{ detail.action }}
-                  </p>
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="font-medium text-highlighted">
+                      {{ detail.action }}
+                    </p>
+                  </div>
                   <p v-if="detail.remark" class="mt-0.5 whitespace-pre-wrap text-sm text-muted">
                     {{ detail.remark }}
                   </p>
                 </div>
 
-                <div v-if="detail.attachments.length" class="flex flex-wrap gap-1.5 md:justify-end">
-                  <UTooltip v-for="attachment in detail.attachments" :key="attachment.id" :text="attachment.fileName">
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                  <div v-if="detail.attachments.length" class="flex flex-wrap items-center justify-end gap-1.5">
+                    <UTooltip v-for="attachment in detail.attachments" :key="attachment.id" :text="attachment.fileName">
+                      <UButton
+                        :key="attachment.id"
+                        :to="attachmentUrl(attachment.publicId)"
+                        icon="i-lucide-paperclip"
+                        target="_blank"
+                        color="neutral"
+                        variant="outline"
+                        size="xs"
+                        class="max-w-full"
+                        :ui="{ label: 'break-all whitespace-normal text-left' }"
+                      />
+                    </UTooltip>
+                  </div>
+                  <div class="flex items-center gap-1 opacity-100 transition-opacity duration-150 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
                     <UButton
-                      :key="attachment.id"
-                      :to="attachmentUrl(attachment.publicId)"
-                      icon="i-lucide-paperclip"
-                      target="_blank"
+                      icon="i-lucide-pencil"
                       color="neutral"
-                      variant="outline"
+                      variant="ghost"
                       size="xs"
-                      class="max-w-full"
-                      :ui="{ label: 'break-all whitespace-normal text-left' }"
+                      aria-label="Edit progress"
+                      @click="openEditProgress(detail)"
                     />
-                  </UTooltip>
+                    <UButton
+                      v-if="isAdmin"
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
+                      size="xs"
+                      aria-label="Hapus progress"
+                      :disabled="isDeletingProgress"
+                      @click="openDeleteProgress(detail)"
+                    />
+                  </div>
                 </div>
               </article>
             </div>
@@ -734,6 +927,52 @@ async function confirmStatusChange(): Promise<void> {
             :loading="isUpdatingStatus"
             :disabled="isUpdatingStatus"
             @click="confirmStatusChange"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="deleteProgressModalOpen"
+    title="Hapus progress"
+    :description="progressToDelete
+      ? `Progress ${progressToDelete.action} dan attachment terkait akan dihapus permanen.`
+      : 'Progress akan dihapus permanen.'"
+    :dismissible="!isDeletingProgress"
+    :close="!isDeletingProgress"
+  >
+    <template #body>
+      <div class="space-y-4">
+        <UAlert
+          v-if="deleteProgressError"
+          color="error"
+          variant="subtle"
+          title="Progress gagal dihapus"
+          :description="deleteProgressError"
+        />
+
+        <p class="text-sm text-muted">
+          Tindakan ini tidak dapat dibatalkan.
+        </p>
+
+        <div class="flex justify-end gap-2">
+          <UButton
+            type="button"
+            label="Batal"
+            color="neutral"
+            variant="outline"
+            :disabled="isDeletingProgress"
+            @click="closeDeleteProgress"
+          />
+          <UButton
+            type="button"
+            label="Hapus"
+            color="error"
+            icon="i-lucide-trash-2"
+            :loading="isDeletingProgress"
+            :disabled="isDeletingProgress"
+            @click="confirmDeleteProgress"
           />
         </div>
       </div>

@@ -70,6 +70,7 @@ function validSortDirection(value: string | undefined): SortDirection | undefine
 export function useQualityIssues() {
   const route = useRoute()
   const router = useRouter()
+  const { clearSession } = useCurrentSession()
 
   const query = computed(() => {
     const search = queryValue(route.query.search)?.trim() || undefined
@@ -103,6 +104,15 @@ export function useQualityIssues() {
   const fetchResult = useFetch<QualityIssueListResponse>('/api/quality-issues', {
     query: requestQuery,
     lazy: true,
+    onResponseError({ response }) {
+      if (response.status === 401 && import.meta.client) {
+        clearSession()
+        void navigateTo({
+          path: '/login',
+          query: { redirect: route.fullPath }
+        })
+      }
+    },
     default: () => ({
       items: [],
       meta: {

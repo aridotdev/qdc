@@ -48,6 +48,13 @@ export interface AddQualityIssueProgressInput {
   attachments?: QualityIssueFileInput[]
 }
 
+export interface UpdateQualityIssueProgressInput {
+  action: string
+  remark?: string | null
+  attachments?: QualityIssueFileInput[]
+  removeAttachmentIds?: number[]
+}
+
 export type UpdateQualityIssueServiceInput = Pick<
   UpdateQualityIssueInput,
   | 'issueName'
@@ -80,6 +87,33 @@ export class QualityIssueServiceNotFoundError extends Error {
   constructor(issueId: number) {
     super(`Quality Issue ${issueId} tidak ditemukan.`)
     this.name = 'QualityIssueServiceNotFoundError'
+  }
+}
+
+export class QualityIssueInitialEvidenceUpdateForbiddenError extends Error {
+  readonly code = ERROR_CODES.FORBIDDEN
+
+  constructor() {
+    super('Detail awal Quality Issue atau action khususnya tidak dapat diedit.')
+    this.name = 'QualityIssueInitialEvidenceUpdateForbiddenError'
+  }
+}
+
+export class QualityIssueInitialEvidenceDeleteForbiddenError extends Error {
+  readonly code = ERROR_CODES.FORBIDDEN
+
+  constructor() {
+    super('Detail awal Quality Issue tidak dapat dihapus.')
+    this.name = 'QualityIssueInitialEvidenceDeleteForbiddenError'
+  }
+}
+
+export class QualityIssueProgressAttachmentNotFoundError extends Error {
+  readonly code = ERROR_CODES.NOT_FOUND
+
+  constructor(attachmentId: number) {
+    super(`Attachment ${attachmentId} bukan bagian dari progress Quality Issue.`)
+    this.name = 'QualityIssueProgressAttachmentNotFoundError'
   }
 }
 
@@ -231,12 +265,14 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
   ): Promise<QualityIssueDetailMutationResult> {
     const created = await config.db.transaction(async (transaction) => {
       const repository = createQualityIssueRepository({ db: transaction })
-      const issue = await repository.findById(issueId)
+      const issue = await repository.findDetailById(issueId)
 
       if (!issue) {
         throw new QualityIssueServiceNotFoundError(issueId)
       }
 
+      const shouldStartProgress = issue.status === QUALITY_ISSUE_STATUS.OPEN
+        && !issue.details.some(detail => detail.action !== QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE)
       const now = clock().toISOString()
       const detail = await repository.createDetail({
         issueId,
@@ -260,27 +296,177 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
 
       return {
         detailId: detail.id,
-        storageContext: createAttachmentStorageContext(issue.businessId, issue.createdAt)
+        storageContext: createAttachmentStorageContext(issue.businessId, issue.createdAt),
+        shouldStartProgress
       }
     })
 
     try {
-      const { storageContext, ...result } = created
+      const attachmentIds = await createDetailAttachments(
+        config.attachments,
+        created.detailId,
+        input.attachments,
+        context,
+        created.storageContext
+      )
 
-      return {
-        ...result,
-        attachmentIds: await createDetailAttachments(
-          config.attachments,
-          created.detailId,
-          input.attachments,
-          context,
-          storageContext
-        )
+      if (created.shouldStartProgress) {
+        await config.db.transaction(async (transaction) => {
+          const repository = createQualityIssueRepository({ db: transaction })
+          const issue = await repository.findById(issueId)
+
+          if (!issue || issue.status !== QUALITY_ISSUE_STATUS.OPEN) {
+            return
+          }
+
+          const now = clock().toISOString()
+          const updated = await repository.update(issueId, {
+            status: QUALITY_ISSUE_STATUS.IN_PROGRESS,
+            updatedAt: now,
+            updatedByUserId: context.actorUserId
+          })
+
+          if (!updated) {
+            throw new QualityIssueServiceNotFoundError(issueId)
+          }
+
+          await recordAuditLog(transaction, {
+            entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE,
+            entityId: issueId,
+            action: AUDIT_ACTION.STATUS_CHANGE,
+            fromStatus: QUALITY_ISSUE_STATUS.OPEN,
+            toStatus: QUALITY_ISSUE_STATUS.IN_PROGRESS,
+            actorUserId: context.actorUserId,
+            createdAt: now
+          })
+        })
       }
+
+      return { detailId: created.detailId, attachmentIds }
     } catch (error) {
       await createQualityIssueRepository({ db: config.db }).deleteDetail(created.detailId)
       throw error
     }
+  }
+
+  async function updateProgress(
+    issueId: number,
+    detailId: number,
+    input: UpdateQualityIssueProgressInput,
+    context: QualityIssueMutationContext
+  ): Promise<QualityIssueDetailMutationResult> {
+    const issue = await createQualityIssueRepository({ db: config.db }).findDetailById(issueId)
+
+    if (!issue) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    const detail = issue.details.find(item => item.id === detailId)
+
+    if (!detail) {
+      throw new QualityIssueServiceNotFoundError(detailId)
+    }
+
+    if (
+      detail.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
+      || input.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
+    ) {
+      throw new QualityIssueInitialEvidenceUpdateForbiddenError()
+    }
+
+    const removeAttachmentIds = [...new Set(input.removeAttachmentIds ?? [])]
+    const attachmentsToRemove = removeAttachmentIds.map((attachmentId) => {
+      const attachment = detail.attachments.find(item => item.id === attachmentId)
+
+      if (!attachment) {
+        throw new QualityIssueProgressAttachmentNotFoundError(attachmentId)
+      }
+
+      return attachment
+    })
+    const attachmentIds = await createDetailAttachments(
+      config.attachments,
+      detailId,
+      input.attachments,
+      context,
+      createAttachmentStorageContext(issue.businessId, issue.createdAt)
+    )
+
+    const now = clock().toISOString()
+    await config.db.transaction(async (transaction) => {
+      const repository = createQualityIssueRepository({ db: transaction })
+      const updated = await repository.updateDetail(detailId, {
+        action: input.action,
+        remark: input.remark ?? null,
+        updatedAt: now,
+        updatedByUserId: context.actorUserId
+      })
+
+      if (!updated) {
+        throw new QualityIssueServiceNotFoundError(detailId)
+      }
+
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE_DETAIL,
+        entityId: detailId,
+        action: AUDIT_ACTION.UPDATE,
+        metadata: { fields: ['action', 'remark'] },
+        actorUserId: context.actorUserId,
+        createdAt: now
+      })
+    })
+
+    for (const attachment of attachmentsToRemove) {
+      await config.attachments.deleteAttachment(attachment.id, context)
+    }
+
+    return { detailId, attachmentIds }
+  }
+
+  async function removeProgress(
+    issueId: number,
+    detailId: number,
+    context: QualityIssueMutationContext
+  ): Promise<void> {
+    const repository = createQualityIssueRepository({ db: config.db })
+    const issue = await repository.findDetailById(issueId)
+
+    if (!issue) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    const detail = issue.details.find(item => item.id === detailId)
+
+    if (!detail) {
+      throw new QualityIssueServiceNotFoundError(detailId)
+    }
+
+    if (detail.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE) {
+      throw new QualityIssueInitialEvidenceDeleteForbiddenError()
+    }
+
+    for (const attachment of detail.attachments) {
+      await config.attachments.deleteAttachment(attachment.id, context)
+    }
+
+    await config.db.transaction(async (transaction) => {
+      const transactionRepository = createQualityIssueRepository({ db: transaction })
+      const now = clock().toISOString()
+      const deleted = await transactionRepository.deleteDetail(detailId)
+
+      if (!deleted) {
+        throw new QualityIssueServiceNotFoundError(detailId)
+      }
+
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE_DETAIL,
+        entityId: detailId,
+        action: AUDIT_ACTION.DELETE,
+        metadata: { issueId },
+        actorUserId: context.actorUserId,
+        createdAt: now
+      })
+    })
   }
 
   async function update(
@@ -365,6 +551,8 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
   return {
     create: createInitialIssue,
     addProgress,
+    updateProgress,
+    removeProgress,
     update,
     remove
   }

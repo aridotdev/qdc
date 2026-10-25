@@ -183,6 +183,14 @@ describe('Quality Issue service', () => {
     )
 
     const details = await getIssueDetails(created.issueId)
+    const [updatedIssue] = await database.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, created.issueId))
+    const issueLogs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, created.issueId))
     const [attachment] = await database.db
       .select()
       .from(attachments)
@@ -192,9 +200,85 @@ describe('Quality Issue service', () => {
       QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE,
       'INVESTIGATION'
     ])
+    expect(updatedIssue?.status).toBe(QUALITY_ISSUE_STATUS.IN_PROGRESS)
+    expect(issueLogs).toContainEqual(expect.objectContaining({
+      action: AUDIT_ACTION.STATUS_CHANGE,
+      fromStatus: QUALITY_ISSUE_STATUS.OPEN,
+      toStatus: QUALITY_ISSUE_STATUS.IN_PROGRESS
+    }))
     expect(attachment).toMatchObject({
       detailId: progress.detailId,
       fileName: 'progress.png'
+    })
+  })
+
+  it('updates progress data and replaces selected attachments', async () => {
+    const service = createService()
+    const created = await service.create(
+      {
+        issueName: 'Editable progress issue',
+        modelName: 'MODEL-QI',
+        serialNumber: 'SN-QI-EDIT-PROGRESS',
+        tanggalKejadian: '2026-10-08',
+        detail: 'Issue for editable progress'
+      },
+      { actorUserId }
+    )
+    const progress = await service.addProgress(
+      created.issueId,
+      {
+        action: 'INVESTIGATION',
+        attachments: [{
+          fileName: 'old-progress.png',
+          mimeType: 'image/png',
+          data: new TextEncoder().encode('old progress')
+        }]
+      },
+      { actorUserId }
+    )
+    const [oldAttachment] = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, progress.attachmentIds[0]!))
+
+    await service.updateProgress(
+      created.issueId,
+      progress.detailId,
+      {
+        action: 'CORRECTIVE_ACTION',
+        remark: 'Updated progress remark',
+        attachments: [{
+          fileName: 'new-progress.png',
+          mimeType: 'image/png',
+          data: new TextEncoder().encode('new progress')
+        }],
+        removeAttachmentIds: [progress.attachmentIds[0]!]
+      },
+      { actorUserId }
+    )
+
+    const issue = await database.db
+      .select()
+      .from(qualityIssueDetails)
+      .where(eq(qualityIssueDetails.id, progress.detailId))
+    const detailAttachments = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.detailId, progress.detailId))
+    const detailLogs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, progress.detailId))
+
+    expect(issue[0]).toMatchObject({
+      action: 'CORRECTIVE_ACTION',
+      remark: 'Updated progress remark'
+    })
+    expect(detailAttachments).toHaveLength(1)
+    expect(detailAttachments[0]).toMatchObject({ fileName: 'new-progress.png' })
+    expect(detailLogs).toContainEqual(expect.objectContaining({ action: AUDIT_ACTION.UPDATE }))
+    await expect(stat(join(storageRoot, oldAttachment!.storageName))).rejects.toMatchObject({
+      code: 'ENOENT'
     })
   })
 
@@ -294,10 +378,15 @@ describe('Quality Issue service', () => {
     ).rejects.toThrow('write failed')
 
     const details = await getIssueDetails(created.issueId)
+    const [issue] = await database.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, created.issueId))
 
     expect(details.map(detail => detail.action)).toEqual([
       QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
     ])
+    expect(issue?.status).toBe(QUALITY_ISSUE_STATUS.OPEN)
     await expect(stat(join(storageRoot, '2026/10/08/progress-failure'))).rejects.toMatchObject({
       code: 'ENOENT'
     })
@@ -332,6 +421,62 @@ describe('Quality Issue service', () => {
       .where(eq(auditLogs.entityId, created.issueId))
 
     expect(logs.some(log => log.action === AUDIT_ACTION.UPDATE)).toBe(true)
+  })
+
+  it('deletes progress detail, attachments, physical files, and audit logs', async () => {
+    const service = createService()
+    const created = await service.create({
+      issueName: 'Delete progress issue',
+      modelName: 'MODEL-QI',
+      serialNumber: 'SN-QI-DELETE-PROGRESS',
+      tanggalKejadian: '2026-10-08',
+      detail: 'Issue with deletable progress'
+    }, { actorUserId })
+    const progress = await service.addProgress(created.issueId, {
+      action: 'TO_DELETE',
+      attachments: [{
+        fileName: 'delete-progress.png',
+        mimeType: 'image/png',
+        data: new TextEncoder().encode('delete progress')
+      }]
+    }, { actorUserId })
+    const [attachment] = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, progress.attachmentIds[0]!))
+
+    await service.removeProgress(created.issueId, progress.detailId, { actorUserId })
+
+    expect(await database.db
+      .select()
+      .from(qualityIssueDetails)
+      .where(eq(qualityIssueDetails.id, progress.detailId))).toEqual([])
+    expect(await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, progress.attachmentIds[0]!))).toEqual([])
+    const logs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, progress.detailId))
+    expect(logs.some(log => log.action === AUDIT_ACTION.DELETE)).toBe(true)
+    await expect(stat(join(storageRoot, attachment!.storageName))).rejects.toMatchObject({
+      code: 'ENOENT'
+    })
+  })
+
+  it('does not delete initial evidence as a progress detail', async () => {
+    const service = createService()
+    const created = await service.create({
+      issueName: 'Protected initial evidence',
+      modelName: 'MODEL-QI',
+      serialNumber: 'SN-QI-PROTECTED-DETAIL',
+      tanggalKejadian: '2026-10-08',
+      detail: 'Initial evidence must remain'
+    }, { actorUserId })
+
+    await expect(service.removeProgress(created.issueId, created.detailId, { actorUserId }))
+      .rejects.toThrow('Detail awal Quality Issue tidak dapat dihapus.')
   })
 
   it('deletes an issue, its timeline attachments, and physical files', async () => {

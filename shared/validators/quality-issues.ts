@@ -59,6 +59,28 @@ export const qualityIssueProgressSchema = z.strictObject({
   remark: optionalNullableText('Remark')
 })
 
+const qualityIssueProgressAttachmentIdsSchema = z.preprocess((value) => {
+  if (value === undefined || value === '') {
+    return []
+  }
+
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}, z.array(z.number().int().positive()).default([]))
+
+export const qualityIssueProgressUpdateSchema = z.strictObject({
+  action: requiredText('Action'),
+  remark: z.string().trim().nullable().optional(),
+  remove_attachment_ids: qualityIssueProgressAttachmentIdsSchema
+})
+
 export const qualityIssueStatusOperationSchema = z.strictObject({
   operation: z.enum(['FORWARD', 'ROLLBACK']),
   reason: optionalNullableText('Alasan')
@@ -69,6 +91,7 @@ export type UpdateQualityIssuePayload = z.infer<typeof updateQualityIssueSchema>
 export type QualityIssueFilter = z.infer<typeof qualityIssueFilterSchema>
 export type QualityIssuePagination = z.infer<typeof qualityIssuePaginationSchema>
 export type QualityIssueProgressPayload = z.infer<typeof qualityIssueProgressSchema>
+export type QualityIssueProgressUpdatePayload = z.infer<typeof qualityIssueProgressUpdateSchema>
 export type QualityIssueStatusOperationPayload = z.infer<
   typeof qualityIssueStatusOperationSchema
 >
