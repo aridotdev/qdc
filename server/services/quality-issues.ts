@@ -48,6 +48,13 @@ export interface AddQualityIssueProgressInput {
   attachments?: QualityIssueFileInput[]
 }
 
+export interface UpdateQualityIssueProgressInput {
+  action: string
+  remark?: string | null
+  attachments?: QualityIssueFileInput[]
+  removeAttachmentIds?: number[]
+}
+
 export type UpdateQualityIssueServiceInput = Pick<
   UpdateQualityIssueInput,
   | 'issueName'
@@ -80,6 +87,24 @@ export class QualityIssueServiceNotFoundError extends Error {
   constructor(issueId: number) {
     super(`Quality Issue ${issueId} tidak ditemukan.`)
     this.name = 'QualityIssueServiceNotFoundError'
+  }
+}
+
+export class QualityIssueInitialEvidenceUpdateForbiddenError extends Error {
+  readonly code = ERROR_CODES.FORBIDDEN
+
+  constructor() {
+    super('Detail awal Quality Issue atau action khususnya tidak dapat diedit.')
+    this.name = 'QualityIssueInitialEvidenceUpdateForbiddenError'
+  }
+}
+
+export class QualityIssueProgressAttachmentNotFoundError extends Error {
+  readonly code = ERROR_CODES.NOT_FOUND
+
+  constructor(attachmentId: number) {
+    super(`Attachment ${attachmentId} bukan bagian dari progress Quality Issue.`)
+    this.name = 'QualityIssueProgressAttachmentNotFoundError'
   }
 }
 
@@ -315,6 +340,80 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
     }
   }
 
+  async function updateProgress(
+    issueId: number,
+    detailId: number,
+    input: UpdateQualityIssueProgressInput,
+    context: QualityIssueMutationContext
+  ): Promise<QualityIssueDetailMutationResult> {
+    const issue = await createQualityIssueRepository({ db: config.db }).findDetailById(issueId)
+
+    if (!issue) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    const detail = issue.details.find(item => item.id === detailId)
+
+    if (!detail) {
+      throw new QualityIssueServiceNotFoundError(detailId)
+    }
+
+    if (
+      detail.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
+      || input.action === QUALITY_ISSUE_DETAIL_ACTION.INITIAL_EVIDENCE
+    ) {
+      throw new QualityIssueInitialEvidenceUpdateForbiddenError()
+    }
+
+    const removeAttachmentIds = [...new Set(input.removeAttachmentIds ?? [])]
+    const attachmentsToRemove = removeAttachmentIds.map((attachmentId) => {
+      const attachment = detail.attachments.find(item => item.id === attachmentId)
+
+      if (!attachment) {
+        throw new QualityIssueProgressAttachmentNotFoundError(attachmentId)
+      }
+
+      return attachment
+    })
+    const attachmentIds = await createDetailAttachments(
+      config.attachments,
+      detailId,
+      input.attachments,
+      context,
+      createAttachmentStorageContext(issue.businessId, issue.createdAt)
+    )
+
+    const now = clock().toISOString()
+    await config.db.transaction(async (transaction) => {
+      const repository = createQualityIssueRepository({ db: transaction })
+      const updated = await repository.updateDetail(detailId, {
+        action: input.action,
+        remark: input.remark ?? null,
+        updatedAt: now,
+        updatedByUserId: context.actorUserId
+      })
+
+      if (!updated) {
+        throw new QualityIssueServiceNotFoundError(detailId)
+      }
+
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE_DETAIL,
+        entityId: detailId,
+        action: AUDIT_ACTION.UPDATE,
+        metadata: { fields: ['action', 'remark'] },
+        actorUserId: context.actorUserId,
+        createdAt: now
+      })
+    })
+
+    for (const attachment of attachmentsToRemove) {
+      await config.attachments.deleteAttachment(attachment.id, context)
+    }
+
+    return { detailId, attachmentIds }
+  }
+
   async function update(
     issueId: number,
     input: UpdateQualityIssueServiceInput,
@@ -397,6 +496,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
   return {
     create: createInitialIssue,
     addProgress,
+    updateProgress,
     update,
     remove
   }

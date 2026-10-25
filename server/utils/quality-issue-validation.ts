@@ -28,3 +28,14 @@ export function parseQualityIssueIdentifier(value: string | undefined): QualityI
     fieldErrors: { id: ['ID atau Public ID Quality Issue tidak valid.'] }
   })
 }
+
+export function parseQualityIssueDetailId(value: string | undefined): number {
+  if (!value || !/^[1-9]\d*$/.test(value)) {
+    throw createApiError({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      message: 'ID detail Quality Issue tidak valid.'
+    })
+  }
+
+  return Number(value)
+}

@@ -158,6 +158,19 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     return created
   }
 
+  async function updateDetail(
+    id: number,
+    input: Partial<Pick<QualityIssueDetail, 'action' | 'remark' | 'updatedAt' | 'updatedByUserId'>>
+  ): Promise<QualityIssueDetail | undefined> {
+    const [updated] = await config.db
+      .update(qualityIssueDetails)
+      .set(input)
+      .where(eq(qualityIssueDetails.id, id))
+      .returning()
+
+    return updated
+  }
+
   async function deleteDetailById(id: number): Promise<QualityIssueDetail | undefined> {
     const [deleted] = await config.db
       .delete(qualityIssueDetails)
@@ -218,6 +231,7 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     findByPublicId,
     findDetailById,
     createDetail,
+    updateDetail,
     list,
     update,
     deleteDetail: deleteDetailById,

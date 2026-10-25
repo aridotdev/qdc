@@ -128,7 +128,7 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'issueName',
     header: sortableHeader('issueName'),
-    cell: ({ row }) => 
+    cell: ({ row }) =>
       h(NuxtLink, {
         to: `/quality-issues/${row.original.publicId}`,
         class: 'hover:underline'
@@ -161,17 +161,17 @@ const columns: TableColumn<QualityIssueListItem>[] = [
       return h(
         UDropdownMenu,
         {
-          content: {
+          'content': {
             align: 'end'
           },
-          items: getRowItems(row),
+          'items': getRowItems(row),
           'aria-label': 'Actions dropdown'
         },
         () =>
           h(UButton, {
-            icon: 'i-lucide-ellipsis-vertical',
-            color: 'neutral',
-            variant: 'ghost',
+            'icon': 'i-lucide-ellipsis-vertical',
+            'color': 'neutral',
+            'variant': 'ghost',
             'aria-label': 'Actions dropdown'
           })
       )

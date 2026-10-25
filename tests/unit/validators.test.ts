@@ -6,6 +6,7 @@ import {
   formatValidationError,
   qualityIssuePaginationSchema,
   qualityIssueProgressSchema,
+  qualityIssueProgressUpdateSchema,
   qualityIssueStatusOperationSchema,
   updateQualityIssueSchema
 } from '#shared'
@@ -113,6 +114,15 @@ describe('Zod validation contracts', () => {
       action: 'INVESTIGATION',
       remark: 'Checked unit'
     })).toMatchObject({ action: 'INVESTIGATION' })
+    expect(qualityIssueProgressUpdateSchema.parse({
+      action: 'UPDATED ACTION',
+      remark: '',
+      remove_attachment_ids: '[1, 2]'
+    })).toEqual({
+      action: 'UPDATED ACTION',
+      remark: '',
+      remove_attachment_ids: [1, 2]
+    })
     expect(qualityIssueStatusOperationSchema.parse({ operation: 'FORWARD' })).toEqual({
       operation: 'FORWARD'
     })

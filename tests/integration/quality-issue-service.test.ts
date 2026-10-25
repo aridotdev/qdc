@@ -212,6 +212,76 @@ describe('Quality Issue service', () => {
     })
   })
 
+  it('updates progress data and replaces selected attachments', async () => {
+    const service = createService()
+    const created = await service.create(
+      {
+        issueName: 'Editable progress issue',
+        modelName: 'MODEL-QI',
+        serialNumber: 'SN-QI-EDIT-PROGRESS',
+        tanggalKejadian: '2026-10-08',
+        detail: 'Issue for editable progress'
+      },
+      { actorUserId }
+    )
+    const progress = await service.addProgress(
+      created.issueId,
+      {
+        action: 'INVESTIGATION',
+        attachments: [{
+          fileName: 'old-progress.png',
+          mimeType: 'image/png',
+          data: new TextEncoder().encode('old progress')
+        }]
+      },
+      { actorUserId }
+    )
+    const [oldAttachment] = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.id, progress.attachmentIds[0]!))
+
+    await service.updateProgress(
+      created.issueId,
+      progress.detailId,
+      {
+        action: 'CORRECTIVE_ACTION',
+        remark: 'Updated progress remark',
+        attachments: [{
+          fileName: 'new-progress.png',
+          mimeType: 'image/png',
+          data: new TextEncoder().encode('new progress')
+        }],
+        removeAttachmentIds: [progress.attachmentIds[0]!]
+      },
+      { actorUserId }
+    )
+
+    const issue = await database.db
+      .select()
+      .from(qualityIssueDetails)
+      .where(eq(qualityIssueDetails.id, progress.detailId))
+    const detailAttachments = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.detailId, progress.detailId))
+    const detailLogs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, progress.detailId))
+
+    expect(issue[0]).toMatchObject({
+      action: 'CORRECTIVE_ACTION',
+      remark: 'Updated progress remark'
+    })
+    expect(detailAttachments).toHaveLength(1)
+    expect(detailAttachments[0]).toMatchObject({ fileName: 'new-progress.png' })
+    expect(detailLogs).toContainEqual(expect.objectContaining({ action: AUDIT_ACTION.UPDATE }))
+    await expect(stat(join(storageRoot, oldAttachment!.storageName))).rejects.toMatchObject({
+      code: 'ENOENT'
+    })
+  })
+
   it('removes created issue and detail when create attachment fails', async () => {
     const failingStorage: FileStorage = {
       rootDir: storageRoot,
