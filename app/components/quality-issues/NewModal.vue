@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import { parseDate, type CalendarDate } from '@internationalized/date'
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent, StepperItem } from '@nuxt/ui'
 import {
   ATTACHMENT_MIME_TYPE,
   ATTACHMENT_SIZE_LIMIT_BYTES,
@@ -36,6 +36,36 @@ watch(open, (value) => {
 })
 
 const attachmentAccept = '.jpg,.jpeg,.png,.pdf,.docx,.xlsx,.mp4'
+
+const stepItems = [
+  {
+    slot: 'identification' as const,
+    title: 'Identifikasi produk & isu',
+    description: 'Lengkapi informasi produk dan isu yang ditemukan'
+  }, {
+    slot: 'description' as const,
+    title: 'Deskripsi & Catatan',
+    description: 'Jelaskan detail masalah dan informasi tambahan'
+  }, {
+    slot: 'attachments' as const,
+    title: 'Lampiran Berkas',
+    description: 'Tambahkan berkas pendukung jika diperlukan'
+  }
+] satisfies StepperItem[]
+
+const activeStep = ref(0)
+
+function nextStep(): void {
+  if (activeStep.value < stepItems.length - 1) {
+    activeStep.value += 1
+  }
+}
+
+function previousStep(): void {
+  if (activeStep.value > 0) {
+    activeStep.value -= 1
+  }
+}
 
 function emptyToUndefined(value: unknown) {
   return typeof value === 'string' && value.trim() === '' ? undefined : value
@@ -253,210 +283,231 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             class="space-y-6"
             @submit="onSubmit"
           >
-            <section>
-              <div class="mb-3 flex items-center gap-2">
-                <UBadge
-                  color="neutral"
-                  variant="subtle"
-                  class="size-5 justify-center rounded-full p-0 text-[10px]"
-                >
-                  1
-                </UBadge>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-muted">
-                  Identifikasi Produk & Isu
-                </h2>
-              </div>
+            <UStepper
+              v-model="activeStep"
+              :items="stepItems"
+              class="w-full"
+            >
+              <template #identification>
+                <section class="mt-6 space-y-6">
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-6">
+                    <UFormField
+                      label="Nama issue"
+                      name="issue_name"
+                      required
+                      class="md:col-span-2"
+                    >
+                      <UInput
+                        v-model="state.issue_name"
+                        class="w-full"
+                        placeholder="Contoh: Unit Standby setiap 4 jam"
+                      />
+                    </UFormField>
 
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-6">
-                <UFormField
-                  label="Nama issue"
-                  name="issue_name"
-                  required
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.issue_name"
-                    class="w-full"
-                    placeholder="Contoh: Unit Standby setiap 4 jam"
-                  />
-                </UFormField>
+                    <UFormField
+                      label="Model name"
+                      name="model_name"
+                      required
+                      class="md:col-span-2"
+                    >
+                      <UInput
+                        v-model="state.model_name"
+                        class="w-full"
+                        placeholder="Contoh: 4T-C55JP5000I"
+                      />
+                    </UFormField>
 
-                <UFormField
-                  label="Model name"
-                  name="model_name"
-                  required
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.model_name"
-                    class="w-full"
-                    placeholder="Contoh: 4T-C55JP5000I"
-                  />
-                </UFormField>
+                    <UFormField
+                      label="Serial number"
+                      name="serial_number"
+                      required
+                      class="md:col-span-2"
+                    >
+                      <UInput
+                        v-model="state.serial_number"
+                        class="w-full"
+                        placeholder="Contoh: 9653226F000123"
+                      />
+                    </UFormField>
 
-                <UFormField
-                  label="Serial number"
-                  name="serial_number"
-                  required
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.serial_number"
-                    class="w-full"
-                    placeholder="Contoh: 9653226F000123"
-                  />
-                </UFormField>
+                    <UFormField
+                      label="Tanggal kejadian"
+                      name="tanggal_kejadian"
+                      required
+                      class="md:col-span-2"
+                    >
+                      <UInputDate
+                        ref="inputDate"
+                        v-model="datePickerValue"
+                        locale="id-ID"
+                        class="w-full"
+                      >
+                        <template #trailing>
+                          <UPopover :reference="inputDate?.inputsRef[3]?.$el">
+                            <UButton
+                              color="neutral"
+                              variant="link"
+                              size="sm"
+                              icon="i-lucide-calendar"
+                              aria-label="Pilih tanggal kejadian"
+                              class="px-0"
+                            />
 
-                <UFormField
-                  label="Tanggal kejadian"
-                  name="tanggal_kejadian"
-                  required
-                  class="md:col-span-2"
-                >
-                  <UInputDate
-                    ref="inputDate"
-                    v-model="datePickerValue"
-                    locale="id-ID"
-                    class="w-full"
-                  >
-                    <template #trailing>
-                      <UPopover :reference="inputDate?.inputsRef[3]?.$el">
-                        <UButton
-                          color="neutral"
-                          variant="link"
-                          size="sm"
-                          icon="i-lucide-calendar"
-                          aria-label="Pilih tanggal kejadian"
-                          class="px-0"
-                        />
-
-                        <template #content>
-                          <UCalendar v-model="datePickerValue" locale="id-ID" class="p-2" />
+                            <template #content>
+                              <UCalendar v-model="datePickerValue" locale="id-ID" class="p-2" />
+                            </template>
+                          </UPopover>
                         </template>
-                      </UPopover>
-                    </template>
-                  </UInputDate>
-                </UFormField>
+                      </UInputDate>
+                    </UFormField>
 
-                <UFormField
-                  label="Notification number"
-                  name="notification_number"
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.notification_number"
-                    class="w-full"
-                    placeholder="Opsional"
-                  />
-                </UFormField>
+                    <UFormField
+                      label="Notification number"
+                      name="notification_number"
+                      class="md:col-span-2"
+                    >
+                      <UInput
+                        v-model="state.notification_number"
+                        class="w-full"
+                        placeholder="Opsional"
+                      />
+                    </UFormField>
 
-                <UFormField
-                  label="Usage period"
-                  name="usage_period"
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.usage_period"
-                    class="w-full"
-                    placeholder="Opsional"
-                  />
-                </UFormField>
+                    <UFormField
+                      label="Usage period"
+                      name="usage_period"
+                      class="md:col-span-2"
+                    >
+                      <UInput
+                        v-model="state.usage_period"
+                        class="w-full"
+                        placeholder="Opsional"
+                      />
+                    </UFormField>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-end gap-3 border-t border-default pt-5">
+                    <UButton
+                      type="button"
+                      color="neutral"
+                      variant="outline"
+                      :disabled="isSubmitting"
+                      @click="open = false"
+                    >
+                      Cancel
+                    </UButton>
+                    <UButton
+                      type="button"
+                      trailing-icon="i-lucide-arrow-right"
+                      :disabled="isSubmitting"
+                      @click="nextStep"
+                    >
+                      Next
+                    </UButton>
+                  </div>
+                </section>
+              </template>
 
-                
+              <template #description>
+                <section class="mt-6 space-y-6">
+                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <UFormField label="Detail" name="detail" required>
+                      <UTextarea
+                        v-model="state.detail"
+                        class="w-full"
+                        :rows="4"
+                        placeholder="Jelaskan masalah yang ditemukan secara spesifik..."
+                      />
+                    </UFormField>
 
-                
-              </div>
-            </section>
+                    <UFormField label="Keterangan" name="keterangan">
+                      <UTextarea
+                        v-model="state.keterangan"
+                        class="w-full"
+                        :rows="4"
+                        placeholder="Informasi tambahan lain jika ada"
+                      />
+                    </UFormField>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-end gap-3 border-t border-default pt-5">
+                    <UButton
+                      type="button"
+                      color="neutral"
+                      variant="outline"
+                      :disabled="isSubmitting"
+                      @click="previousStep"
+                    >
+                      Back
+                    </UButton>
+                    <UButton
+                      type="button"
+                      color="neutral"
+                      variant="outline"
+                      :disabled="isSubmitting"
+                      @click="open = false"
+                    >
+                      Cancel
+                    </UButton>
+                    <UButton
+                      type="button"
+                      trailing-icon="i-lucide-arrow-right"
+                      :disabled="isSubmitting"
+                      @click="nextStep"
+                    >
+                      Next
+                    </UButton>
+                  </div>
+                </section>
+              </template>
 
-            <USeparator />
-
-            <section>
-              <div class="mb-3 flex items-center gap-2">
-                <UBadge
-                  color="neutral"
-                  variant="subtle"
-                  class="size-5 justify-center rounded-full p-0 text-[10px]"
-                >
-                  2
-                </UBadge>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-muted">
-                  Deskripsi & Catatan
-                </h2>
-              </div>
-
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <UFormField label="Detail" name="detail" required>
-                  <UTextarea
-                    v-model="state.detail"
-                    class="w-full"
-                    :rows="4"
-                    placeholder="Jelaskan masalah yang ditemukan secara spesifik..."
-                  />
-                </UFormField>
-
-                <UFormField label="Keterangan" name="keterangan">
-                  <UTextarea
-                    v-model="state.keterangan"
-                    class="w-full"
-                    :rows="4"
-                    placeholder="Informasi tambahan lain jika ada"
-                  />
-                </UFormField>
-              </div>
-            </section>
-
-            <USeparator />
-
-            <section>
-              <div class="mb-3 flex items-center gap-2">
-                <UBadge
-                  color="neutral"
-                  variant="subtle"
-                  class="size-5 justify-center rounded-full p-0 text-[10px]"
-                >
-                  3
-                </UBadge>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-muted">
-                  Lampiran Berkas
-                </h2>
-              </div>
-
-              <UFormField label="Attachment" :error="attachmentError || undefined">
-                <UFileUpload
-                  v-model="attachments"
-                  position="inside"
-                  layout="list"
-                  multiple
-                  label="Pilih atau seret file ke sini"
-                  description="JPG, PNG, PDF, DOCX, XLSX maksimal 1 MB | MP4 maksimal 10 MB"
-                  :accept="attachmentAccept"
-                  :disabled="isSubmitting"
-                  class="w-full"
-                  :ui="{
-                    base: 'min-h-40'
-                  }"
-                />
-              </UFormField>
-            </section>
-
-            <div class="flex flex-wrap items-center justify-end gap-3 border-t border-default pt-5">
-              <UButton
-                color="neutral"
-                variant="outline"
-                :disabled="isSubmitting"
-                @click="open = false"
-              >
-                Cancel
-              </UButton>
-              <UButton
-                type="submit"
-                icon="i-lucide-save"
-                :loading="isSubmitting"
-                :disabled="isSubmitting"
-              >
-                Create Quality Issue
-              </UButton>
-            </div>
+              <template #attachments>
+                <section class="mt-6 space-y-6">
+                  <UFormField label="Attachment" :error="attachmentError || undefined">
+                    <UFileUpload
+                      v-model="attachments"
+                      position="inside"
+                      layout="list"
+                      multiple
+                      label="Pilih atau seret file ke sini"
+                      description="JPG, PNG, PDF, DOCX, XLSX maksimal 1 MB | MP4 maksimal 10 MB"
+                      :accept="attachmentAccept"
+                      :disabled="isSubmitting"
+                      class="w-full"
+                      :ui="{
+                        base: 'min-h-40'
+                      }"
+                    />
+                  </UFormField>
+                  <div class="flex flex-wrap items-center justify-end gap-3 border-t border-default pt-5">
+                    <UButton
+                      type="button"
+                      color="neutral"
+                      variant="outline"
+                      :disabled="isSubmitting"
+                      @click="previousStep"
+                    >
+                      Back
+                    </UButton>
+                    <UButton
+                      type="button"
+                      color="neutral"
+                      variant="outline"
+                      :disabled="isSubmitting"
+                      @click="open = false"
+                    >
+                      Cancel
+                    </UButton>
+                    <UButton
+                      type="submit"
+                      icon="i-lucide-save"
+                      :loading="isSubmitting"
+                      :disabled="isSubmitting"
+                    >
+                      Create Quality Issue
+                    </UButton>
+                  </div>
+                </section>
+              </template>
+            </UStepper>
           </UForm>
         </UCard>
       </div>
