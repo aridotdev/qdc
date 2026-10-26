@@ -14,6 +14,27 @@ import {
 
 const toast = useToast()
 
+const props = withDefaults(defineProps<{ open?: boolean }>(), {
+  open: true
+})
+const emit = defineEmits<{
+  'update:open': [value: boolean]
+}>()
+const open = ref(props.open)
+
+watch(
+  () => props.open,
+  (value) => {
+    open.value = value
+  }
+)
+
+watch(open, (value) => {
+  if (value !== props.open) {
+    emit('update:open', value)
+  }
+})
+
 const attachmentAccept = '.jpg,.jpeg,.png,.pdf,.docx,.xlsx,.mp4'
 
 function emptyToUndefined(value: unknown) {
@@ -203,25 +224,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UDashboardPanel id="new-quality-issue">
-    <template #header>
-      <UDashboardNavbar title="New Quality Issue">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
-        <template #right>
-          <UButton
-            to="/quality-issues"
-            color="primary"
-            variant="soft"
-            icon="i-lucide-arrow-left"
-            label="Back"
-            aria-label="Back to Quality Issues List"
-          />
-        </template>
-      </UDashboardNavbar>
-    </template>
-
+  <UModal
+    v-model:open="open"
+    title="New Quality Issue"
+    scrollable
+    :ui="{
+      content: 'w-full max-w-5xl',
+      body: 'p-0 sm:p-0'
+    }"
+  >
     <template #body>
       <div class="mx-auto w-full max-w-5xl">
         <UAlert
@@ -426,10 +437,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
             <div class="flex flex-wrap items-center justify-end gap-3 border-t border-default pt-5">
               <UButton
-                to="/quality-issues"
                 color="neutral"
                 variant="outline"
                 :disabled="isSubmitting"
+                @click="open = false"
               >
                 Cancel
               </UButton>
@@ -446,5 +457,5 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </UCard>
       </div>
     </template>
-  </UDashboardPanel>
+  </UModal>
 </template>

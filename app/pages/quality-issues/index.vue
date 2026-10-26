@@ -9,6 +9,7 @@ import {
 } from '~/composables/useQualityIssues'
 import type { Row } from '@tanstack/table-core'
 import { formatIndonesianDate } from '~/utils/date'
+import NewQualityIssue from '~/components/quality-issues/NewModal.vue'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
@@ -18,6 +19,7 @@ const toast = useToast()
 
 const { data, error, status: requestStatus, refresh, query, updateQuery } = useQualityIssues()
 const deleteModalOpen = ref(false)
+const newModalOpen = ref(false)
 const issueToDelete = ref<QualityIssueListItem | null>(null)
 const isDeleting = ref(false)
 const deleteError = ref('')
@@ -244,7 +246,11 @@ const errorMessage = computed(() => {
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UButton to="/quality-issues/new" icon="i-lucide-plus" label="New Quality Issue" />
+          <UButton
+            icon="i-lucide-plus"
+            label="New Quality Issue"
+            @click="newModalOpen = true"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -356,4 +362,6 @@ const errorMessage = computed(() => {
       </div>
     </template>
   </UModal>
+
+  <NewQualityIssue v-model:open="newModalOpen" />
 </template>
