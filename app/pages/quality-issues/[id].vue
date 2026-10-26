@@ -35,6 +35,7 @@ interface QualityIssue {
   modelName: string
   serialNumber: string
   tanggalKejadian: string
+  usagePeriod: string | null
   notificationNumber: string | null
   detail: string
   keterangan: string | null
@@ -610,6 +611,14 @@ async function confirmStatusChange(): Promise<void> {
                 </dt>
                 <dd class="mt-1 text-sm">
                   {{ issue.notificationNumber || '—' }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted">
+                  Usage period
+                </dt>
+                <dd class="mt-1 text-sm">
+                  {{ issue.usagePeriod || '—' }}
                 </dd>
               </div>
               <div>

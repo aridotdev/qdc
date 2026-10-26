@@ -35,6 +35,7 @@ export interface CreateQualityIssueServiceInput {
   modelName: string
   serialNumber: string
   tanggalKejadian: string
+  usagePeriod?: string | null
   notificationNumber?: string | null
   detail: string
   keterangan?: string | null
@@ -61,6 +62,7 @@ export type UpdateQualityIssueServiceInput = Pick<
   | 'modelName'
   | 'serialNumber'
   | 'tanggalKejadian'
+  | 'usagePeriod'
   | 'notificationNumber'
   | 'detail'
   | 'keterangan'
@@ -193,6 +195,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
         modelName: input.modelName,
         serialNumber: input.serialNumber,
         tanggalKejadian: input.tanggalKejadian,
+        usagePeriod: input.usagePeriod ?? null,
         notificationNumber: input.notificationNumber ?? null,
         detail: input.detail,
         keterangan: input.keterangan ?? null,

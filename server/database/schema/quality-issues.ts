@@ -24,6 +24,7 @@ export const qualityIssues = sqliteTable(
     serialNumber: text('serial_number').notNull(),
     // BusinessDate 'YYYY-MM-DD'
     tanggalKejadian: text('tanggal_kejadian').notNull(),
+    usagePeriod: text('usage_period'),
     notificationNumber: text('notification_number'),
     detail: text('detail').notNull(),
     keterangan: text('keterangan'),
@@ -48,6 +49,7 @@ export const insertQualityIssueSchema = createInsertSchema(qualityIssues, {
   modelName: z.string().min(1, 'Model name tidak boleh kosong').trim(),
   serialNumber: z.string().min(1, 'Serial number tidak boleh kosong').trim(),
   tanggalKejadian: z.string().min(1, 'Tanggal tidak boleh kosong').trim(),
+  usagePeriod: z.string().trim().nullable().optional(),
   notificationNumber: z.string().nullable().optional(),
   detail: z.string().min(1, 'Detail tidak boleh kosong').trim(),
   keterangan: z.string().nullable().optional(),
@@ -69,6 +71,7 @@ export const updateQualityIssueSchema = createUpdateSchema(qualityIssues, {
   modelName: z.string().min(1, 'Model name tidak boleh kosong').trim().optional(),
   serialNumber: z.string().min(1, 'Serial number tidak boleh kosong').trim().optional(),
   tanggalKejadian: z.string().min(1, 'Tanggal tidak boleh kosong').trim().optional(),
+  usagePeriod: z.string().trim().nullable().optional(),
   notificationNumber: z.string().nullable().optional(),
   detail: z.string().min(1, 'Detail tidak boleh kosong').trim().optional(),
   keterangan: z.string().nullable().optional()

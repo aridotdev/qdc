@@ -15,6 +15,7 @@ export default eventHandler(async (event) => {
       modelName: payload.model_name,
       serialNumber: payload.serial_number,
       tanggalKejadian: payload.tanggal_kejadian,
+      usagePeriod: payload.usage_period,
       notificationNumber: payload.notification_number,
       detail: payload.detail,
       keterangan: payload.keterangan,

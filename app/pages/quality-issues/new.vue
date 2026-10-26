@@ -25,6 +25,7 @@ const schema = z.object({
   model_name: requiredText('Model name'),
   serial_number: requiredText('Serial number'),
   tanggal_kejadian: businessDateSchema,
+  usage_period: z.preprocess(emptyToUndefined, optionalNullableText('Usage period')),
   notification_number: z.preprocess(emptyToUndefined, optionalNullableText('Nomor notifikasi')),
   detail: requiredText('Detail'),
   keterangan: z.preprocess(emptyToUndefined, optionalNullableText('Keterangan'))
@@ -37,6 +38,7 @@ const state = reactive({
   model_name: '',
   serial_number: '',
   tanggal_kejadian: '',
+  usage_period: '',
   notification_number: '',
   detail: '',
   keterangan: ''
@@ -306,6 +308,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 >
                   <UInput
                     v-model="state.notification_number"
+                    class="w-full"
+                    placeholder="Opsional"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Usage period"
+                  name="usage_period"
+                  class="md:col-span-2"
+                >
+                  <UInput
+                    v-model="state.usage_period"
                     class="w-full"
                     placeholder="Opsional"
                   />

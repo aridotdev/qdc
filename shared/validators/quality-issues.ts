@@ -25,6 +25,7 @@ export const createQualityIssueSchema = z.strictObject({
   model_name: requiredText('Model name'),
   serial_number: requiredText('Serial number'),
   tanggal_kejadian: businessDateSchema,
+  usage_period: optionalNullableText('Usage period'),
   notification_number: optionalNullableText('Nomor notifikasi'),
   detail: requiredText('Detail'),
   keterangan: optionalNullableText('Keterangan')
@@ -36,6 +37,7 @@ export const updateQualityIssueSchema = nonEmptyUpdateSchema(
     model_name: optionalText('Model name'),
     serial_number: optionalText('Serial number'),
     tanggal_kejadian: businessDateSchema.optional(),
+    usage_period: optionalNullableText('Usage period'),
     notification_number: optionalNullableText('Nomor notifikasi'),
     detail: optionalText('Detail'),
     keterangan: optionalNullableText('Keterangan')
