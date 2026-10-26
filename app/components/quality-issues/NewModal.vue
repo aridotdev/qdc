@@ -229,12 +229,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     title="New Quality Issue"
     scrollable
     :ui="{
-      content: 'w-full max-w-5xl',
+      content: 'w-full max-w-4xl',
       body: 'p-0 sm:p-0'
     }"
   >
     <template #body>
-      <div class="mx-auto w-full max-w-5xl">
+      <div class="mx-auto w-full max-w-4xl">
         <UAlert
           v-if="submitError"
           color="error"
@@ -244,7 +244,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           class="mb-4"
         />
 
-        <UCard :ui="{ body: 'p-6 sm:p-8' }">
+        <UCard :ui="{ body: 'p-6 sm:p-8', root: 'ring-0' }">
           <UForm
             ref="form"
             :schema="schema"
@@ -272,12 +272,38 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   label="Nama issue"
                   name="issue_name"
                   required
-                  class="md:col-span-3"
+                  class="md:col-span-2"
                 >
                   <UInput
                     v-model="state.issue_name"
                     class="w-full"
-                    placeholder="Contoh: Housing retak"
+                    placeholder="Contoh: Unit Standby setiap 4 jam"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Model name"
+                  name="model_name"
+                  required
+                  class="md:col-span-2"
+                >
+                  <UInput
+                    v-model="state.model_name"
+                    class="w-full"
+                    placeholder="Contoh: 4T-C55JP5000I"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Serial number"
+                  name="serial_number"
+                  required
+                  class="md:col-span-2"
+                >
+                  <UInput
+                    v-model="state.serial_number"
+                    class="w-full"
+                    placeholder="Contoh: 9653226F000123"
                   />
                 </UFormField>
 
@@ -285,7 +311,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   label="Tanggal kejadian"
                   name="tanggal_kejadian"
                   required
-                  class="md:col-span-3"
+                  class="md:col-span-2"
                 >
                   <UInputDate
                     ref="inputDate"
@@ -336,31 +362,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   />
                 </UFormField>
 
-                <UFormField
-                  label="Model name"
-                  name="model_name"
-                  required
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.model_name"
-                    class="w-full"
-                    placeholder="Contoh: MODEL-01"
-                  />
-                </UFormField>
+                
 
-                <UFormField
-                  label="Serial number"
-                  name="serial_number"
-                  required
-                  class="md:col-span-2"
-                >
-                  <UInput
-                    v-model="state.serial_number"
-                    class="w-full"
-                    placeholder="Contoh: SN-001"
-                  />
-                </UFormField>
+                
               </div>
             </section>
 
