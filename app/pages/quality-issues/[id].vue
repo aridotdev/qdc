@@ -9,6 +9,7 @@ import {
   type QualityIssueStatus
 } from '#shared'
 import { formatIndonesianDate, formatIndonesianDateTime } from '~/utils/date'
+import QualityIssueModal from '~/components/quality-issues/NewModal.vue'
 
 interface QualityIssueAttachment {
   id: number
@@ -134,6 +135,7 @@ const canForward = computed(() => nextStatus.value !== undefined && !isAwaitingF
 const canRollback = computed(() => isAdmin.value && previousStatus.value !== undefined)
 
 const progressModalOpen = ref(false)
+const issueModalOpen = ref(false)
 const progressModalMode = ref<ProgressModalMode>('CREATE')
 const editingProgressId = ref<number | null>(null)
 const progressAttachments = ref<File[]>([])
@@ -591,9 +593,19 @@ async function confirmStatusChange(): Promise<void> {
         <div class="grid gap-4 lg:grid-cols-3">
           <UCard>
             <template #header>
-              <h2 class="font-semibold text-highlighted">
-                Informasi Quality Issue
-              </h2>
+              <div class="flex items-center justify-between gap-2">
+                <h2 class="font-semibold text-highlighted">
+                  Informasi Quality Issue
+                </h2>
+                <UButton
+                  label="Edit"
+                  icon="i-lucide-pencil"
+                  color="neutral"
+                  variant="outline"
+                  size="sm"
+                  @click="issueModalOpen = true"
+                />
+              </div>
             </template>
 
             <dl class="grid gap-4 sm:grid-cols-2 text-sm">
@@ -959,6 +971,14 @@ async function confirmStatusChange(): Promise<void> {
       </div>
     </template>
   </UModal>
+
+  <QualityIssueModal
+    v-model:open="issueModalOpen"
+    :issue="issue"
+    :existing-attachments="initialEvidence?.attachments ?? []"
+    :can-delete-attachments="isAdmin"
+    @saved="refreshData"
+  />
 
   <UModal
     v-model:open="deleteProgressModalOpen"

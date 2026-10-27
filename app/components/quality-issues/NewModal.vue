@@ -14,18 +14,55 @@ import {
 
 const toast = useToast()
 
-const props = withDefaults(defineProps<{ open?: boolean }>(), {
-  open: true
+interface EditableQualityIssue {
+  publicId: string
+  issueName: string
+  modelName: string
+  serialNumber: string
+  tanggalKejadian: string
+  usagePeriod: string | null
+  notificationNumber: string | null
+  detail: string
+  keterangan: string | null
+}
+
+interface EditableQualityIssueAttachment {
+  id: number
+  publicId: string
+  fileName: string
+  fileType: string
+  fileSize: number
+}
+
+const props = withDefaults(defineProps<{
+  open?: boolean
+  issue?: EditableQualityIssue | null
+  existingAttachments?: EditableQualityIssueAttachment[]
+  canDeleteAttachments?: boolean
+}>(), {
+  open: true,
+  issue: null,
+  existingAttachments: () => [],
+  canDeleteAttachments: false
 })
 const emit = defineEmits<{
   'update:open': [value: boolean]
+  'saved': []
 }>()
 const open = ref(props.open)
+const isEditing = computed(() => props.issue !== null)
 
 watch(
   () => props.open,
   (value) => {
     open.value = value
+    if (value) {
+      if (props.issue) {
+        fillState(props.issue)
+      } else {
+        resetState()
+      }
+    }
   }
 )
 
@@ -37,7 +74,7 @@ watch(open, (value) => {
 
 const attachmentAccept = '.jpg,.jpeg,.png,.pdf,.docx,.xlsx,.mp4'
 
-const stepItems = [
+const stepItems = computed<StepperItem[]>(() => [
   {
     slot: 'identification' as const,
     title: 'Identifikasi produk & isu',
@@ -51,12 +88,12 @@ const stepItems = [
     title: 'Lampiran Berkas',
     description: 'Tambahkan berkas pendukung jika diperlukan'
   }
-] satisfies StepperItem[]
+])
 
 const activeStep = ref(0)
 
 function nextStep(): void {
-  if (activeStep.value < stepItems.length - 1) {
+  if (activeStep.value < stepItems.value.length - 1) {
     activeStep.value += 1
   }
 }
@@ -94,6 +131,57 @@ const state = reactive({
   detail: '',
   keterangan: ''
 })
+const attachments = ref<File[]>([])
+const removedAttachmentIds = ref<number[]>([])
+const attachmentError = ref('')
+const submitError = ref('')
+const isSubmitting = ref(false)
+const form = ref<{ setErrors: (errors: Array<{ name: string, message: string }>) => void }>()
+
+const visibleExistingAttachments = computed(() => props.existingAttachments.filter(
+  attachment => !removedAttachmentIds.value.includes(attachment.id)
+))
+
+function resetState(): void {
+  state.issue_name = ''
+  state.model_name = ''
+  state.serial_number = ''
+  state.tanggal_kejadian = ''
+  state.usage_period = ''
+  state.notification_number = ''
+  state.detail = ''
+  state.keterangan = ''
+  activeStep.value = 0
+  attachments.value = []
+  removedAttachmentIds.value = []
+  attachmentError.value = ''
+  submitError.value = ''
+}
+
+function fillState(issue: EditableQualityIssue): void {
+  state.issue_name = issue.issueName
+  state.model_name = issue.modelName
+  state.serial_number = issue.serialNumber
+  state.tanggal_kejadian = issue.tanggalKejadian
+  state.usage_period = issue.usagePeriod ?? ''
+  state.notification_number = issue.notificationNumber ?? ''
+  state.detail = issue.detail
+  state.keterangan = issue.keterangan ?? ''
+  activeStep.value = 0
+  attachments.value = []
+  removedAttachmentIds.value = []
+  attachmentError.value = ''
+  submitError.value = ''
+}
+
+watch(
+  () => props.issue,
+  (issue) => {
+    if (open.value && issue) {
+      fillState(issue)
+    }
+  }
+)
 
 const inputDate = useTemplateRef('inputDate')
 const datePickerValue = computed<CalendarDate | undefined>({
@@ -102,12 +190,6 @@ const datePickerValue = computed<CalendarDate | undefined>({
     state.tanggal_kejadian = value?.toString() ?? ''
   }
 })
-
-const attachments = ref<File[]>([])
-const attachmentError = ref('')
-const submitError = ref('')
-const isSubmitting = ref(false)
-const form = ref<{ setErrors: (errors: Array<{ name: string, message: string }>) => void }>()
 
 const attachmentPolicies: Record<string, { mimeType: string, maxSize: number }> = {
   jpg: {
@@ -163,6 +245,31 @@ function formatFileSize(size: number): string {
   return size >= 1024 * 1024 ? `${size / (1024 * 1024)} MB` : `${size / 1024} KB`
 }
 
+function attachmentUrl(publicId: string): string {
+  return `/api/attachments/${encodeURIComponent(publicId)}`
+}
+
+function removeExistingAttachment(attachmentId: number): void {
+  if (!removedAttachmentIds.value.includes(attachmentId)) {
+    removedAttachmentIds.value.push(attachmentId)
+  }
+}
+
+async function syncAttachments(issuePublicId: string): Promise<void> {
+  for (const attachmentId of removedAttachmentIds.value) {
+    await $fetch(`/api/attachments/${attachmentId}`, { method: 'DELETE' })
+  }
+
+  for (const attachment of attachments.value) {
+    const formData = new FormData()
+    formData.append('file', attachment)
+    await $fetch(`/api/quality-issues/${encodeURIComponent(issuePublicId)}/attachments`, {
+      method: 'POST',
+      body: formData
+    })
+  }
+}
+
 watch(attachments, (files) => {
   attachmentError.value = validateAttachments(files)
 })
@@ -173,7 +280,12 @@ function getApiError(error: unknown): {
   code?: string
 } {
   if (!error || typeof error !== 'object') {
-    return { message: 'Quality Issue gagal dibuat. Silakan coba lagi.', fieldErrors: {} }
+    return {
+      message: isEditing.value
+        ? 'Quality Issue gagal diperbarui. Silakan coba lagi.'
+        : 'Quality Issue gagal dibuat. Silakan coba lagi.',
+      fieldErrors: {}
+    }
   }
 
   const response = error as {
@@ -188,7 +300,9 @@ function getApiError(error: unknown): {
   const body = response.data?.error
 
   return {
-    message: body?.message ?? 'Quality Issue gagal dibuat. Silakan coba lagi.',
+    message: body?.message ?? (isEditing.value
+      ? 'Quality Issue gagal diperbarui. Silakan coba lagi.'
+      : 'Quality Issue gagal dibuat. Silakan coba lagi.'),
     fieldErrors: body?.fieldErrors ?? {},
     code: body?.code
   }
@@ -206,6 +320,23 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   isSubmitting.value = true
 
   try {
+    if (isEditing.value && props.issue) {
+      await $fetch(`/api/quality-issues/${encodeURIComponent(props.issue.publicId)}`, {
+        method: 'PATCH',
+        body: event.data
+      })
+      await syncAttachments(props.issue.publicId)
+
+      toast.add({
+        title: 'Quality Issue berhasil diperbarui',
+        color: 'success',
+        icon: 'i-lucide-circle-check'
+      })
+      open.value = false
+      emit('saved')
+      return
+    }
+
     const formData = new FormData()
 
     for (const [key, value] of Object.entries(event.data)) {
@@ -256,7 +387,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UModal
     v-model:open="open"
-    title="New Quality Issue"
+    :title="isEditing ? 'Edit Quality Issue' : 'New Quality Issue'"
     scrollable
     :ui="{
       content: 'w-full max-w-4xl',
@@ -269,7 +400,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           v-if="submitError"
           color="error"
           variant="subtle"
-          title="Quality Issue gagal dibuat"
+          :title="isEditing ? 'Quality Issue gagal diperbarui' : 'Quality Issue gagal dibuat'"
           :description="submitError"
           class="mb-4"
         />
@@ -461,7 +592,50 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
               <template #attachments>
                 <section class="mt-6 space-y-6">
-                  <UFormField label="Attachment" :error="attachmentError || undefined">
+                  <UFormField
+                    v-if="isEditing && props.existingAttachments.length"
+                    label="Attachment saat ini"
+                  >
+                    <div class="space-y-2">
+                      <div
+                        v-for="attachment in visibleExistingAttachments"
+                        :key="attachment.id"
+                        class="flex items-center justify-between gap-2 rounded-md border border-default px-3 py-2"
+                      >
+                        <UButton
+                          :to="attachmentUrl(attachment.publicId)"
+                          :label="`${attachment.fileName} (${formatFileSize(attachment.fileSize)})`"
+                          target="_blank"
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
+                          icon="i-lucide-paperclip"
+                          class="min-w-0 justify-start"
+                        />
+                        <UButton
+                          v-if="props.canDeleteAttachments"
+                          type="button"
+                          icon="i-lucide-trash-2"
+                          color="error"
+                          variant="ghost"
+                          size="xs"
+                          aria-label="Hapus attachment"
+                          :disabled="isSubmitting"
+                          @click="removeExistingAttachment(attachment.id)"
+                        />
+                      </div>
+                      <p
+                        v-if="!visibleExistingAttachments.length"
+                        class="text-sm text-muted"
+                      >
+                        Semua attachment lama akan dihapus.
+                      </p>
+                    </div>
+                  </UFormField>
+                  <UFormField
+                    :label="isEditing ? 'Attachment baru' : 'Attachment'"
+                    :error="attachmentError || undefined"
+                  >
                     <UFileUpload
                       v-model="attachments"
                       position="inside"
@@ -502,7 +676,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                       :loading="isSubmitting"
                       :disabled="isSubmitting"
                     >
-                      Create Quality Issue
+                      {{ isEditing ? 'Update Quality Issue' : 'Create Quality Issue' }}
                     </UButton>
                   </div>
                 </section>
