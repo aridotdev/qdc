@@ -52,6 +52,9 @@ Relasi:
 
 - Parent dari `quality_issue_details`.
 - Direferensikan optional oleh `sample_defects` dan `technical_reports`.
+- Satu Quality Issue dapat direferensikan oleh beberapa Technical Report.
+- Technical Report yang merekam improvement Quality Issue bersifat optional;
+  timeline Quality Issue tetap menjadi tempat pencatatan progress operasional.
 
 ## 3. Quality Issue Detail
 
@@ -170,6 +173,15 @@ Indexes:
 - `document_type`
 - `release_date`
 - `model_name`
+
+Relasi bisnis:
+
+- `issue_id` nullable agar Technical Report dapat berdiri sendiri, termasuk
+  report yang berasal dari improvement internal produksi.
+- Jika `issue_id` diisi, report tersebut menjadi dokumen improvement yang
+  terkait dengan satu Quality Issue.
+- Tidak ada unique constraint pada `issue_id`, sehingga satu Quality Issue
+  dapat memiliki beberapa Technical Report.
 
 ## 6. Attachment
 

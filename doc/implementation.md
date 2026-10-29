@@ -33,6 +33,19 @@ Aturan:
 - Status memakai canonical uppercase code.
 - Semua mutation domain memiliki audit actor dan timestamp.
 
+### 1.1 Keputusan bisnis: improvement dan Technical Report
+
+- Setiap Quality Issue dapat memiliki proses improvement yang dicatat melalui
+  timeline `quality_issue_details`.
+- Technical Report adalah salah satu artefak improvement yang dapat dikaitkan
+  ke Quality Issue.
+- Technical Report juga dapat berasal dari improvement internal produksi dan
+  karena itu boleh dibuat tanpa Quality Issue.
+- Satu Technical Report hanya dapat dikaitkan ke satu Quality Issue.
+- Satu Quality Issue dapat memiliki beberapa Technical Report terkait.
+- Relasi Quality Issue–Technical Report bersifat optional; Quality Issue tidak
+  wajib memiliki Technical Report.
+
 Target structure:
 
 ```text
@@ -225,6 +238,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - `document_number` unique.
     - `document_type` hanya menerima `TECHNICAL_REPORT` atau `SERVICE_TIPS`.
     - Optional Quality Issue relation memakai `ON DELETE SET NULL`.
+    - Report dapat standalone untuk improvement internal produksi atau terkait
+      ke satu Quality Issue.
   - Test:
     - Duplicate document number dan FK behavior test.
 
@@ -419,6 +434,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Priority: P0
   - Acceptance:
     - Create membuat issue status `OPEN`.
+    - Timeline Quality Issue dapat mencatat progress improvement tanpa
+      mewajibkan Technical Report.
     - Attachment create-time dimiliki detail `INITIAL_EVIDENCE`.
     - Add progress membuat timeline dan attachment owner yang benar.
     - Orphan issue/detail/file tidak tertinggal ketika operasi gagal.
@@ -599,6 +616,9 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Acceptance:
     - Document type dan duplicate number divalidasi.
     - Optional Quality Issue relation diverifikasi.
+    - Report standalone dan report yang terkait ke Quality Issue sama-sama
+      valid.
+    - Satu Quality Issue dapat memiliki beberapa Technical Report.
     - Attachment report memiliki exactly-one-owner.
     - Failure cleanup berjalan.
   - Test:
@@ -619,6 +639,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Priority: P1
   - Acceptance:
     - Form mendukung metadata, PDF, XLSX, dan optional Quality Issue.
+    - Form menjelaskan bahwa Quality Issue hanya dipilih jika report terkait
+      improvement dari issue tersebut.
     - List mendukung search, filter, dan pagination.
     - Detail mendukung attachment open/download dan relation navigation.
   - Test:
@@ -790,7 +812,9 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Depends on: TASK-043
   - Priority: P1
   - Acceptance:
-    - Create report -> upload PDF -> upload XLSX -> link issue -> search ->
+    - Create report standalone dari improvement internal produksi -> upload PDF
+      -> upload XLSX -> search -> detail berhasil.
+    - Create report -> upload attachment -> link ke Quality Issue -> search ->
       detail berhasil.
     - Duplicate document number ditolak dengan feedback yang benar.
   - Test:

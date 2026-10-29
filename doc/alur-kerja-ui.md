@@ -98,6 +98,16 @@ dan integrasi existing.
 6. Perubahan status, jika diminta oleh operation, hanya melalui state machine
    dan ditulis ke audit log.
 
+### 5.2.1 Improvement dan Technical Report
+
+1. Setiap Quality Issue dapat memiliki proses improvement yang dicatat sebagai
+   progress pada timeline.
+2. Jika improvement membutuhkan dokumen formal, pengguna dapat membuat
+   Technical Report dan memilih Quality Issue terkait.
+3. Satu Quality Issue dapat memiliki beberapa Technical Report terkait.
+4. Quality Issue tetap dapat selesai tanpa Technical Report jika progress
+   cukup dicatat pada timeline.
+
 ### 5.3 Status Transition
 
 Forward action:
@@ -186,7 +196,8 @@ memperbarui badge, action, timeline, dan audit state.
 1. Pengguna membuka `/technical-reports/new`.
 2. Form memuat nomor dokumen, tipe, tanggal rilis, model, issue name,
    root cause, action, improvement cutoff, reference, keterangan, optional
-   Quality Issue, dan attachment.
+   Quality Issue, dan attachment. Quality Issue tidak wajib dipilih karena
+   report dapat berasal dari improvement internal produksi.
 3. Tipe hanya `TECHNICAL_REPORT` atau `SERVICE_TIPS`.
 4. API menolak nomor dokumen duplikat dengan field error yang jelas.
 5. Service membuat report, menyimpan attachment PDF/XLSX, dan mengembalikan
@@ -194,7 +205,8 @@ memperbarui badge, action, timeline, dan audit state.
 6. Attachment menggunakan `report_id`; owner lain harus null.
    File baru memakai folder `technical-report/<tahun_laporan>/<businessId>/`.
 7. Detail menyediakan search, download/open attachment, dan relasi Quality
-   Issue bila tersedia. Pembukaan file menggunakan `/api/attachments/:id` yang
+   Issue bila tersedia. Satu Quality Issue dapat ditampilkan pada beberapa
+   Technical Report. Pembukaan file menggunakan `/api/attachments/:id` yang
    terautentikasi, bukan URL static `/uploads/...`.
 
 ## 8. Delete dan Cleanup
