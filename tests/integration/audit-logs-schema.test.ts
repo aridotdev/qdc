@@ -53,11 +53,12 @@ describe('Audit log schema and service', () => {
     ])
   })
 
-  it('records create, update, delete, status change, rollback, and upload events', async () => {
+  it('records create, update, delete, restore, status change, rollback, and upload events', async () => {
     const actions = [
       AUDIT_ACTION.CREATE,
       AUDIT_ACTION.UPDATE,
       AUDIT_ACTION.DELETE,
+      AUDIT_ACTION.RESTORE,
       AUDIT_ACTION.STATUS_CHANGE,
       AUDIT_ACTION.ROLLBACK,
       AUDIT_ACTION.UPLOAD
@@ -83,8 +84,9 @@ describe('Audit log schema and service', () => {
       .orderBy(asc(auditLogs.id))
 
     expect(events.map(event => event.action)).toEqual(actions)
-    expect(events[3]?.fromStatus).toBe('OPEN')
-    expect(events[3]?.toStatus).toBe('IN_PROGRESS')
+    const statusEvent = events.find(event => event.action === AUDIT_ACTION.STATUS_CHANGE)
+    expect(statusEvent?.fromStatus).toBe('OPEN')
+    expect(statusEvent?.toStatus).toBe('IN_PROGRESS')
     expect(JSON.parse(events[1]?.metadataJson ?? '{}')).toEqual({
       changedFields: ['detail']
     })

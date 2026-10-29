@@ -9,7 +9,7 @@ import { createPublicId } from '../../utils/public-id'
 /**
  * db-schema.md §2 — Quality Issue
  * Parent dari `quality_issue_details`; direferensikan optional oleh
- * `sample_defects` dan `technical_reports`.
+ * `sample_defects` dan `technical_reports`. Delete domain memakai soft delete.
  */
 export const qualityIssues = sqliteTable(
   'quality_issues',
@@ -31,6 +31,9 @@ export const qualityIssues = sqliteTable(
     status: text('status')
       .notNull()
       .default(QUALITY_ISSUE_STATUS.OPEN),
+    deletedAt: text('deleted_at'),
+    deletedByUserId: text('deleted_by_user_id'),
+    deletionReason: text('deletion_reason'),
     ...auditFields
   },
   table => [
@@ -40,6 +43,7 @@ export const qualityIssues = sqliteTable(
     index('quality_issues_notification_number_idx').on(table.notificationNumber),
     index('quality_issues_model_name_idx').on(table.modelName),
     index('quality_issues_tanggal_kejadian_idx').on(table.tanggalKejadian),
+    index('quality_issues_deleted_at_idx').on(table.deletedAt),
     check('quality_issues_status_check', checkEnum(table.status, QUALITY_ISSUE_STATUSES))
   ]
 )
@@ -61,7 +65,10 @@ export const insertQualityIssueSchema = createInsertSchema(qualityIssues, {
   createdByUserId: true,
   updatedByUserId: true,
   publicId: true,
-  businessId: true
+  businessId: true,
+  deletedAt: true,
+  deletedByUserId: true,
+  deletionReason: true
 })
 
 export const selectQualityIssueSchema = createSelectSchema(qualityIssues)
@@ -82,7 +89,10 @@ export const updateQualityIssueSchema = createUpdateSchema(qualityIssues, {
   createdByUserId: true,
   updatedByUserId: true,
   publicId: true,
-  businessId: true
+  businessId: true,
+  deletedAt: true,
+  deletedByUserId: true,
+  deletionReason: true
 })
 
 export type QualityIssue = typeof qualityIssues.$inferSelect

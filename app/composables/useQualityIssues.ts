@@ -6,6 +6,7 @@ import {
   SORT_DIRECTION,
   type PaginatedResponse,
   type QualityIssueStatus,
+  type QualityIssueView,
   type SortDirection
 } from '#shared'
 import type { LocationQueryValue } from 'vue-router'
@@ -32,6 +33,9 @@ export interface QualityIssueListItem {
   tanggalKejadian: string
   notificationNumber: string | null
   status: QualityIssueStatus
+  deletedAt: string | null
+  deletedByUserId: string | null
+  deletionReason: string | null
 }
 
 export type QualityIssueListResponse = PaginatedResponse<QualityIssueListItem>
@@ -67,6 +71,10 @@ function validSortDirection(value: string | undefined): SortDirection | undefine
   return value === SORT_DIRECTION.ASC || value === SORT_DIRECTION.DESC ? value : undefined
 }
 
+function validView(value: string | undefined): QualityIssueView {
+  return value === 'deleted' || value === 'all' ? value : 'active'
+}
+
 export function useQualityIssues() {
   const route = useRoute()
   const router = useRouter()
@@ -77,6 +85,7 @@ export function useQualityIssues() {
     const status = validStatus(queryValue(route.query.status))
     const sortBy = validSortField(queryValue(route.query.sortBy))
     const sortDirection = validSortDirection(queryValue(route.query.sortDirection))
+    const view = validView(queryValue(route.query.view))
 
     return {
       page: positiveQueryNumber(route.query.page, PAGINATION_DEFAULT_PAGE),
@@ -84,7 +93,8 @@ export function useQualityIssues() {
       search,
       status,
       sortBy,
-      sortDirection
+      sortDirection,
+      view
     }
   })
 
@@ -97,7 +107,8 @@ export function useQualityIssues() {
       ...(current.search ? { search: current.search } : {}),
       ...(current.status ? { status: current.status } : {}),
       ...(current.sortBy ? { sortBy: current.sortBy } : {}),
-      ...(current.sortDirection ? { sortDirection: current.sortDirection } : {})
+      ...(current.sortDirection ? { sortDirection: current.sortDirection } : {}),
+      ...(current.view !== 'active' ? { view: current.view } : {})
     }
   })
 
@@ -132,6 +143,7 @@ export function useQualityIssues() {
     if (next.status) nextQuery.status = next.status
     if (next.sortBy) nextQuery.sortBy = next.sortBy
     if (next.sortDirection) nextQuery.sortDirection = next.sortDirection
+    if (next.view !== 'active') nextQuery.view = next.view
     if (next.page > PAGINATION_DEFAULT_PAGE) nextQuery.page = String(next.page)
     if (next.limit !== PAGINATION_DEFAULT_PAGE_SIZE) nextQuery.limit = String(next.limit)
 

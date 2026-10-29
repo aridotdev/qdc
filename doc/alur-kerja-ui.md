@@ -211,12 +211,19 @@ memperbarui badge, action, timeline, dan audit state.
 
 ## 8. Delete dan Cleanup
 
-1. Delete hanya tersedia untuk Admin dan selalu meminta konfirmasi.
-2. Server menulis audit delete sebelum mutation.
-3. Service menghapus domain row dan metadata attachment dalam transaction.
-4. Physical file dihapus setelah metadata berhasil dihapus. Jika physical
-   cleanup gagal, error dicatat untuk retry/reconciliation.
-5. Cascade database tidak boleh dianggap otomatis menghapus file fisik.
+1. Delete Quality Issue hanya tersedia untuk Admin dan selalu meminta
+   konfirmasi.
+2. Operasi delete melakukan soft delete dengan menyimpan waktu, actor, dan
+   alasan penghapusan pada Quality Issue.
+3. Server menulis audit delete sebelum menandai record terhapus.
+4. Timeline, attachment, Sample Defect, dan Technical Report tetap tersimpan
+   dan tetap memiliki relasi untuk kebutuhan restore.
+5. Quality Issue terhapus tidak tampil pada list/detail normal.
+6. Admin dapat membuka daftar terhapus dan memilih `Restore`.
+7. Restore mengosongkan metadata soft delete, menulis audit restore, dan
+   membuat Quality Issue kembali tampil pada alur normal.
+8. Soft delete tidak menghapus physical file dan tidak mengandalkan cascade
+   database.
 
 ## 9. Shared UI Components
 

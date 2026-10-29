@@ -20,6 +20,8 @@ const qualityIssueFilterShape = {
   tanggal_kejadian_to: businessDateSchema.optional()
 }
 
+export const qualityIssueViewSchema = z.enum(['active', 'deleted', 'all']).default('active')
+
 export const createQualityIssueSchema = z.strictObject({
   issue_name: requiredText('Nama issue'),
   model_name: requiredText('Model name'),
@@ -49,6 +51,7 @@ export const qualityIssueFilterSchema = z.strictObject(qualityIssueFilterShape)
 export const qualityIssuePaginationSchema = z.strictObject({
   ...paginationSchema.shape,
   ...qualityIssueFilterShape,
+  view: qualityIssueViewSchema,
   issue_id: queryPositiveIdSchema.optional(),
   id: positiveIdSchema.optional()
 })
@@ -88,6 +91,10 @@ export const qualityIssueStatusOperationSchema = z.strictObject({
   reason: optionalNullableText('Alasan')
 })
 
+export const qualityIssueDeleteSchema = z.strictObject({
+  reason: optionalNullableText('Alasan penghapusan')
+})
+
 export type CreateQualityIssuePayload = z.infer<typeof createQualityIssueSchema>
 export type UpdateQualityIssuePayload = z.infer<typeof updateQualityIssueSchema>
 export type QualityIssueFilter = z.infer<typeof qualityIssueFilterSchema>
@@ -97,3 +104,5 @@ export type QualityIssueProgressUpdatePayload = z.infer<typeof qualityIssueProgr
 export type QualityIssueStatusOperationPayload = z.infer<
   typeof qualityIssueStatusOperationSchema
 >
+export type QualityIssueView = z.infer<typeof qualityIssueViewSchema>
+export type QualityIssueDeletePayload = z.infer<typeof qualityIssueDeleteSchema>

@@ -89,6 +89,7 @@ POST   /api/quality-issues
 GET    /api/quality-issues/:id
 PATCH  /api/quality-issues/:id
 DELETE /api/quality-issues/:id
+POST   /api/quality-issues/:id/restore
 
 POST   /api/quality-issues/:id/details
 GET    /api/quality-issues/:id/details
@@ -101,7 +102,9 @@ operation service yang menerima transition valid. Parameter `:id` pada seluruh
 endpoint Quality Issue menerima ID numeric lama atau `QI-<uuid-v7>` public ID;
 public ID di-resolve ke integer internal sebelum repository/service dipanggil.
 Response list/create juga membawa `businessId` untuk display operasional
-format `QI-yyyymmdd-xxx`; route tetap memakai `publicId`.
+format `QI-yyyymmdd-xxx`; route tetap memakai `publicId`. List Quality Issue
+default hanya mengembalikan record aktif. Query `view=deleted` atau
+`view=all` hanya tersedia untuk Admin.
 
 ### Sample Defect
 
@@ -259,7 +262,8 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Priority: P0
   - Acceptance:
     - `audit_logs` mengikuti schema canonical.
-    - Create, update, delete, status change, rollback, dan upload dapat dicatat.
+    - Create, update, delete, restore, status change, rollback, dan upload
+      dapat dicatat.
     - Status transition dan audit event ditulis dalam transaction yang sama.
   - Test:
     - Audit event test untuk setiap action utama.
@@ -309,7 +313,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Priority: P0
   - Acceptance:
     - Read/create/update/forward transition memerlukan authenticated user.
-    - Delete dan rollback memerlukan `ADMIN`.
+    - Soft delete, restore, dan rollback memerlukan `ADMIN`.
     - Authorization diuji di server, bukan hanya melalui UI.
   - Test:
     - Authenticated non-admin ditolak untuk delete dan rollback.
@@ -691,16 +695,20 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 11. Admin Operations, Backup, dan Reliability
 
-- [ ] TASK-048 - Implement admin delete Quality Issue
+- [x] TASK-048 - Implement admin soft delete dan restore Quality Issue
   - Depends on: TASK-015, TASK-018, TASK-023, TASK-010
   - Priority: P1
   - Acceptance:
-    - Admin-only, confirmation, audit delete, cascade detail/attachment
-      metadata, dan physical file cleanup.
-    - Relasi Sample Defect dan Technical Report menjadi null.
-    - Cleanup failure tercatat dan dapat direkonsiliasi.
+    - Admin-only dan confirmation tersedia.
+    - Delete melakukan soft delete dengan `deleted_at`, actor, dan alasan.
+    - Timeline, attachment, Sample Defect, dan Technical Report tetap ada dan
+      tetap terhubung.
+    - List/detail normal menyembunyikan Quality Issue terhapus.
+    - Admin dapat melihat daftar terhapus dan melakukan restore.
+    - Delete dan restore menulis audit event yang dapat ditelusuri.
   - Test:
-    - Permission, cascade, relation set-null, file cleanup, dan failure test.
+    - Permission, soft delete, restore, visibility, relation preservation,
+      attachment preservation, dan audit test.
 
 - [ ] TASK-049 - Implement admin delete Sample Defect
   - Depends on: TASK-015, TASK-018, TASK-030, TASK-010

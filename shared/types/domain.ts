@@ -40,6 +40,9 @@ export interface QualityIssue extends AuditFields {
   detail: string
   keterangan: string | null
   status: QualityIssueStatus
+  deleted_at: IsoDateTime | null
+  deleted_by_user_id: string | null
+  deletion_reason: string | null
 }
 
 export interface CreateQualityIssueInput {

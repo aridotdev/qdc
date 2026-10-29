@@ -33,7 +33,7 @@ export const schema = {
 
 export const relations = defineRelations(schema, r => ({
   qualityIssues: {
-    // cascade delete di DB (lihat quality-issue-details.ts)
+    // Relasi tetap tersedia saat Quality Issue menjalani soft delete.
     details: r.many.qualityIssueDetails({
       from: r.qualityIssues.id,
       to: r.qualityIssueDetails.issueId

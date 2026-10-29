@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import { QUALITY_ISSUE_STATUS, type QualityIssueStatus } from '#shared'
+import {
+  QUALITY_ISSUE_STATUS,
+  USER_ROLE,
+  type QualityIssueStatus,
+  type QualityIssueView
+} from '#shared'
 import {
   type QualityIssueListItem,
   type QualityIssueSortField,
@@ -16,6 +21,7 @@ const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const NuxtLink = resolveComponent('NuxtLink')
 const toast = useToast()
+const { user } = useUserProfile()
 
 const { data, error, status: requestStatus, refresh, query, updateQuery } = useQualityIssues()
 const deleteModalOpen = ref(false)
@@ -23,6 +29,11 @@ const newModalOpen = ref(false)
 const issueToDelete = ref<QualityIssueListItem | null>(null)
 const isDeleting = ref(false)
 const deleteError = ref('')
+const deleteReason = ref('')
+const restoreModalOpen = ref(false)
+const issueToRestore = ref<QualityIssueListItem | null>(null)
+const isRestoring = ref(false)
+const restoreError = ref('')
 
 const searchInput = ref(query.value.search ?? '')
 let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -59,6 +70,22 @@ const selectedStatus = computed({
     void updateQuery({ status: value, page: 1 })
   }
 })
+
+const viewOptions = [
+  { label: 'Quality Issue aktif', value: 'active' as const },
+  { label: 'Quality Issue terhapus', value: 'deleted' as const },
+  { label: 'Semua Quality Issue', value: 'all' as const }
+]
+
+const selectedView = computed({
+  get: () => query.value.view,
+  set: (value: QualityIssueView) => {
+    void updateQuery({ view: value, page: 1 })
+  }
+})
+
+const isDeletedView = computed(() => query.value.view === 'deleted')
+const isAdmin = computed(() => user.value?.role === USER_ROLE.ADMIN)
 
 const sortLabels: Record<QualityIssueSortField, string> = {
   issueName: 'Issue',
@@ -109,12 +136,21 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'businessId',
     header: 'ID',
-    cell: ({ row }) =>
-      h(NuxtLink, {
-        to: `/quality-issues/${row.original.publicId}`,
-        class: 'inline-block hover:font-bold'
-      }, row.original.businessId ?? `#${row.original.id}`),
+    cell: ({ row }) => row.original.deletedAt
+      ? h('span', row.original.businessId ?? `#${row.original.id}`)
+      : h(NuxtLink, {
+          to: `/quality-issues/${row.original.publicId}`,
+          class: 'inline-block hover:font-bold'
+        }, row.original.businessId ?? `#${row.original.id}`),
     meta: { class: { th: 'w-[160px]', td: 'whitespace-nowrap' } }
+  },
+  {
+    accessorKey: 'deletedAt',
+    header: 'Deleted at',
+    cell: ({ row }) => row.original.deletedAt
+      ? formatIndonesianDate(row.original.deletedAt)
+      : '—',
+    meta: { class: { th: 'whitespace-nowrap', td: 'whitespace-nowrap' } }
   },
   {
     accessorKey: 'tanggalKejadian',
@@ -130,11 +166,12 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   {
     accessorKey: 'issueName',
     header: sortableHeader('issueName'),
-    cell: ({ row }) =>
-      h(NuxtLink, {
-        to: `/quality-issues/${row.original.publicId}`,
-        class: 'hover:underline'
-      }, row.original.issueName),
+    cell: ({ row }) => row.original.deletedAt
+      ? h('span', row.original.issueName)
+      : h(NuxtLink, {
+          to: `/quality-issues/${row.original.publicId}`,
+          class: 'hover:underline'
+        }, row.original.issueName),
     meta: { class: { th: 'w-[45%]', td: 'min-w-0 text-primary' } }
   },
   {
@@ -181,8 +218,34 @@ const columns: TableColumn<QualityIssueListItem>[] = [
   }
 ]
 
-function getRowItems(row: Row<QualityIssueListItem>) {
-  return [
+interface IssueActionItem {
+  type?: 'label'
+  label: string
+  icon?: string
+  color?: 'error'
+  onSelect?: () => void
+}
+
+function getRowItems(row: Row<QualityIssueListItem>): IssueActionItem[] {
+  if (row.original.deletedAt) {
+    return [
+      {
+        type: 'label',
+        label: 'Actions'
+      },
+      {
+        label: 'Restore Issue',
+        icon: 'i-lucide-rotate-ccw',
+        onSelect() {
+          issueToRestore.value = row.original
+          restoreError.value = ''
+          restoreModalOpen.value = true
+        }
+      }
+    ]
+  }
+
+  const items: IssueActionItem[] = [
     {
       type: 'label',
       label: 'Actions'
@@ -194,17 +257,23 @@ function getRowItems(row: Row<QualityIssueListItem>) {
         navigateTo(`/quality-issues/${row.original.publicId}`)
       }
     },
-    {
-      label: 'Delete Issue',
+  ]
+
+  if (isAdmin.value) {
+    items.push({
+      label: 'Archive Issue',
       color: 'error',
       icon: 'i-lucide-trash-2',
       onSelect() {
         issueToDelete.value = row.original
         deleteError.value = ''
+        deleteReason.value = ''
         deleteModalOpen.value = true
       }
-    }
-  ]
+    })
+  }
+
+  return items
 }
 
 async function confirmDelete() {
@@ -214,16 +283,39 @@ async function confirmDelete() {
   deleteError.value = ''
   try {
     await $fetch(`/api/quality-issues/${encodeURIComponent(issueToDelete.value.publicId)}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      body: deleteReason.value.trim() ? { reason: deleteReason.value.trim() } : {}
     })
     deleteModalOpen.value = false
-    toast.add({ title: 'Issue deleted', description: 'Quality Issue berhasil dihapus.', color: 'success' })
+    toast.add({ title: 'Issue diarsipkan', description: 'Quality Issue berhasil di-soft delete.', color: 'success' })
     await refresh()
   } catch (deleteRequestError: unknown) {
     const payload = deleteRequestError as { data?: { message?: string } }
     deleteError.value = payload.data?.message ?? 'Quality Issue gagal dihapus.'
   } finally {
     isDeleting.value = false
+  }
+}
+
+async function confirmRestore() {
+  if (!issueToRestore.value || isRestoring.value) return
+
+  isRestoring.value = true
+  restoreError.value = ''
+
+  try {
+    await $fetch(`/api/quality-issues/${encodeURIComponent(issueToRestore.value.publicId)}/restore`, {
+      method: 'POST'
+    })
+    restoreModalOpen.value = false
+    issueToRestore.value = null
+    toast.add({ title: 'Issue dipulihkan', description: 'Quality Issue kembali aktif.', color: 'success' })
+    await refresh()
+  } catch (restoreRequestError: unknown) {
+    const payload = restoreRequestError as { data?: { error?: { message?: string }, message?: string } }
+    restoreError.value = payload.data?.error?.message ?? payload.data?.message ?? 'Quality Issue gagal dipulihkan.'
+  } finally {
+    isRestoring.value = false
   }
 }
 
@@ -241,12 +333,20 @@ const errorMessage = computed(() => {
 <template>
   <UDashboardPanel id="quality-issues">
     <template #header>
-      <UDashboardNavbar title="Quality Issues">
+      <UDashboardNavbar :title="isDeletedView ? 'Deleted Quality Issues' : 'Quality Issues'">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <USelect
+            v-model="selectedView"
+            :items="viewOptions"
+            value-key="value"
+            class="min-w-52"
+            aria-label="Tampilan Quality Issue"
+          />
           <UButton
+            v-if="!isDeletedView"
             icon="i-lucide-plus"
             label="New Quality Issue"
             @click="newModalOpen = true"
@@ -302,7 +402,9 @@ const errorMessage = computed(() => {
           :empty="
             query.search || query.status
               ? 'Tidak ada Quality Issue yang sesuai.'
-              : 'Belum ada Quality Issue.'
+              : isDeletedView
+                ? 'Belum ada Quality Issue yang dihapus.'
+                : 'Belum ada Quality Issue.'
           "
           :ui="{
             base: 'table-auto border-separate border-spacing-0',
@@ -331,8 +433,8 @@ const errorMessage = computed(() => {
 
   <UModal
     v-model:open="deleteModalOpen"
-    title="Delete Issue"
-    :description="`Hapus ${issueToDelete?.businessId ?? 'Quality Issue'}? Tindakan ini tidak dapat dibatalkan.`"
+    title="Archive Issue"
+    :description="`Arsipkan ${issueToDelete?.businessId ?? 'Quality Issue'}? Data tetap dapat dipulihkan oleh Admin.`"
   >
     <template #body>
       <div class="space-y-4">
@@ -340,9 +442,18 @@ const errorMessage = computed(() => {
           v-if="deleteError"
           color="error"
           variant="subtle"
-          title="Delete gagal"
+          title="Archive gagal"
           :description="deleteError"
         />
+        <UFormField label="Alasan penghapusan (opsional)">
+          <UTextarea
+            v-model="deleteReason"
+            class="w-full"
+            :rows="3"
+            placeholder="Contoh: Duplikasi laporan"
+            :disabled="isDeleting"
+          />
+        </UFormField>
         <div class="flex justify-end gap-2">
           <UButton
             label="Batal"
@@ -352,11 +463,47 @@ const errorMessage = computed(() => {
             @click="deleteModalOpen = false"
           />
           <UButton
-            label="Delete Issue"
+            label="Archive Issue"
             color="error"
             :loading="isDeleting"
             :disabled="isDeleting"
             @click="confirmDelete"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="restoreModalOpen"
+    title="Restore Issue"
+    :description="`Pulihkan ${issueToRestore?.businessId ?? 'Quality Issue'}? Data dan relasinya akan kembali ke daftar aktif.`"
+    :dismissible="!isRestoring"
+    :close="!isRestoring"
+  >
+    <template #body>
+      <div class="space-y-4">
+        <UAlert
+          v-if="restoreError"
+          color="error"
+          variant="subtle"
+          title="Restore gagal"
+          :description="restoreError"
+        />
+        <div class="flex justify-end gap-2">
+          <UButton
+            label="Batal"
+            color="neutral"
+            variant="outline"
+            :disabled="isRestoring"
+            @click="restoreModalOpen = false"
+          />
+          <UButton
+            label="Restore Issue"
+            color="primary"
+            :loading="isRestoring"
+            :disabled="isRestoring"
+            @click="confirmRestore"
           />
         </div>
       </div>

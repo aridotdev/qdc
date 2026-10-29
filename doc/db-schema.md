@@ -34,6 +34,9 @@ Table: `quality_issues`
 | detail | text | NOT NULL | Deskripsi masalah |
 | keterangan | text | NULL | Catatan tambahan |
 | status | text | NOT NULL, DEFAULT `OPEN` | `OPEN`, `IN_PROGRESS`, `MONITORING`, `CLOSED` |
+| deleted_at | text | NULL | Timestamp soft delete; NULL berarti aktif |
+| deleted_by_user_id | text | NULL | Actor soft delete terakhir |
+| deletion_reason | text | NULL | Alasan soft delete |
 | created_at | text | NOT NULL | Timestamp audit |
 | updated_at | text | NOT NULL | Timestamp audit |
 | created_by_user_id | text | NOT NULL | Actor pembuat |
@@ -47,6 +50,7 @@ Indexes:
 - `notification_number`
 - `model_name`
 - `tanggal_kejadian`
+- `deleted_at`
 
 Relasi:
 
@@ -55,6 +59,10 @@ Relasi:
 - Satu Quality Issue dapat direferensikan oleh beberapa Technical Report.
 - Technical Report yang merekam improvement Quality Issue bersifat optional;
   timeline Quality Issue tetap menjadi tempat pencatatan progress operasional.
+- Soft delete tidak menghapus row, timeline, attachment, atau relasi domain.
+- Record dengan `deleted_at` non-NULL disembunyikan dari query normal.
+- Restore mengosongkan `deleted_at`, `deleted_by_user_id`, dan
+  `deletion_reason`; riwayat delete/restore tetap berada di `audit_logs`.
 
 ## 3. Quality Issue Detail
 
@@ -246,7 +254,7 @@ Table: `audit_logs`
 | id | integer | PK | ID audit |
 | entity_type | text | NOT NULL | Domain entity |
 | entity_id | integer | NOT NULL | ID entity |
-| action | text | NOT NULL | `CREATE`, `UPDATE`, `DELETE`, `STATUS_CHANGE`, `ROLLBACK`, `UPLOAD` |
+| action | text | NOT NULL | `CREATE`, `UPDATE`, `DELETE`, `RESTORE`, `STATUS_CHANGE`, `ROLLBACK`, `UPLOAD` |
 | from_status | text | NULL | Status sebelum perubahan |
 | to_status | text | NULL | Status sesudah perubahan |
 | metadata_json | text | NULL | Metadata non-sensitive |
@@ -283,11 +291,11 @@ yang belum melewati service khusus.
 
 ## 9. Referential Integrity dan Transaction
 
-- `quality_issues -> quality_issue_details`: cascade delete.
-- `quality_issues -> sample_defects`: set null.
-- `quality_issues -> technical_reports`: set null.
-- Detail/sample/report -> attachment: cascade metadata deletion.
-- Penghapusan attachment harus menghapus physical file melalui service.
+- Soft delete Quality Issue tidak menjalankan cascade atau set-null karena row
+  dan seluruh relasinya dipertahankan untuk restore.
+- Hard delete Quality Issue tidak menjadi operasi domain yang tersedia.
+- Penghapusan attachment harus menghapus physical file melalui service jika
+  attachment dihapus secara terpisah.
 - Create Sample Defect batch memakai satu transaction. Jika satu part gagal,
   seluruh insert di-rollback.
 - File write dan database insert bukan atomic; service wajib melakukan cleanup

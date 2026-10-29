@@ -7,7 +7,10 @@ export function requiresAdmin(pathname: string, method: string): boolean {
   const normalizedMethod = method.toUpperCase()
 
   return normalizedMethod === 'DELETE'
-    || (normalizedMethod === 'POST' && normalizedPathname.endsWith('/rollback'))
+    || (normalizedMethod === 'POST' && (
+      normalizedPathname.endsWith('/rollback')
+      || normalizedPathname.endsWith('/restore')
+    ))
 }
 
 export function requireAdmin(actor: AuthActor): void {

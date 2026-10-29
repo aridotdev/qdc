@@ -46,7 +46,8 @@ dan bukti pendukung tidak memiliki lifecycle yang jelas.
   Quality Issue.
 - Server-side search, filter, sorting whitelist, dan pagination.
 - Export Excel serta PDF untuk data penuh atau hasil filter.
-- Admin-only delete, rollback, backup, retention, integrity check, dan restore.
+- Admin-only soft delete, restore, rollback, backup, retention, integrity
+  check, dan backup/restore database.
 - Unit test, integration test, E2E critical flow, build, dan smoke test.
 
 ### 3.2 Out of Scope
@@ -87,6 +88,13 @@ dicatat pada timeline Quality Issue. Jika improvement tersebut dituangkan
 dalam Technical Report, report dapat dikaitkan ke Quality Issue. Satu Quality
 Issue dapat memiliki beberapa Technical Report terkait, dan Quality Issue
 tidak wajib memiliki Technical Report.
+
+Penghapusan Quality Issue menggunakan soft delete. Operasi delete hanya
+menandai record dengan waktu, actor, dan metadata penghapusan; data Quality
+Issue, timeline, attachment, Sample Defect, dan Technical Report tetap
+tersimpan. Quality Issue terhapus tidak tampil pada daftar dan detail normal.
+Admin dapat membuka daftar terhapus, memulihkan record, dan melihat riwayat
+delete/restore melalui audit log.
 
 Status internal yang canonical:
 
