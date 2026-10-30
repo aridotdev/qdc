@@ -71,10 +71,23 @@ describe('quality issue repository', () => {
       updatedByUserId: 'user-2'
     })
 
-    expect(await repository.delete(created.id)).toMatchObject({ id: created.id })
+    const deleted = await repository.softDelete(created.id, {
+      deletedAt: now,
+      deletedByUserId: 'admin-1',
+      deletionReason: 'Duplicate record',
+      updatedAt: now,
+      updatedByUserId: 'admin-1'
+    })
+    expect(deleted).toMatchObject({ id: created.id, deletedByUserId: 'admin-1' })
     expect(await repository.findById(created.id)).toBeUndefined()
     expect(await repository.update(created.id, { detail: 'No row' })).toBeUndefined()
-    expect(await repository.delete(created.id)).toBeUndefined()
+    expect(await repository.restore(created.id, now, 'admin-1')).toMatchObject({
+      id: created.id,
+      deletedAt: null,
+      deletionReason: null
+    })
+    expect(await repository.findById(created.id)).toMatchObject({ id: created.id })
+    await repository.hardDelete(created.id)
   })
 
   it('filters, searches, sorts, paginates, and returns total count', async () => {

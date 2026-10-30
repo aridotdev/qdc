@@ -56,8 +56,9 @@ Alurnya:
 2. Menjalankan backfill public ID agar schema berada pada bentuk final.
 3. Membuat akun admin development melalui Better Auth agar password di-hash
    oleh provider auth.
-4. Membuat contoh Quality Issue, timeline, Sample Defect, Technical Report,
-   dan audit log.
+4. Membuat contoh Quality Issue beserta timeline improvement, Sample Defect,
+   Technical Report standalone dari improvement internal produksi, Technical
+   Report yang terhubung ke Quality Issue, dan audit log.
 5. Menjalankan insert data terkait dalam satu transaction.
 6. Mengecek identifier seed agar command dapat dijalankan ulang tanpa membuat
    duplikat.

@@ -479,7 +479,7 @@ describe('Quality Issue service', () => {
       .rejects.toThrow('Detail awal Quality Issue tidak dapat dihapus.')
   })
 
-  it('deletes an issue, its timeline attachments, and physical files', async () => {
+  it('soft deletes an issue while preserving timeline attachments and physical files', async () => {
     const service = createService()
     const created = await service.create({
       issueName: 'Delete issue',
@@ -500,17 +500,36 @@ describe('Quality Issue service', () => {
       .from(attachments)
       .where(eq(attachments.id, created.attachmentIds[0]!))
 
-    await service.remove(created.issueId, { actorUserId })
+    await service.remove(created.issueId, { actorUserId }, { reason: 'Duplicate issue' })
 
     expect(await database.db
       .select()
       .from(qualityIssues)
-      .where(eq(qualityIssues.id, created.issueId))).toEqual([])
+      .where(eq(qualityIssues.id, created.issueId))).toMatchObject([{
+      id: created.issueId,
+      deletedByUserId: actorUserId,
+      deletionReason: 'Duplicate issue'
+    }])
     expect(await database.db
       .select()
       .from(attachments)
-      .where(eq(attachments.id, created.attachmentIds[0]!))).toEqual([])
-    await expect(stat(join(storageRoot, attachment!.storageName)))
-      .rejects.toMatchObject({ code: 'ENOENT' })
+      .where(eq(attachments.id, created.attachmentIds[0]!))).toHaveLength(1)
+    await expect(stat(join(storageRoot, attachment!.storageName))).resolves.toBeDefined()
+
+    await service.restore(created.issueId, { actorUserId })
+    expect(await database.db
+      .select()
+      .from(qualityIssues)
+      .where(eq(qualityIssues.id, created.issueId))).toMatchObject([{
+      id: created.issueId,
+      deletedAt: null,
+      deletedByUserId: null
+    }])
+    const issueLogs = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, created.issueId))
+    expect(issueLogs.some(log => log.action === AUDIT_ACTION.DELETE)).toBe(true)
+    expect(issueLogs.some(log => log.action === AUDIT_ACTION.RESTORE)).toBe(true)
   })
 })

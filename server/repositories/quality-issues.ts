@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, like, lte, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from 'drizzle-orm'
 import type { PaginatedResponse } from '../../shared/types'
 import type { QualityIssuePagination } from '../../shared/validators/quality-issues'
 import type { createDatabase } from '../database/client'
@@ -46,8 +46,21 @@ const qualityIssueSortFields = {
   createdAt: qualityIssues.createdAt
 } as const
 
+function buildVisibilityCondition(view: QualityIssuePagination['view']) {
+  if (view === 'active') {
+    return isNull(qualityIssues.deletedAt)
+  }
+
+  if (view === 'deleted') {
+    return isNotNull(qualityIssues.deletedAt)
+  }
+
+  return undefined
+}
+
 function buildListConditions(query: QualityIssuePagination) {
   return and(
+    buildVisibilityCondition(query.view),
     query.id === undefined ? undefined : eq(qualityIssues.id, query.id),
     query.issue_id === undefined ? undefined : eq(qualityIssues.id, query.issue_id),
     query.status === undefined ? undefined : eq(qualityIssues.status, query.status),
@@ -86,28 +99,43 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     return created
   }
 
-  async function findById(id: number): Promise<QualityIssue | undefined> {
+  async function findById(
+    id: number,
+    options: { includeDeleted?: boolean } = {}
+  ): Promise<QualityIssue | undefined> {
     const [issue] = await config.db
       .select()
       .from(qualityIssues)
-      .where(eq(qualityIssues.id, id))
+      .where(and(
+        eq(qualityIssues.id, id),
+        options.includeDeleted ? undefined : isNull(qualityIssues.deletedAt)
+      ))
       .limit(1)
 
     return issue
   }
 
-  async function findByPublicId(publicId: string): Promise<QualityIssue | undefined> {
+  async function findByPublicId(
+    publicId: string,
+    options: { includeDeleted?: boolean } = {}
+  ): Promise<QualityIssue | undefined> {
     const [issue] = await config.db
       .select()
       .from(qualityIssues)
-      .where(eq(qualityIssues.publicId, publicId))
+      .where(and(
+        eq(qualityIssues.publicId, publicId),
+        options.includeDeleted ? undefined : isNull(qualityIssues.deletedAt)
+      ))
       .limit(1)
 
     return issue
   }
 
-  async function findDetailById(id: number): Promise<QualityIssueWithDetails | undefined> {
-    const issue = await findById(id)
+  async function findDetailById(
+    id: number,
+    options: { includeDeleted?: boolean } = {}
+  ): Promise<QualityIssueWithDetails | undefined> {
+    const issue = await findById(id, options)
 
     if (!issue) {
       return undefined
@@ -210,13 +238,49 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     const [updated] = await config.db
       .update(qualityIssues)
       .set(input)
-      .where(eq(qualityIssues.id, id))
+      .where(and(eq(qualityIssues.id, id), isNull(qualityIssues.deletedAt)))
       .returning()
 
     return updated
   }
 
-  async function deleteById(id: number): Promise<QualityIssue | undefined> {
+  async function softDelete(
+    id: number,
+    input: Pick<
+      QualityIssue,
+      'deletedAt' | 'deletedByUserId' | 'deletionReason' | 'updatedAt' | 'updatedByUserId'
+    >
+  ): Promise<QualityIssue | undefined> {
+    const [deleted] = await config.db
+      .update(qualityIssues)
+      .set(input)
+      .where(and(eq(qualityIssues.id, id), isNull(qualityIssues.deletedAt)))
+      .returning()
+
+    return deleted
+  }
+
+  async function restore(
+    id: number,
+    updatedAt: string,
+    updatedByUserId: string
+  ): Promise<QualityIssue | undefined> {
+    const [restored] = await config.db
+      .update(qualityIssues)
+      .set({
+        deletedAt: null,
+        deletedByUserId: null,
+        deletionReason: null,
+        updatedAt,
+        updatedByUserId
+      })
+      .where(and(eq(qualityIssues.id, id), isNotNull(qualityIssues.deletedAt)))
+      .returning()
+
+    return restored
+  }
+
+  async function hardDelete(id: number): Promise<QualityIssue | undefined> {
     const [deleted] = await config.db
       .delete(qualityIssues)
       .where(eq(qualityIssues.id, id))
@@ -235,6 +299,8 @@ export function createQualityIssueRepository(config: QualityIssueRepositoryConfi
     list,
     update,
     deleteDetail: deleteDetailById,
-    delete: deleteById
+    softDelete,
+    restore,
+    hardDelete
   }
 }

@@ -9,9 +9,10 @@
 ## 1. Ringkasan Produk
 
 QRCC Data Center adalah aplikasi web lokal untuk menjadi single source of truth
-atas quality issue dari pasar, sample defect, dan arsip Technical Report /
-Service Tips. Aplikasi harus memudahkan pencatatan, pelacakan progres,
-pencarian histori, attachment bukti, export, dan backup lokal.
+atas quality issue dari pasar, sample defect, dan Technical Report / Service
+Tips dari improvement internal maupun improvement yang terkait issue. Aplikasi
+harus memudahkan pencatatan, pelacakan progres, pencarian histori, attachment
+bukti, export, dan backup lokal.
 
 Pengguna operasional adalah satu akun personal. Walaupun tidak ada kebutuhan
 RBAC kompleks, server tetap membedakan operasi biasa dan operasi admin untuk
@@ -45,7 +46,8 @@ dan bukti pendukung tidak memiliki lifecycle yang jelas.
   Quality Issue.
 - Server-side search, filter, sorting whitelist, dan pagination.
 - Export Excel serta PDF untuk data penuh atau hasil filter.
-- Admin-only delete, rollback, backup, retention, integrity check, dan restore.
+- Admin-only soft delete, restore, rollback, backup, retention, integrity
+  check, dan backup/restore database.
 - Unit test, integration test, E2E critical flow, build, dan smoke test.
 
 ### 3.2 Out of Scope
@@ -80,6 +82,19 @@ dengan menyembunyikan atau menonaktifkan action yang tidak tersedia.
 
 Data minimum: nama issue, model, serial number, tanggal kejadian, nomor
 notifikasi, detail, keterangan, status, timeline progress, dan attachment.
+
+Setiap Quality Issue dapat memiliki proses improvement. Progress operasional
+dicatat pada timeline Quality Issue. Jika improvement tersebut dituangkan
+dalam Technical Report, report dapat dikaitkan ke Quality Issue. Satu Quality
+Issue dapat memiliki beberapa Technical Report terkait, dan Quality Issue
+tidak wajib memiliki Technical Report.
+
+Penghapusan Quality Issue menggunakan soft delete. Operasi delete hanya
+menandai record dengan waktu, actor, dan metadata penghapusan; data Quality
+Issue, timeline, attachment, Sample Defect, dan Technical Report tetap
+tersimpan. Quality Issue terhapus tidak tampil pada daftar dan detail normal.
+Admin dapat membuka daftar terhapus, memulihkan record, dan melihat riwayat
+delete/restore melalui audit log.
 
 Status internal yang canonical:
 
@@ -144,7 +159,11 @@ TECHNICAL_REPORT
 SERVICE_TIPS
 ```
 
-Masing-masing report dapat standalone atau dikaitkan ke satu Quality Issue.
+Technical Report dapat berasal dari improvement internal produksi atau dari
+Quality Issue yang ditemukan di market. Karena itu, masing-masing report dapat
+berdiri sendiri atau dikaitkan ke satu Quality Issue. Satu report hanya dapat
+memiliki satu Quality Issue terkait, sedangkan satu Quality Issue dapat
+memiliki beberapa report terkait.
 
 ### 5.5 Attachment
 

@@ -63,7 +63,8 @@ describe('server-side auth middleware contract', () => {
     ['DELETE', '/api/sample-defects/1'],
     ['DELETE', '/api/technical-reports/1'],
     ['DELETE', '/api/attachments/1'],
-    ['POST', '/api/sample-defects/1/rollback']
+    ['POST', '/api/sample-defects/1/rollback'],
+    ['POST', '/api/quality-issues/1/restore']
   ])('requires admin policy for %s %s', (method, pathname) => {
     expect(requiresAdmin(pathname, method)).toBe(true)
   })
@@ -87,6 +88,8 @@ describe('server-side auth middleware contract', () => {
         .toThrowError(expect.objectContaining({ statusCode: 403 }))
       expect(() => authorizeDomainRequest('/api/sample-defects/1/rollback', 'POST', actor))
         .toThrowError(expect.objectContaining({ statusCode: 403 }))
+      expect(() => authorizeDomainRequest('/api/quality-issues/1/restore', 'POST', actor))
+        .toThrowError(expect.objectContaining({ statusCode: 403 }))
     } finally {
       globalThis.createError = createError
     }
@@ -103,6 +106,8 @@ describe('server-side auth middleware contract', () => {
     expect(() => authorizeDomainRequest('/api/quality-issues/1', 'DELETE', actor))
       .not.toThrow()
     expect(() => authorizeDomainRequest('/api/sample-defects/1/rollback', 'POST', actor))
+      .not.toThrow()
+    expect(() => authorizeDomainRequest('/api/quality-issues/1/restore', 'POST', actor))
       .not.toThrow()
   })
 })

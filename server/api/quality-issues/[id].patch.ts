@@ -18,6 +18,7 @@ export default eventHandler(async (event) => {
       modelName: result.data.model_name,
       serialNumber: result.data.serial_number,
       tanggalKejadian: result.data.tanggal_kejadian,
+      usagePeriod: result.data.usage_period,
       notificationNumber: result.data.notification_number,
       detail: result.data.detail,
       keterangan: result.data.keterangan

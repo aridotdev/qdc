@@ -9,6 +9,7 @@ import {
   type QualityIssueStatus
 } from '#shared'
 import { formatIndonesianDate, formatIndonesianDateTime } from '~/utils/date'
+import QualityIssueModal from '~/components/quality-issues/NewModal.vue'
 
 interface QualityIssueAttachment {
   id: number
@@ -35,6 +36,7 @@ interface QualityIssue {
   modelName: string
   serialNumber: string
   tanggalKejadian: string
+  usagePeriod: string | null
   notificationNumber: string | null
   detail: string
   keterangan: string | null
@@ -133,6 +135,7 @@ const canForward = computed(() => nextStatus.value !== undefined && !isAwaitingF
 const canRollback = computed(() => isAdmin.value && previousStatus.value !== undefined)
 
 const progressModalOpen = ref(false)
+const issueModalOpen = ref(false)
 const progressModalMode = ref<ProgressModalMode>('CREATE')
 const editingProgressId = ref<number | null>(null)
 const progressAttachments = ref<File[]>([])
@@ -176,6 +179,32 @@ const progressModalTitle = computed(() => progressModalMode.value === 'EDIT'
 const progressModalDescription = computed(() => progressModalMode.value === 'EDIT'
   ? 'Perbarui data progress dan attachment pendukung.'
   : 'Catat action terbaru dan lampiran pendukung.')
+
+function getProgressMenuItems(detail: QualityIssueDetail) {
+  const items: Array<{
+    label: string
+    icon: string
+    color?: 'error'
+    disabled?: boolean
+    onSelect: () => void
+  }> = [{
+    label: 'Edit',
+    icon: 'i-lucide-pencil',
+    onSelect: () => openEditProgress(detail)
+  }]
+
+  if (isAdmin.value) {
+    items.push({
+      label: 'Hapus',
+      icon: 'i-lucide-trash-2',
+      color: 'error' as const,
+      disabled: isDeletingProgress.value,
+      onSelect: () => openDeleteProgress(detail)
+    })
+  }
+
+  return [items]
+}
 
 function getApiError(error: unknown, fallback: string): {
   code?: string
@@ -564,9 +593,19 @@ async function confirmStatusChange(): Promise<void> {
         <div class="grid gap-4 lg:grid-cols-3">
           <UCard>
             <template #header>
-              <h2 class="font-semibold text-highlighted">
-                Informasi Quality Issue
-              </h2>
+              <div class="flex items-center justify-between gap-2">
+                <h2 class="font-semibold text-highlighted">
+                  Informasi Quality Issue
+                </h2>
+                <UButton
+                  label="Edit"
+                  icon="i-lucide-pencil"
+                  color="neutral"
+                  variant="outline"
+                  size="sm"
+                  @click="issueModalOpen = true"
+                />
+              </div>
             </template>
 
             <dl class="grid gap-4 sm:grid-cols-2 text-sm">
@@ -584,6 +623,14 @@ async function confirmStatusChange(): Promise<void> {
                 </dt>
                 <dd class="mt-1 text-sm">
                   {{ issue.notificationNumber || '—' }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted">
+                  Usage period
+                </dt>
+                <dd class="mt-1 text-sm">
+                  {{ issue.usagePeriod || '—' }}
                 </dd>
               </div>
               <div>
@@ -818,7 +865,7 @@ async function confirmStatusChange(): Promise<void> {
               <article
                 v-for="detail in progressDetails"
                 :key="detail.id"
-                class="group grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
+                class="grid gap-2 py-2 first:pt-0 last:pb-0 md:grid-cols-[6rem_minmax(0,1fr)_6rem] md:items-start md:gap-4"
               >
                 <time class="text-xs text-muted md:pt-0.5" :datetime="detail.tanggal">
                   {{ formatIndonesianDateTime(detail.tanggal) }}
@@ -851,26 +898,18 @@ async function confirmStatusChange(): Promise<void> {
                       />
                     </UTooltip>
                   </div>
-                  <div class="flex items-center gap-1 opacity-100 transition-opacity duration-150 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+                  <UDropdownMenu
+                    :items="getProgressMenuItems(detail)"
+                    :content="{ align: 'end' }"
+                  >
                     <UButton
-                      icon="i-lucide-pencil"
+                      icon="i-lucide-ellipsis"
                       color="neutral"
                       variant="ghost"
                       size="xs"
-                      aria-label="Edit progress"
-                      @click="openEditProgress(detail)"
+                      aria-label="Aksi progress"
                     />
-                    <UButton
-                      v-if="isAdmin"
-                      icon="i-lucide-trash-2"
-                      color="error"
-                      variant="ghost"
-                      size="xs"
-                      aria-label="Hapus progress"
-                      :disabled="isDeletingProgress"
-                      @click="openDeleteProgress(detail)"
-                    />
-                  </div>
+                  </UDropdownMenu>
                 </div>
               </article>
             </div>
@@ -932,6 +971,14 @@ async function confirmStatusChange(): Promise<void> {
       </div>
     </template>
   </UModal>
+
+  <QualityIssueModal
+    v-model:open="issueModalOpen"
+    :issue="issue"
+    :existing-attachments="initialEvidence?.attachments ?? []"
+    :can-delete-attachments="isAdmin"
+    @saved="refreshData"
+  />
 
   <UModal
     v-model:open="deleteProgressModalOpen"

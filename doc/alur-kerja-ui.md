@@ -98,6 +98,16 @@ dan integrasi existing.
 6. Perubahan status, jika diminta oleh operation, hanya melalui state machine
    dan ditulis ke audit log.
 
+### 5.2.1 Improvement dan Technical Report
+
+1. Setiap Quality Issue dapat memiliki proses improvement yang dicatat sebagai
+   progress pada timeline.
+2. Jika improvement membutuhkan dokumen formal, pengguna dapat membuat
+   Technical Report dan memilih Quality Issue terkait.
+3. Satu Quality Issue dapat memiliki beberapa Technical Report terkait.
+4. Quality Issue tetap dapat selesai tanpa Technical Report jika progress
+   cukup dicatat pada timeline.
+
 ### 5.3 Status Transition
 
 Forward action:
@@ -186,7 +196,8 @@ memperbarui badge, action, timeline, dan audit state.
 1. Pengguna membuka `/technical-reports/new`.
 2. Form memuat nomor dokumen, tipe, tanggal rilis, model, issue name,
    root cause, action, improvement cutoff, reference, keterangan, optional
-   Quality Issue, dan attachment.
+   Quality Issue, dan attachment. Quality Issue tidak wajib dipilih karena
+   report dapat berasal dari improvement internal produksi.
 3. Tipe hanya `TECHNICAL_REPORT` atau `SERVICE_TIPS`.
 4. API menolak nomor dokumen duplikat dengan field error yang jelas.
 5. Service membuat report, menyimpan attachment PDF/XLSX, dan mengembalikan
@@ -194,17 +205,25 @@ memperbarui badge, action, timeline, dan audit state.
 6. Attachment menggunakan `report_id`; owner lain harus null.
    File baru memakai folder `technical-report/<tahun_laporan>/<businessId>/`.
 7. Detail menyediakan search, download/open attachment, dan relasi Quality
-   Issue bila tersedia. Pembukaan file menggunakan `/api/attachments/:id` yang
+   Issue bila tersedia. Satu Quality Issue dapat ditampilkan pada beberapa
+   Technical Report. Pembukaan file menggunakan `/api/attachments/:id` yang
    terautentikasi, bukan URL static `/uploads/...`.
 
 ## 8. Delete dan Cleanup
 
-1. Delete hanya tersedia untuk Admin dan selalu meminta konfirmasi.
-2. Server menulis audit delete sebelum mutation.
-3. Service menghapus domain row dan metadata attachment dalam transaction.
-4. Physical file dihapus setelah metadata berhasil dihapus. Jika physical
-   cleanup gagal, error dicatat untuk retry/reconciliation.
-5. Cascade database tidak boleh dianggap otomatis menghapus file fisik.
+1. Delete Quality Issue hanya tersedia untuk Admin dan selalu meminta
+   konfirmasi.
+2. Operasi delete melakukan soft delete dengan menyimpan waktu, actor, dan
+   alasan penghapusan pada Quality Issue.
+3. Server menulis audit delete sebelum menandai record terhapus.
+4. Timeline, attachment, Sample Defect, dan Technical Report tetap tersimpan
+   dan tetap memiliki relasi untuk kebutuhan restore.
+5. Quality Issue terhapus tidak tampil pada list/detail normal.
+6. Admin dapat membuka daftar terhapus dan memilih `Restore`.
+7. Restore mengosongkan metadata soft delete, menulis audit restore, dan
+   membuat Quality Issue kembali tampil pada alur normal.
+8. Soft delete tidak menghapus physical file dan tidak mengandalkan cascade
+   database.
 
 ## 9. Shared UI Components
 

@@ -35,6 +35,7 @@ export interface CreateQualityIssueServiceInput {
   modelName: string
   serialNumber: string
   tanggalKejadian: string
+  usagePeriod?: string | null
   notificationNumber?: string | null
   detail: string
   keterangan?: string | null
@@ -61,6 +62,7 @@ export type UpdateQualityIssueServiceInput = Pick<
   | 'modelName'
   | 'serialNumber'
   | 'tanggalKejadian'
+  | 'usagePeriod'
   | 'notificationNumber'
   | 'detail'
   | 'keterangan'
@@ -68,6 +70,10 @@ export type UpdateQualityIssueServiceInput = Pick<
 
 export interface QualityIssueMutationContext {
   actorUserId: string
+}
+
+export interface SoftDeleteQualityIssueInput {
+  reason?: string | null
 }
 
 export interface QualityIssueDetailMutationResult {
@@ -193,6 +199,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
         modelName: input.modelName,
         serialNumber: input.serialNumber,
         tanggalKejadian: input.tanggalKejadian,
+        usagePeriod: input.usagePeriod ?? null,
         notificationNumber: input.notificationNumber ?? null,
         detail: input.detail,
         keterangan: input.keterangan ?? null,
@@ -253,7 +260,7 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
         )
       }
     } catch (error) {
-      await createQualityIssueRepository({ db: config.db }).delete(created.issueId)
+      await createQualityIssueRepository({ db: config.db }).hardDelete(created.issueId)
       throw error
     }
   }
@@ -510,21 +517,14 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
 
   async function remove(
     issueId: number,
-    context: QualityIssueMutationContext
+    context: QualityIssueMutationContext,
+    input: SoftDeleteQualityIssueInput = {}
   ): Promise<QualityIssue> {
     const repository = createQualityIssueRepository({ db: config.db })
-    const issue = await repository.findDetailById(issueId)
+    const issue = await repository.findById(issueId)
 
     if (!issue) {
       throw new QualityIssueServiceNotFoundError(issueId)
-    }
-
-    const attachmentIds = issue.details.flatMap(detail =>
-      detail.attachments.map(attachment => attachment.id)
-    )
-
-    for (const attachmentId of attachmentIds) {
-      await config.attachments.deleteAttachment(attachmentId, context)
     }
 
     return config.db.transaction(async (transaction) => {
@@ -535,10 +535,20 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
         entityId: issueId,
         action: AUDIT_ACTION.DELETE,
         actorUserId: context.actorUserId,
+        metadata: {
+          deletedAt: now,
+          reason: input.reason ?? null
+        },
         createdAt: now
       })
 
-      const deleted = await transactionRepository.delete(issueId)
+      const deleted = await transactionRepository.softDelete(issueId, {
+        deletedAt: now,
+        deletedByUserId: context.actorUserId,
+        deletionReason: input.reason ?? null,
+        updatedAt: now,
+        updatedByUserId: context.actorUserId
+      })
 
       if (!deleted) {
         throw new QualityIssueServiceNotFoundError(issueId)
@@ -548,12 +558,50 @@ export function createQualityIssueService(config: QualityIssueServiceConfig) {
     })
   }
 
+  async function restore(
+    issueId: number,
+    context: QualityIssueMutationContext
+  ): Promise<QualityIssue> {
+    const repository = createQualityIssueRepository({ db: config.db })
+    const issue = await repository.findById(issueId, { includeDeleted: true })
+
+    if (!issue) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    if (!issue.deletedAt) {
+      throw new QualityIssueServiceNotFoundError(issueId)
+    }
+
+    return config.db.transaction(async (transaction) => {
+      const transactionRepository = createQualityIssueRepository({ db: transaction })
+      const now = clock().toISOString()
+      const restored = await transactionRepository.restore(issueId, now, context.actorUserId)
+
+      if (!restored) {
+        throw new QualityIssueServiceNotFoundError(issueId)
+      }
+
+      await recordAuditLog(transaction, {
+        entityType: AUDIT_ENTITY_TYPE.QUALITY_ISSUE,
+        entityId: issueId,
+        action: AUDIT_ACTION.RESTORE,
+        metadata: { restoredAt: now },
+        actorUserId: context.actorUserId,
+        createdAt: now
+      })
+
+      return restored
+    })
+  }
+
   return {
     create: createInitialIssue,
     addProgress,
     updateProgress,
     removeProgress,
     update,
-    remove
+    remove,
+    restore
   }
 }

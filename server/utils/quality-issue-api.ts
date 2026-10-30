@@ -42,14 +42,20 @@ export function createRuntimeQualityIssueStateMachine() {
   return createQualityIssueStateMachine({ db })
 }
 
-export async function resolveQualityIssueId(value: string | undefined): Promise<number> {
+export async function resolveQualityIssueId(
+  value: string | undefined,
+  options: { includeDeleted?: boolean } = {}
+): Promise<number> {
   const identifier = parseQualityIssueIdentifier(value)
 
   if (identifier.type === 'numeric') {
     return identifier.value
   }
 
-  const issue = await createRuntimeQualityIssueRepository().findByPublicId(identifier.value)
+  const issue = await createRuntimeQualityIssueRepository().findByPublicId(
+    identifier.value,
+    options
+  )
 
   if (!issue) {
     throw createApiError({

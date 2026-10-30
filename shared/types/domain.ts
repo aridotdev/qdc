@@ -35,10 +35,14 @@ export interface QualityIssue extends AuditFields {
   model_name: string
   serial_number: string
   tanggal_kejadian: BusinessDate
+  usage_period: string | null
   notification_number: string | null
   detail: string
   keterangan: string | null
   status: QualityIssueStatus
+  deleted_at: IsoDateTime | null
+  deleted_by_user_id: string | null
+  deletion_reason: string | null
 }
 
 export interface CreateQualityIssueInput {
@@ -46,6 +50,7 @@ export interface CreateQualityIssueInput {
   model_name: string
   serial_number: string
   tanggal_kejadian: BusinessDate
+  usage_period?: string | null
   notification_number?: string | null
   detail?: string
   keterangan?: string | null
