@@ -496,7 +496,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
 
 ## 8. Sample Defect Module
 
-- [ ] TASK-030 - Implement Sample Defect repository
+- [x] TASK-030 - Implement Sample Defect repository
   - Depends on: TASK-007, TASK-022
   - Priority: P0
   - Acceptance:
