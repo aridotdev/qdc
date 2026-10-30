@@ -256,7 +256,7 @@ function getRowItems(row: Row<QualityIssueListItem>): IssueActionItem[] {
       onSelect() {
         navigateTo(`/quality-issues/${row.original.publicId}`)
       }
-    },
+    }
   ]
 
   if (isAdmin.value) {
