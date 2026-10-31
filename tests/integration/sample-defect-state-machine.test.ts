@@ -12,8 +12,10 @@ import {
   USER_ROLE
 } from '../../shared/constants'
 import { createDatabase } from '../../server/database/client'
-import { auditLogs } from '../../server/database/schema'
+import { attachments, auditLogs } from '../../server/database/schema'
 import { createSampleDefectRepository } from '../../server/repositories/sample-defects'
+import { createAttachmentService } from '../../server/services/attachments'
+import { createFileStorage, type FileStorage } from '../../server/services/file-storage'
 import {
   createSampleDefectStateMachine,
   SampleDefectRollbackForbiddenError
@@ -28,14 +30,26 @@ describe('Sample Defect state machine service', () => {
   let stateMachine: ReturnType<typeof createSampleDefectStateMachine>
   let directory: string
   let sequence = 0
+  let photoSequence = 0
 
   beforeAll(async () => {
     directory = await mkdtemp(join(tmpdir(), 'qdc-sample-defect-state-machine-'))
     database = await createDatabase(`file:${join(directory, 'database.sqlite')}`)
     await migrate(database.db, { migrationsFolder })
     repository = createSampleDefectRepository({ db: database.db })
+    const storage = createFileStorage({
+      rootDir: join(directory, 'uploads'),
+      clock: () => now,
+      idGenerator: () => `pqa-photo-${++photoSequence}`
+    })
+    const attachmentService = createAttachmentService({
+      db: database.db,
+      storage,
+      clock: () => now
+    })
     stateMachine = createSampleDefectStateMachine({
       db: database.db,
+      attachments: attachmentService,
       clock: () => now
     })
   })
@@ -269,6 +283,114 @@ describe('Sample Defect state machine service', () => {
       fromStatus: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA,
       toStatus: SAMPLE_DEFECT_STATUS.PQA_ANALYZED
     })
+  })
+
+  it('completes PQA analysis, preserves verification, and stores an optional photo', async () => {
+    const sample = await createSample(SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA)
+
+    const analyzed = await stateMachine.pqaAnalysis(sample.id, {
+      kondisiPqa: SAMPLE_CONDITION.NDF,
+      kerusakanVerifikasi: '  Retak terkonfirmasi QRCC  ',
+      repair: '  Tidak perlu repair  ',
+      photo: {
+        fileName: 'pqa-result.png',
+        mimeType: 'image/png',
+        data: new TextEncoder().encode('pqa photo')
+      }
+    }, { actor: userActor })
+
+    expect(analyzed).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.PQA_ANALYZED,
+      kondisiPqa: SAMPLE_CONDITION.NDF,
+      repair: 'Tidak perlu repair',
+      kerusakanVerifikasi: 'Retak terkonfirmasi QRCC',
+      updatedByUserId: userActor.userId
+    })
+
+    const [photo] = await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.sampleId, sample.id))
+    expect(photo).toMatchObject({
+      fileName: 'pqa-result.png',
+      fileType: 'image/png',
+      sampleId: sample.id,
+      fileUrl: `/api/attachments/${photo?.id}`
+    })
+    const persistedSample = await repository.findById(sample.id)
+    expect(photo?.storageName).toBe(
+      `sample-defect/2026/${persistedSample?.businessId}/pqa-photo-1`
+    )
+  })
+
+  it('rejects invalid PQA condition and state without changing the sample', async () => {
+    const invalidCondition = await createSample(SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA)
+
+    await expect(stateMachine.pqaAnalysis(invalidCondition.id, {
+      kondisiPqa: 'INVALID' as never,
+      repair: 'Repair'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      field: 'kondisiPqa'
+    })
+
+    const requested = await createSample()
+    await expect(stateMachine.pqaAnalysis(requested.id, {
+      kondisiPqa: SAMPLE_CONDITION.NG,
+      repair: 'Repair'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.REQUESTED,
+      toStatus: SAMPLE_DEFECT_STATUS.RECEIVED
+    })
+
+    const unchanged = await repository.findById(requested.id)
+    expect(unchanged).toMatchObject({ status: SAMPLE_DEFECT_STATUS.REQUESTED })
+  })
+
+  it('does not change PQA state when photo attachment upload fails', async () => {
+    const failingStorage: FileStorage = {
+      rootDir: join(directory, 'uploads-failure'),
+      publicPath: '/uploads',
+      resolvePath: storageName => join(directory, 'uploads-failure', storageName),
+      write: async () => {
+        throw new Error('photo write failed')
+      },
+      remove: async () => {},
+      list: async () => []
+    }
+    const failingStateMachine = createSampleDefectStateMachine({
+      db: database.db,
+      attachments: createAttachmentService({
+        db: database.db,
+        storage: failingStorage,
+        clock: () => now
+      }),
+      clock: () => now
+    })
+    const sample = await createSample(SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA)
+
+    await expect(failingStateMachine.pqaAnalysis(sample.id, {
+      kondisiPqa: SAMPLE_CONDITION.NG,
+      repair: 'Ganti housing',
+      photo: {
+        fileName: 'pqa-failure.png',
+        mimeType: 'image/png',
+        data: new TextEncoder().encode('pqa photo')
+      }
+    }, { actor: userActor })).rejects.toThrow('photo write failed')
+
+    expect(await repository.findById(sample.id)).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA
+    })
+    expect(await database.db
+      .select()
+      .from(attachments)
+      .where(eq(attachments.sampleId, sample.id))).toEqual([])
+    expect(await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, sample.id))).toEqual([])
   })
 
   it('moves through every canonical state and records each audit event', async () => {
