@@ -4,10 +4,16 @@ import {
   createSampleDefectBatchSchema,
   createTechnicalReportSchema,
   formatValidationError,
+  handoverSampleDefectSchema,
+  pqaAnalysisSampleDefectSchema,
   qualityIssuePaginationSchema,
   qualityIssueProgressSchema,
   qualityIssueProgressUpdateSchema,
   qualityIssueStatusOperationSchema,
+  receiveSampleDefectSchema,
+  rollbackSampleDefectSchema,
+  supplierAnalysisSampleDefectSchema,
+  verifySampleDefectSchema,
   updateQualityIssueSchema
 } from '#shared'
 
@@ -128,5 +134,31 @@ describe('Zod validation contracts', () => {
     })
     expect(qualityIssueStatusOperationSchema.safeParse({ operation: 'CLOSED' }).success)
       .toBe(false)
+  })
+
+  it('validates Sample Defect operation payloads', () => {
+    expect(receiveSampleDefectSchema.parse({
+      tanggal_terima: '2026-10-03T00:00:00.000Z',
+      keterangan_terima: 'Diterima gudang'
+    })).toMatchObject({ tanggal_terima: '2026-10-03T00:00:00.000Z' })
+    expect(verifySampleDefectSchema.parse({
+      kerusakan_verifikasi: 'Retak terkonfirmasi'
+    })).toEqual({ kerusakan_verifikasi: 'Retak terkonfirmasi' })
+    expect(handoverSampleDefectSchema.parse({
+      nama_penerima_pqa: 'PQA User',
+      tanggal_serah_pqa: '2026-10-03T01:00:00.000Z'
+    })).toHaveProperty('nama_penerima_pqa', 'PQA User')
+    expect(pqaAnalysisSampleDefectSchema.parse({
+      kondisi_pqa: 'NG',
+      kerusakan_verifikasi: 'Retak',
+      repair: 'Ganti housing'
+    })).toMatchObject({ kondisi_pqa: 'NG' })
+    expect(supplierAnalysisSampleDefectSchema.parse({
+      hasil_analisa_supplier: 'Material tidak sesuai'
+    })).toEqual({ hasil_analisa_supplier: 'Material tidak sesuai' })
+    expect(rollbackSampleDefectSchema.parse({})).toEqual({})
+    expect(supplierAnalysisSampleDefectSchema.safeParse({
+      hasil_analisa_supplier: ' '
+    }).success).toBe(false)
   })
 })

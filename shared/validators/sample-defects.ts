@@ -37,6 +37,34 @@ export const createSampleDefectBatchSchema = z.strictObject({
 
 export const createSampleDefectSchema = createSampleDefectBatchSchema
 
+export const receiveSampleDefectSchema = z.strictObject({
+  tanggal_terima: isoDateTimeSchema,
+  keterangan_terima: optionalNullableText('Keterangan penerimaan')
+})
+
+export const verifySampleDefectSchema = z.strictObject({
+  kerusakan_verifikasi: requiredText('Hasil verifikasi')
+})
+
+export const handoverSampleDefectSchema = z.strictObject({
+  nama_penerima_pqa: requiredText('Nama penerima PQA'),
+  tanggal_serah_pqa: isoDateTimeSchema
+})
+
+export const pqaAnalysisSampleDefectSchema = z.strictObject({
+  kondisi_pqa: sampleConditionSchema,
+  kerusakan_verifikasi: optionalText('Hasil verifikasi'),
+  repair: requiredText('Repair')
+})
+
+export const supplierAnalysisSampleDefectSchema = z.strictObject({
+  hasil_analisa_supplier: requiredText('Hasil analisa supplier')
+})
+
+export const rollbackSampleDefectSchema = z.strictObject({
+  reason: optionalNullableText('Alasan rollback')
+})
+
 export const updateSampleDefectSchema = nonEmptyUpdateSchema(
   z.strictObject({
     issue_id: queryPositiveIdSchema.nullable().optional(),
@@ -68,6 +96,12 @@ export const sampleDefectPaginationSchema = z.strictObject({
 export const sampleDefectListQuerySchema = sampleDefectPaginationSchema
 
 export type CreateSampleDefectBatchPayload = z.infer<typeof createSampleDefectBatchSchema>
+export type ReceiveSampleDefectPayload = z.infer<typeof receiveSampleDefectSchema>
+export type VerifySampleDefectPayload = z.infer<typeof verifySampleDefectSchema>
+export type HandoverSampleDefectPayload = z.infer<typeof handoverSampleDefectSchema>
+export type PqaAnalysisSampleDefectPayload = z.infer<typeof pqaAnalysisSampleDefectSchema>
+export type SupplierAnalysisSampleDefectPayload = z.infer<typeof supplierAnalysisSampleDefectSchema>
+export type RollbackSampleDefectPayload = z.infer<typeof rollbackSampleDefectSchema>
 export type UpdateSampleDefectPayload = z.infer<typeof updateSampleDefectSchema>
 export type SampleDefectFilter = z.infer<typeof sampleDefectFilterSchema>
 export type SampleDefectPagination = z.infer<typeof sampleDefectPaginationSchema>
