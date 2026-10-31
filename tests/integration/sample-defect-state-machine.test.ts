@@ -393,6 +393,64 @@ describe('Sample Defect state machine service', () => {
       .where(eq(auditLogs.entityId, sample.id))).toEqual([])
   })
 
+  it('completes supplier analysis per part and records an audit event', async () => {
+    const sample = await createSample(SAMPLE_DEFECT_STATUS.PQA_ANALYZED)
+
+    const completed = await stateMachine.supplierAnalysis(sample.id, {
+      hasilAnalisaSupplier: '  Material tidak sesuai spesifikasi  '
+    }, { actor: userActor })
+
+    expect(completed).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.SUPPLIER_ANALYZED,
+      hasilAnalisaSupplier: 'Material tidak sesuai spesifikasi',
+      updatedByUserId: userActor.userId
+    })
+
+    const [event] = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, sample.id))
+
+    expect(event).toMatchObject({
+      action: AUDIT_ACTION.STATUS_CHANGE,
+      fromStatus: SAMPLE_DEFECT_STATUS.PQA_ANALYZED,
+      toStatus: SAMPLE_DEFECT_STATUS.SUPPLIER_ANALYZED,
+      actorUserId: userActor.userId
+    })
+    expect(JSON.parse(event?.metadataJson ?? '{}')).toEqual({ operation: 'SUPPLIER_ANALYSIS' })
+  })
+
+  it('rejects missing, invalid-state, and repeated supplier analysis', async () => {
+    const missingConclusion = await createSample(SAMPLE_DEFECT_STATUS.PQA_ANALYZED)
+    await expect(stateMachine.supplierAnalysis(missingConclusion.id, {
+      hasilAnalisaSupplier: ' '
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      field: 'hasilAnalisaSupplier'
+    })
+
+    const handedOver = await createSample(SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA)
+    await expect(stateMachine.supplierAnalysis(handedOver.id, {
+      hasilAnalisaSupplier: 'Belum dapat dianalisis'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA,
+      toStatus: SAMPLE_DEFECT_STATUS.PQA_ANALYZED
+    })
+
+    const repeated = await createSample(SAMPLE_DEFECT_STATUS.PQA_ANALYZED)
+    await stateMachine.supplierAnalysis(repeated.id, {
+      hasilAnalisaSupplier: 'Kesimpulan pertama'
+    }, { actor: userActor })
+    await expect(stateMachine.supplierAnalysis(repeated.id, {
+      hasilAnalisaSupplier: 'Kesimpulan kedua'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.SUPPLIER_ANALYZED,
+      toStatus: null
+    })
+  })
+
   it('moves through every canonical state and records each audit event', async () => {
     const sample = await createSample()
 
