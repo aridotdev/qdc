@@ -135,6 +135,69 @@ describe('Sample Defect state machine service', () => {
     })
   })
 
+  it('verifies a received sample, stores the result, and records an audit event', async () => {
+    const sample = await createSample()
+
+    await stateMachine.receive(sample.id, {
+      tanggalTerima: '2026-10-31T08:00:00.000Z'
+    }, { actor: userActor })
+
+    const verified = await stateMachine.verify(sample.id, {
+      kerusakanVerifikasi: '  Retak pada housing  '
+    }, { actor: userActor })
+
+    expect(verified).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.QRCC_VERIFIED,
+      kerusakanVerifikasi: 'Retak pada housing',
+      updatedByUserId: userActor.userId
+    })
+
+    const events = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, sample.id))
+
+    expect(events).toHaveLength(2)
+    expect(events[1]).toMatchObject({
+      action: AUDIT_ACTION.STATUS_CHANGE,
+      fromStatus: SAMPLE_DEFECT_STATUS.RECEIVED,
+      toStatus: SAMPLE_DEFECT_STATUS.QRCC_VERIFIED,
+      actorUserId: userActor.userId
+    })
+    expect(JSON.parse(events[1]?.metadataJson ?? '{}')).toEqual({ operation: 'VERIFY' })
+  })
+
+  it('rejects verification with a missing result or an invalid state', async () => {
+    const missingResult = await createSample(SAMPLE_DEFECT_STATUS.RECEIVED)
+
+    await expect(stateMachine.verify(missingResult.id, {
+      kerusakanVerifikasi: ' '
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      field: 'kerusakanVerifikasi'
+    })
+
+    const requested = await createSample()
+    await expect(stateMachine.verify(requested.id, {
+      kerusakanVerifikasi: 'Tidak boleh diverifikasi'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.REQUESTED,
+      toStatus: SAMPLE_DEFECT_STATUS.RECEIVED
+    })
+
+    const verified = await stateMachine.verify(missingResult.id, {
+      kerusakanVerifikasi: 'Retak pada housing'
+    }, { actor: userActor })
+    await expect(stateMachine.verify(verified.id, {
+      kerusakanVerifikasi: 'Hasil kedua'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.QRCC_VERIFIED,
+      toStatus: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA
+    })
+  })
+
   it('moves through every canonical state and records each audit event', async () => {
     const sample = await createSample()
 
