@@ -579,7 +579,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Required conclusion, valid transition, repeated operation, dan audit test.
 
-- [ ] TASK-038 - Implement Sample Defect API
+- [x] TASK-038 - Implement Sample Defect API
   - Depends on: TASK-013, TASK-021, TASK-032, TASK-033, TASK-034, TASK-035,
     TASK-036, TASK-037
   - Priority: P0
