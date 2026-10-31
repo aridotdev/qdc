@@ -549,7 +549,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid dan invalid state/field test.
 
-- [ ] TASK-035 - Implement PQA handover operation
+- [x] TASK-035 - Implement PQA handover operation
   - Depends on: TASK-031
   - Priority: P0
   - Acceptance:

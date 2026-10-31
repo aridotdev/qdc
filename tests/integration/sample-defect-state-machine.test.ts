@@ -198,6 +198,79 @@ describe('Sample Defect state machine service', () => {
     })
   })
 
+  it('hands over a verified sample, stores the PIC and timestamp, and records an audit event', async () => {
+    const sample = await createSample(SAMPLE_DEFECT_STATUS.QRCC_VERIFIED)
+
+    const handedOver = await stateMachine.handover(sample.id, {
+      namaPenerimaPqa: '  PQA User  ',
+      tanggalSerahPqa: ' 2026-10-31T09:00:00.000Z '
+    }, { actor: userActor })
+
+    expect(handedOver).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA,
+      namaPenerimaPqa: 'PQA User',
+      tanggalSerahPqa: '2026-10-31T09:00:00.000Z',
+      updatedByUserId: userActor.userId
+    })
+
+    const [event] = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, sample.id))
+
+    expect(event).toMatchObject({
+      action: AUDIT_ACTION.STATUS_CHANGE,
+      fromStatus: SAMPLE_DEFECT_STATUS.QRCC_VERIFIED,
+      toStatus: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA,
+      actorUserId: userActor.userId
+    })
+    expect(JSON.parse(event?.metadataJson ?? '{}')).toEqual({ operation: 'HANDOVER' })
+  })
+
+  it('rejects handover with missing fields, invalid state, or repeated operation', async () => {
+    const missingPic = await createSample(SAMPLE_DEFECT_STATUS.QRCC_VERIFIED)
+    await expect(stateMachine.handover(missingPic.id, {
+      namaPenerimaPqa: ' ',
+      tanggalSerahPqa: '2026-10-31T09:00:00.000Z'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      field: 'namaPenerimaPqa'
+    })
+
+    const missingTimestamp = await createSample(SAMPLE_DEFECT_STATUS.QRCC_VERIFIED)
+    await expect(stateMachine.handover(missingTimestamp.id, {
+      namaPenerimaPqa: 'PQA User',
+      tanggalSerahPqa: ' '
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.VALIDATION_ERROR,
+      field: 'tanggalSerahPqa'
+    })
+
+    const requested = await createSample()
+    await expect(stateMachine.handover(requested.id, {
+      namaPenerimaPqa: 'PQA User',
+      tanggalSerahPqa: '2026-10-31T09:00:00.000Z'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.REQUESTED,
+      toStatus: SAMPLE_DEFECT_STATUS.RECEIVED
+    })
+
+    const repeated = await createSample(SAMPLE_DEFECT_STATUS.QRCC_VERIFIED)
+    await stateMachine.handover(repeated.id, {
+      namaPenerimaPqa: 'PQA User',
+      tanggalSerahPqa: '2026-10-31T09:00:00.000Z'
+    }, { actor: userActor })
+    await expect(stateMachine.handover(repeated.id, {
+      namaPenerimaPqa: 'PQA User 2',
+      tanggalSerahPqa: '2026-10-31T10:00:00.000Z'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA,
+      toStatus: SAMPLE_DEFECT_STATUS.PQA_ANALYZED
+    })
+  })
+
   it('moves through every canonical state and records each audit event', async () => {
     const sample = await createSample()
 
