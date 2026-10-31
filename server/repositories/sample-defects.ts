@@ -19,7 +19,24 @@ type SampleDefectSortField = keyof typeof sampleDefectSortFields
 
 export type CreateSampleDefectInput = typeof sampleDefects.$inferInsert
 export type UpdateSampleDefectInput = Partial<
-  Omit<SampleDefect, 'id' | 'publicId' | 'createdAt' | 'createdByUserId'>
+  Omit<SampleDefect, 'id' | 'publicId' | 'status' | 'createdAt' | 'createdByUserId'>
+>
+
+export type SampleDefectStatusUpdate = Pick<
+  SampleDefect,
+  'status' | 'updatedAt' | 'updatedByUserId'
+> & Partial<
+  Pick<
+    SampleDefect,
+    | 'tanggalTerima'
+    | 'keteranganTerima'
+    | 'namaPenerimaPqa'
+    | 'tanggalSerahPqa'
+    | 'kerusakanVerifikasi'
+    | 'kondisiPqa'
+    | 'repair'
+    | 'hasilAnalisaSupplier'
+  >
 >
 
 export interface SampleDefectRepositoryConfig {
@@ -157,10 +174,32 @@ export function createSampleDefectRepository(
     id: number,
     input: UpdateSampleDefectInput
   ): Promise<SampleDefect | undefined> {
+    const safeInput = Object.fromEntries(
+      Object.entries(input).filter(([key]) => key !== 'status')
+    ) as UpdateSampleDefectInput
+    const [updated] = await config.db
+      .update(sampleDefects)
+      .set(safeInput)
+      .where(eq(sampleDefects.id, id))
+      .returning()
+
+    return updated
+  }
+
+  async function updateStatus(
+    id: number,
+    currentStatus: SampleDefect['status'],
+    currentUpdatedAt: string,
+    input: SampleDefectStatusUpdate
+  ): Promise<SampleDefect | undefined> {
     const [updated] = await config.db
       .update(sampleDefects)
       .set(input)
-      .where(eq(sampleDefects.id, id))
+      .where(and(
+        eq(sampleDefects.id, id),
+        eq(sampleDefects.status, currentStatus),
+        eq(sampleDefects.updatedAt, currentUpdatedAt)
+      ))
       .returning()
 
     return updated
@@ -183,6 +222,7 @@ export function createSampleDefectRepository(
     findByBatchId,
     list,
     update,
+    updateStatus,
     hardDelete
   }
 }

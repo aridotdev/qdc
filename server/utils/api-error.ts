@@ -44,9 +44,20 @@ interface ApiErrorInput {
 interface CodedError {
   code?: unknown
   message?: unknown
+  fieldErrors?: unknown
   data?: unknown
   status?: unknown
   statusCode?: unknown
+}
+
+function isFieldErrors(value: unknown): value is FieldErrors {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  return Object.values(value).every(errors => (
+    Array.isArray(errors) && errors.every(error => typeof error === 'string')
+  ))
 }
 
 function isErrorCode(value: unknown): value is ErrorCode {
@@ -116,7 +127,10 @@ function getApiErrorBody(error: unknown): ApiErrorBody | undefined {
       code: codedError.code,
       message: typeof codedError.message === 'string'
         ? codedError.message
-        : DEFAULT_MESSAGES[codedError.code]
+        : DEFAULT_MESSAGES[codedError.code],
+      ...(isFieldErrors(codedError.fieldErrors)
+        ? { fieldErrors: codedError.fieldErrors }
+        : {})
     }
   }
 
