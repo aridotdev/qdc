@@ -69,6 +69,72 @@ describe('Sample Defect state machine service', () => {
   const userActor = { userId: 'user-1', role: USER_ROLE.USER }
   const adminActor = { userId: 'admin-1', role: USER_ROLE.ADMIN }
 
+  it('receives a requested sample, stores receipt data, and records an audit event', async () => {
+    const sample = await createSample()
+
+    const received = await stateMachine.receive(sample.id, {
+      tanggalTerima: '2026-10-31T04:00:00.000Z',
+      keteranganTerima: 'Diterima lengkap oleh gudang'
+    }, { actor: userActor })
+
+    expect(received).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.RECEIVED,
+      tanggalTerima: '2026-10-31T04:00:00.000Z',
+      keteranganTerima: 'Diterima lengkap oleh gudang',
+      updatedByUserId: userActor.userId
+    })
+
+    const [event] = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, sample.id))
+
+    expect(event).toMatchObject({
+      action: AUDIT_ACTION.STATUS_CHANGE,
+      fromStatus: SAMPLE_DEFECT_STATUS.REQUESTED,
+      toStatus: SAMPLE_DEFECT_STATUS.RECEIVED,
+      actorUserId: userActor.userId
+    })
+    expect(JSON.parse(event?.metadataJson ?? '{}')).toEqual({ operation: 'RECEIVE' })
+  })
+
+  it('rejects repeated receive and receive from a non-requested state', async () => {
+    const sample = await createSample()
+
+    await stateMachine.receive(sample.id, {
+      tanggalTerima: '2026-10-31T05:00:00.000Z'
+    }, { actor: userActor })
+
+    await expect(stateMachine.receive(sample.id, {
+      tanggalTerima: '2026-10-31T06:00:00.000Z'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.RECEIVED,
+      toStatus: SAMPLE_DEFECT_STATUS.QRCC_VERIFIED
+    })
+
+    const unchanged = await repository.findById(sample.id)
+    expect(unchanged).toMatchObject({
+      status: SAMPLE_DEFECT_STATUS.RECEIVED,
+      tanggalTerima: '2026-10-31T05:00:00.000Z'
+    })
+
+    const events = await database.db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, sample.id))
+    expect(events).toHaveLength(1)
+
+    const alreadyVerified = await createSample(SAMPLE_DEFECT_STATUS.QRCC_VERIFIED)
+    await expect(stateMachine.receive(alreadyVerified.id, {
+      tanggalTerima: '2026-10-31T07:00:00.000Z'
+    }, { actor: userActor })).rejects.toMatchObject({
+      code: ERROR_CODES.INVALID_TRANSITION,
+      fromStatus: SAMPLE_DEFECT_STATUS.QRCC_VERIFIED,
+      toStatus: SAMPLE_DEFECT_STATUS.HANDED_OVER_TO_PQA
+    })
+  })
+
   it('moves through every canonical state and records each audit event', async () => {
     const sample = await createSample()
 
