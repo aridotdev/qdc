@@ -529,7 +529,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Three-part success, third-part failure rollback, duplicate submit, dan
       transaction failure test.
 
-- [ ] TASK-033 - Implement receive sample operation
+- [x] TASK-033 - Implement receive sample operation
   - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
