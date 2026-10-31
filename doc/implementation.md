@@ -559,7 +559,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Missing PIC, valid handover, repeated handover, dan audit test.
 
-- [ ] TASK-036 - Implement PQA analysis operation
+- [x] TASK-036 - Implement PQA analysis operation
   - Depends on: TASK-017, TASK-031
   - Priority: P0
   - Acceptance:

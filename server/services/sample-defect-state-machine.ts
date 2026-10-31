@@ -17,9 +17,14 @@ import {
   type UpdateSampleDefectInput,
   type SampleDefectStatusUpdate
 } from '../repositories/sample-defects'
+import type {
+  AttachmentStorageContext,
+  createAttachmentService
+} from './attachments'
 import { recordAuditLog } from './audit-logs'
 
 type SampleDefectDatabase = Awaited<ReturnType<typeof createDatabase>>['db']
+type SampleDefectAttachmentService = ReturnType<typeof createAttachmentService>
 type SampleDefectStateAction = typeof AUDIT_ACTION.STATUS_CHANGE | typeof AUDIT_ACTION.ROLLBACK
 type SampleDefectStatusResolver = (currentStatus: string) => SampleDefectStatus | undefined
 export type SampleDefectOperation = 'RECEIVE' | 'VERIFY' | 'HANDOVER' | 'PQA_ANALYSIS' | 'SUPPLIER_ANALYSIS'
@@ -43,6 +48,7 @@ const SAMPLE_DEFECT_OPERATION_SOURCE: Record<SampleDefectOperation, SampleDefect
 
 export interface SampleDefectStateMachineConfig {
   db: SampleDefectDatabase
+  attachments?: SampleDefectAttachmentService
   clock?: () => Date
 }
 
@@ -73,7 +79,15 @@ export interface HandoverSampleDefectInput {
 
 export interface PqaAnalysisSampleDefectInput {
   kondisiPqa: SampleCondition
+  kerusakanVerifikasi?: string
   repair: string
+  photo?: SampleDefectPhotoInput
+}
+
+export interface SampleDefectPhotoInput {
+  fileName: string
+  mimeType: string
+  data: Uint8Array
 }
 
 export interface SupplierAnalysisSampleDefectInput {
@@ -182,8 +196,48 @@ function requireCondition(value: SampleCondition | null | undefined): SampleCond
   return value
 }
 
+function createSampleDefectStorageContext(sample: SampleDefect): AttachmentStorageContext {
+  if (!sample.businessId) {
+    throw new Error('Business ID Sample Defect belum tersedia.')
+  }
+
+  return {
+    section: 'sample-defect',
+    reportYear: new Date(sample.createdAt).getUTCFullYear(),
+    businessId: sample.businessId
+  }
+}
+
 export function createSampleDefectStateMachine(config: SampleDefectStateMachineConfig) {
   const clock = config.clock ?? (() => new Date())
+
+  async function findPqaAnalysisSample(
+    sampleId: number,
+    context: SampleDefectStateMutationContext
+  ): Promise<SampleDefect> {
+    const repository = createSampleDefectRepository({ db: config.db })
+    const sample = await repository.findById(sampleId)
+
+    if (!sample) {
+      throw new SampleDefectNotFoundError(sampleId)
+    }
+
+    if (context.expectedUpdatedAt && context.expectedUpdatedAt !== sample.updatedAt) {
+      throw new SampleDefectConcurrencyConflictError(sampleId)
+    }
+
+    const targetStatus = getNextSampleDefectStatus(sample.status)
+
+    if (!targetStatus) {
+      throw new InvalidSampleDefectTransitionError(sample.status)
+    }
+
+    if (sample.status !== SAMPLE_DEFECT_OPERATION_SOURCE.PQA_ANALYSIS) {
+      throw new InvalidSampleDefectTransitionError(sample.status, targetStatus)
+    }
+
+    return sample
+  }
 
   async function transition(
     sampleId: number,
@@ -355,17 +409,57 @@ export function createSampleDefectStateMachine(config: SampleDefectStateMachineC
     input: PqaAnalysisSampleDefectInput,
     context: SampleDefectStateMutationContext
   ): Promise<SampleDefect> {
-    return transition(
+    const kondisiPqa = requireCondition(input.kondisiPqa)
+    const kerusakanVerifikasi = input.kerusakanVerifikasi === undefined
+      ? undefined
+      : requireText('PQA_ANALYSIS', 'kerusakanVerifikasi', input.kerusakanVerifikasi)
+    const repair = requireText('PQA_ANALYSIS', 'repair', input.repair)
+    const fields = {
+      kondisiPqa,
+      repair,
+      ...(kerusakanVerifikasi === undefined ? {} : { kerusakanVerifikasi })
+    }
+
+    if (!input.photo) {
+      return transition(
+        sampleId,
+        getNextSampleDefectStatus,
+        AUDIT_ACTION.STATUS_CHANGE,
+        'PQA_ANALYSIS',
+        fields,
+        context
+      )
+    }
+
+    const sample = await findPqaAnalysisSample(sampleId, context)
+
+    if (!config.attachments) {
+      throw new Error('Attachment service Sample Defect belum dikonfigurasi.')
+    }
+
+    const attachment = await config.attachments.createAttachment({
       sampleId,
-      getNextSampleDefectStatus,
-      AUDIT_ACTION.STATUS_CHANGE,
-      'PQA_ANALYSIS',
-      {
-        kondisiPqa: requireCondition(input.kondisiPqa),
-        repair: requireText('PQA_ANALYSIS', 'repair', input.repair)
-      },
-      context
-    )
+      fileName: input.photo.fileName,
+      mimeType: input.photo.mimeType,
+      data: input.photo.data,
+      storageContext: createSampleDefectStorageContext(sample)
+    }, { actorUserId: context.actor.userId })
+
+    try {
+      return await transition(
+        sampleId,
+        getNextSampleDefectStatus,
+        AUDIT_ACTION.STATUS_CHANGE,
+        'PQA_ANALYSIS',
+        fields,
+        context
+      )
+    } catch (error) {
+      await config.attachments.deleteAttachment(attachment.id, {
+        actorUserId: context.actor.userId
+      })
+      throw error
+    }
   }
 
   async function supplierAnalysis(
