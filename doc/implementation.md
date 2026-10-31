@@ -539,7 +539,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid receive, repeated receive, invalid state, dan audit test.
 
-- [ ] TASK-034 - Implement QRCC verification operation
+- [x] TASK-034 - Implement QRCC verification operation
   - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
