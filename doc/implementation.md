@@ -505,7 +505,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Repository integration test.
 
-- [ ] TASK-031 - Implement Sample Defect state machine service
+- [x] TASK-031 - Implement Sample Defect state machine service
   - Depends on: TASK-007, TASK-010, TASK-014, TASK-030
   - Priority: P0
   - Acceptance:
