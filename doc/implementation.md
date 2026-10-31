@@ -517,7 +517,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
     - Valid/invalid transition, required field, role, audit, dan concurrency
       conflict test.
 
-- [ ] TASK-032 - Implement atomic multi-part batch service
+- [x] TASK-032 - Implement atomic multi-part batch service
   - Depends on: TASK-007, TASK-030, TASK-031
   - Priority: P0
   - Acceptance:
