@@ -569,7 +569,7 @@ menggunakan filter dan sorting whitelist yang sama dengan list repository.
   - Test:
     - Valid analysis, invalid condition, attachment failure, dan state test.
 
-- [ ] TASK-037 - Implement supplier analysis operation
+- [x] TASK-037 - Implement supplier analysis operation
   - Depends on: TASK-031
   - Priority: P0
   - Acceptance:
